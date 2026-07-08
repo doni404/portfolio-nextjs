@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ContentStatus {
+  DRAFT     @map("draft")
+  PUBLISHED @map("published")
+  ARCHIVED  @map("archived")
+
+  @@map("content_status")
+}
+
+enum CommentStatus {
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+  SPAM     @map("spam")
+
+  @@map("comment_status")
+}
+
+enum ContactStatus {
+  NEW      @map("new")
+  READ     @map("read")
+  REPLIED  @map("replied")
+  ARCHIVED @map("archived")
+
+  @@map("contact_status")
+}
+
+enum AdminRole {
+  OWNER  @map("owner")
+  EDITOR @map("editor")
+
+  @@map("admin_role")
+}
+
+model Author {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String     @db.VarChar(120)
+  slug        String     @unique @db.VarChar(160)
+  title       String?    @db.VarChar(160)
+  bio         String?
+  avatarUrl   String?    @map("avatar_url")
+  email       String?    @db.VarChar(255)
+  websiteUrl  String?    @map("website_url")
+  linkedinUrl String?    @map("linkedin_url")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  posts       BlogPost[]
+
+  @@map("authors")
+}
+
+model Category {
+  id          String     @id @default(uuid()) @db.Uuid
+  name        String     @db.VarChar(120)
+  slug        String     @unique @db.VarChar(160)
+  description String?
+  type        String     @default("blog") @db.VarChar(40)
+  sortOrder   Int        @default(0) @map("sort_order")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  posts       BlogPost[]
+  projects    Project[]
+
+  @@map("categories")
+}
+
+model Tag {
+  id        String         @id @default(uuid()) @db.Uuid
+  name      String         @db.VarChar(80)
+  slug      String         @unique @db.VarChar(120)
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  posts     BlogPostTag[]
+  projects  ProjectTag[]
+
+  @@map("tags")
+}
+
+model BlogPost {
+  id                 String          @id @default(uuid()) @db.Uuid
+  authorId           String          @map("author_id") @db.Uuid
+  categoryId         String?         @map("category_id") @db.Uuid
+  title              String          @db.VarChar(220)
+  slug               String          @unique @db.VarChar(260)
+  excerpt            String
+  content            String
+  coverImageUrl      String?         @map("cover_image_url")
+  status             ContentStatus   @default(DRAFT)
+  featured           Boolean         @default(false)
+  readingTimeMinutes Int             @default(1) @map("reading_time_minutes")
+  seoTitle           String?         @map("seo_title") @db.VarChar(220)
+  seoDescription     String?         @map("seo_description") @db.VarChar(320)
+  publishedAt        DateTime?       @map("published_at") @db.Timestamptz(6)
+  updatedAt          DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdAt          DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt          DateTime?       @map("deleted_at") @db.Timestamptz(6)
+  author             Author          @relation(fields: [authorId], references: [id])
+  category           Category?       @relation(fields: [categoryId], references: [id])
+  tags               BlogPostTag[]
+  comments           Comment[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId])
+  @@map("blog_posts")
+}
+
+model BlogPostTag {
+  blogPostId String   @map("blog_post_id") @db.Uuid
+  tagId      String   @map("tag_id") @db.Uuid
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogPostId, tagId])
+  @@map("blog_post_tags")
+}
+
+model Comment {
+  id            String        @id @default(uuid()) @db.Uuid
+  blogPostId    String        @map("blog_post_id") @db.Uuid
+  parentId      String?       @map("parent_id") @db.Uuid
+  authorName    String        @map("author_name") @db.VarChar(120)
+  authorEmail   String        @map("author_email") @db.VarChar(255)
+  authorWebsite String?       @map("author_website")
+  content       String
+  status        CommentStatus @default(PENDING)
+  ipHash        String?       @map("ip_hash") @db.VarChar(128)
+  userAgent     String?       @map("user_agent")
+  approvedAt    DateTime?     @map("approved_at") @db.Timestamptz(6)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt     DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  blogPost      BlogPost      @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  parent        Comment?      @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies       Comment[]     @relation("CommentReplies")
+
+  @@index([blogPostId, status, createdAt])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model Project {
+  id         String        @id @default(uuid()) @db.Uuid
+  title      String        @db.VarChar(220)
+  slug       String        @unique @db.VarChar(260)
+  summary    String
+  problem    String?
+  solution   String?
+  role       String?
+  outcome    String?
+  stack      String[]      @default([])
+  categoryId String?       @map("category_id") @db.Uuid
+  featured   Boolean       @default(false)
+  sortOrder  Int           @default(0) @map("sort_order")
+  year       Int?
+  status     ContentStatus @default(PUBLISHED)
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt  DateTime?     @map("deleted_at") @db.Timestamptz(6)
+  category   Category?     @relation(fields: [categoryId], references: [id])
+  tags       ProjectTag[]
+
+  @@index([status, featured, sortOrder])
+  @@index([categoryId])
+  @@map("projects")
+}
+
+model ProjectTag {
+  projectId String  @map("project_id") @db.Uuid
+  tagId     String  @map("tag_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+  @@map("project_tags")
+}
+
+model Experience {
+  id           String   @id @default(uuid()) @db.Uuid
+  company      String   @db.VarChar(180)
+  role         String   @db.VarChar(180)
+  location     String?  @db.VarChar(180)
+  startDate    DateTime @map("start_date") @db.Date
+  endDate      DateTime? @map("end_date") @db.Date
+  isCurrent    Boolean  @default(false) @map("is_current")
+  summary      String?
+  highlights   String[] @default([])
+  technologies String[] @default([])
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("experiences")
+}
+
+model Skill {
+  id          String   @id @default(uuid()) @db.Uuid
+  groupName   String   @map("group_name") @db.VarChar(120)
+  name        String   @db.VarChar(120)
+  proficiency String?  @db.VarChar(40)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("skills")
+}
+
+model Certification {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(220)
+  issuer        String?  @db.VarChar(180)
+  score         String?  @db.VarChar(80)
+  issuedAt      DateTime? @map("issued_at") @db.Date
+  expiresAt     DateTime? @map("expires_at") @db.Date
+  credentialUrl String?  @map("credential_url")
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("certifications")
+}
+
+model Education {
+  id          String   @id @default(uuid()) @db.Uuid
+  institution String   @db.VarChar(220)
+  degree      String   @db.VarChar(220)
+  location    String?  @db.VarChar(180)
+  startYear   Int?     @map("start_year")
+  endYear     Int?     @map("end_year")
+  gpa         String?  @db.VarChar(40)
+  highlights  String[] @default([])
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("education")
+}
+
+model ContactSubmission {
+  id        String        @id @default(uuid()) @db.Uuid
+  name      String        @db.VarChar(160)
+  email     String        @db.VarChar(255)
+  company   String?       @db.VarChar(180)
+  subject   String?       @db.VarChar(220)
+  message   String
+  source    String?       @default("contact_page") @db.VarChar(80)
+  status    ContactStatus @default(NEW)
+  ipHash    String?       @map("ip_hash") @db.VarChar(128)
+  userAgent String?       @map("user_agent")
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([status, createdAt])
+  @@map("contact_submissions")
+}
+
+model SiteAsset {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique @db.VarChar(120)
+  label     String   @db.VarChar(180)
+  fileUrl   String   @map("file_url")
+  mimeType  String?  @map("mime_type") @db.VarChar(120)
+  sizeBytes Int?     @map("size_bytes")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@map("site_assets")
+}
+
+model AdminUser {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique @db.VarChar(255)
+  passwordHash String     @map("password_hash")
+  name         String     @db.VarChar(120)
+  role         AdminRole  @default(OWNER)
+  lastLoginAt  DateTime?  @map("last_login_at") @db.Timestamptz(6)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+  auditLogs    AuditLog[]
+
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id          String     @id @default(uuid()) @db.Uuid
+  adminUserId String?    @map("admin_user_id") @db.Uuid
+  action      String     @db.VarChar(120)
+  entityType  String     @map("entity_type") @db.VarChar(80)
+  entityId    String?    @map("entity_id") @db.Uuid
+  metadata    Json       @default("{}")
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
+
+  @@index([entityType, entityId, createdAt])
+  @@index([adminUserId, createdAt])
+  @@map("audit_logs")
+}
