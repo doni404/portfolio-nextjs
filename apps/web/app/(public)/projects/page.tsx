@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { projects } from "@/lib/mock-data";
+import { publicApi } from "@/lib/server-api";
 import { Badge } from "@/components/ui/Badge";
 import { ExternalLink } from "lucide-react";
 
@@ -17,8 +17,9 @@ const categoryColors: Record<string, "blue" | "green" | "purple" | "yellow" | "r
   "Backend Engineering": "blue",
 };
 
-export default function Projects() {
-  const publishedProjects = projects.filter((p) => p.status === "published");
+export default async function Projects() {
+  const res = await publicApi.getProjects({ pageSize: "50" });
+  const publishedProjects = res?.data ?? [];
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -48,10 +49,10 @@ export default function Projects() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge
                         variant={
-                          categoryColors[project.category] ?? "blue"
+                          categoryColors[project.category?.name ?? ""] ?? "blue"
                         }
                       >
-                        {project.category}
+                        {project.category?.name ?? "Project"}
                       </Badge>
                       <Badge variant="gray">{project.year}</Badge>
                       {project.featured && <Badge variant="yellow">Featured</Badge>}

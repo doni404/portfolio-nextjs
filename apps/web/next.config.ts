@@ -7,7 +7,17 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+      },
     ],
+  },
+
+  experimental: {
+    serverActions: {
+      allowedOrigins: ["localhost:4000"],
+    },
   },
 };
 

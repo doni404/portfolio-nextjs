@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { MapPin, Calendar } from "lucide-react";
-import { experiences } from "@/lib/mock-data";
+import { publicApi } from "@/lib/server-api";
 import { formatDateShort } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
@@ -10,7 +10,10 @@ export const metadata: Metadata = {
     "Career timeline of Doni Putra Purbawa — Backend Engineering Manager, Cloud Architect, and Machine Learning Engineer.",
 };
 
-export default function Experience() {
+export default async function Experience() {
+  const res = await publicApi.getExperiences();
+  const experiences = res?.data ?? [];
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}

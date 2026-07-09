@@ -1,29 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { blogPosts } from "@/lib/mock-data";
+import { adminApi } from "@/lib/server-api";
 import { BlogEditor } from "@/components/admin/BlogEditor";
 
-interface PageProps {
+export const metadata: Metadata = { title: "Edit Blog Post" };
+
+interface Props {
   params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export default async function EditBlog({ params }: Props) {
   const { id } = await params;
-  const post = blogPosts.find((p) => p.id === id);
-  return { title: post ? `Edit: ${post.title}` : "Edit Post" };
-}
-
-export default async function EditBlog({ params }: PageProps) {
-  const { id } = await params;
-  const post = blogPosts.find((p) => p.id === id);
+  const res = await adminApi.getBlog(id);
+  const post = res?.data;
   if (!post) notFound();
 
   return (
     <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Edit Blog Post</h1>
-        <p className="mt-1 text-slate-500 truncate">{post.title}</p>
-      </div>
       <BlogEditor post={post} />
     </div>
   );

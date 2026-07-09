@@ -1,8 +1,16 @@
-# AWS EC2 Deployment Plan: Amazon Linux 2023
+# Manual AWS EC2 Deployment Plan: Amazon Linux 2023
+
+## Status
+
+This is now the manual fallback plan.
+
+Primary recommended deployment plan: `docs/deployment/coolify-aws-ec2-amazon-linux-2023.md`.
+
+Use this document only if Coolify is not used.
 
 ## Target
 
-- Instance type: t3.nano.
+- Instance type: t3.micro minimum.
 - Operating system: Amazon Linux 2023.
 - Runtime: Node.js.
 - Frontend: Next.js.
@@ -14,9 +22,9 @@
 - CI/CD: GitHub Actions.
 - GitHub repository: `https://github.com/doni404/portfolio-nextjs`.
 
-## Important t3.nano Constraints
+## Important t3.micro Constraints
 
-t3.nano is acceptable for a low-traffic personal portfolio MVP, but it has limited CPU and memory. Use it carefully.
+t3.micro is acceptable for a low-traffic personal portfolio MVP, but it has limited memory. Use it carefully.
 
 Required mitigations:
 
@@ -26,7 +34,7 @@ Required mitigations:
 - Run one Next.js process and one Express.js process.
 - Configure log rotation.
 - Monitor memory and disk usage.
-- Upgrade to t3.micro or t3.small if builds, PostgreSQL, or runtime memory become unstable.
+- Upgrade to t3.small if builds, PostgreSQL, or runtime memory become unstable.
 
 ## Suggested Ports
 

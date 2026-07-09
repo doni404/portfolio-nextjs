@@ -1,61 +1,73 @@
 import type { Metadata } from "next";
-import { contactSubmissions } from "@/lib/mock-data";
-import { formatDate } from "@/lib/utils";
-import { Badge } from "@/components/ui/Badge";
+import Link from "next/link";
+import { adminApi } from "@/lib/server-api";
 import { ContactSubmissionRow } from "@/components/admin/ContactSubmissionRow";
 
 export const metadata: Metadata = { title: "Contact Submissions" };
 
-export default function AdminContactSubmissions() {
-  const counts = {
-    all: contactSubmissions.length,
-    new: contactSubmissions.filter((s) => s.status === "new").length,
-    read: contactSubmissions.filter((s) => s.status === "read").length,
-    replied: contactSubmissions.filter((s) => s.status === "replied").length,
-    archived: contactSubmissions.filter((s) => s.status === "archived").length,
-  };
+interface Props {
+  searchParams: Promise<{ status?: string }>;
+}
+
+export default async function AdminContactSubmissions({ searchParams }: Props) {
+  const { status } = await searchParams;
+  const res = await adminApi.getContactSubmissions(status ? { status } : undefined);
+  const submissions = res?.data ?? [];
+  const total = res?.pagination.total ?? 0;
+
+  const filterTabs = [
+    { label: "All", value: undefined },
+    { label: "New", value: "new" },
+    { label: "Read", value: "read" },
+    { label: "Replied", value: "replied" },
+    { label: "Archived", value: "archived" },
+  ];
 
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Contact Submissions</h1>
-        <p className="mt-1 text-slate-500">{counts.new} new messages</p>
+        <p className="mt-0.5 text-sm text-slate-500">{total} message{total !== 1 ? "s" : ""}</p>
       </div>
 
-      {/* Status tabs */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        {(["all", "new", "read", "replied", "archived"] as const).map((status) => (
-          <button
-            key={status}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-              status === "all"
-                ? "bg-blue-600 text-white"
-                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+      {/* Status filter tabs */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {filterTabs.map((tab) => (
+          <Link
+            key={tab.label}
+            href={tab.value ? `/admin/contact-submissions?status=${tab.value}` : "/admin/contact-submissions"}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+              status === tab.value || (!status && !tab.value)
+                ? "border-blue-200 bg-blue-50 text-blue-700"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
             }`}
           >
-            {status} <span className="ml-1 text-xs opacity-70">({counts[status]})</span>
-          </button>
+            {tab.label}
+          </Link>
         ))}
       </div>
 
-      {/* Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50">
-              <th className="px-4 py-3 text-left font-semibold text-slate-600">Sender</th>
-              <th className="hidden px-4 py-3 text-left font-semibold text-slate-600 sm:table-cell">Subject</th>
-              <th className="hidden px-4 py-3 text-left font-semibold text-slate-600 md:table-cell">Date</th>
-              <th className="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-              <th className="px-4 py-3 text-right font-semibold text-slate-600">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {contactSubmissions.map((sub) => (
-              <ContactSubmissionRow key={sub.id} submission={sub} />
-            ))}
-          </tbody>
-        </table>
+        {submissions.length === 0 ? (
+          <div className="py-16 text-center text-slate-400">No submissions found.</div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50 text-left">
+                <th className="px-4 py-3 font-medium text-slate-600">From</th>
+                <th className="hidden px-4 py-3 font-medium text-slate-600 sm:table-cell">Subject</th>
+                <th className="hidden px-4 py-3 font-medium text-slate-600 md:table-cell">Date</th>
+                <th className="px-4 py-3 font-medium text-slate-600">Status</th>
+                <th className="px-4 py-3 font-medium text-slate-600"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {submissions.map((sub) => (
+                <ContactSubmissionRow key={sub.id} submission={sub} />
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

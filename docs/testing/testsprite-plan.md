@@ -10,7 +10,7 @@ Use TestSprite to validate the portfolio website against the PRD, API behavior, 
 - Backend: Express.js API.
 - Database: PostgreSQL managed by Prisma.
 - CI/CD: GitHub Actions.
-- Deployment target: AWS EC2 t3.nano, Amazon Linux 2023.
+- Deployment target: AWS EC2 t3.micro, Amazon Linux 2023, Coolify.
 
 ## Required Local Test Commands
 

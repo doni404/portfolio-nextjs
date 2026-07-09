@@ -1,57 +1,65 @@
 import type { Metadata } from "next";
-import { comments } from "@/lib/mock-data";
-import { formatDate } from "@/lib/utils";
-import { Badge } from "@/components/ui/Badge";
+import Link from "next/link";
+import { adminApi } from "@/lib/server-api";
 import { CommentModerationRow } from "@/components/admin/CommentModerationRow";
 
-export const metadata: Metadata = { title: "Comment Moderation" };
+export const metadata: Metadata = { title: "Comments" };
 
-const statusVariants: Record<string, "green" | "yellow" | "red" | "gray"> = {
-  approved: "green",
-  pending: "yellow",
-  rejected: "red",
-  spam: "gray",
-};
+interface Props {
+  searchParams: Promise<{ status?: string }>;
+}
 
-export default function AdminComments() {
-  const counts = {
-    all: comments.length,
-    pending: comments.filter((c) => c.status === "pending").length,
-    approved: comments.filter((c) => c.status === "approved").length,
-    rejected: comments.filter((c) => c.status === "rejected").length,
-    spam: comments.filter((c) => c.status === "spam").length,
-  };
+export default async function AdminComments({ searchParams }: Props) {
+  const { status } = await searchParams;
+  const res = await adminApi.getComments(status ? { status } : { status: "pending" });
+  const comments = res?.data ?? [];
+  const total = res?.pagination.total ?? 0;
+
+  const filterTabs = [
+    { label: "Pending", value: "pending" },
+    { label: "Approved", value: "approved" },
+    { label: "Rejected", value: "rejected" },
+    { label: "Spam", value: "spam" },
+    { label: "All", value: undefined },
+  ];
+
+  const activeStatus = status ?? "pending";
 
   return (
     <div className="p-6 lg:p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Comment Moderation</h1>
-        <p className="mt-1 text-slate-500">{counts.pending} comments awaiting review</p>
+        <h1 className="text-2xl font-bold text-slate-900">Comments</h1>
+        <p className="mt-0.5 text-sm text-slate-500">{total} comment{total !== 1 ? "s" : ""}</p>
       </div>
 
-      {/* Status tabs */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        {(["all", "pending", "approved", "rejected", "spam"] as const).map((status) => (
-          <button
-            key={status}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-              status === "all"
-                ? "bg-blue-600 text-white"
-                : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+      {/* Status filter tabs */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        {filterTabs.map((tab) => (
+          <Link
+            key={tab.label}
+            href={tab.value ? `/admin/comments?status=${tab.value}` : "/admin/comments"}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+              activeStatus === tab.value || (!tab.value && !status)
+                ? "border-blue-200 bg-blue-50 text-blue-700"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
             }`}
           >
-            {status}{" "}
-            <span className="ml-1 text-xs opacity-70">({counts[status as keyof typeof counts]})</span>
-          </button>
+            {tab.label}
+          </Link>
         ))}
       </div>
 
-      {/* Comments list */}
-      <div className="space-y-3">
-        {comments.map((comment) => (
-          <CommentModerationRow key={comment.id} comment={comment} />
-        ))}
-      </div>
+      {comments.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-white py-16 text-center">
+          <p className="text-slate-400">No comments with status &quot;{activeStatus}&quot;.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {comments.map((comment) => (
+            <CommentModerationRow key={comment.id} comment={comment} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

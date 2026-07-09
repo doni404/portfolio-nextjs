@@ -10,7 +10,7 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-import { blogPosts, projects } from "@/lib/mock-data";
+import { publicApi } from "@/lib/server-api";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
@@ -54,12 +54,14 @@ const highlights = [
   "Open to Japan relocation — JLPT N4",
 ];
 
-export default function Home() {
-  const featuredProjects = projects.filter((p) => p.featured).slice(0, 3);
-  const latestPosts = blogPosts
-    .filter((p) => p.status === "published")
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
-    .slice(0, 3);
+export default async function Home() {
+  const [projectsRes, blogsRes] = await Promise.all([
+    publicApi.getProjects({ featured: "true", pageSize: "3" }),
+    publicApi.getBlogs({ pageSize: "3" }),
+  ]);
+
+  const featuredProjects = projectsRes?.data ?? [];
+  const latestPosts = blogsRes?.data ?? [];
 
   return (
     <div>
@@ -171,7 +173,7 @@ export default function Home() {
                 className="group flex flex-col rounded-xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-md"
               >
                 <div className="mb-3">
-                  <Badge variant="blue">{project.category}</Badge>
+                  <Badge variant="blue">{project.category?.name ?? "Project"}</Badge>
                 </div>
                 <h3 className="mb-2 font-semibold text-slate-900 group-hover:text-blue-700">
                   {project.title}
@@ -226,7 +228,7 @@ export default function Home() {
                 className="group flex flex-col rounded-xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-md"
               >
                 <div className="mb-3">
-                  <Badge variant="blue">{post.category}</Badge>
+                  <Badge variant="blue">{post.category?.name ?? "Article"}</Badge>
                 </div>
                 <h3 className="mb-2 font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2">
                   {post.title}
@@ -237,11 +239,11 @@ export default function Home() {
                 <div className="flex items-center gap-3 text-xs text-slate-400">
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3.5 w-3.5" />
-                    {formatDate(post.publishedAt)}
+                    {post.publishedAt ? formatDate(post.publishedAt) : "—"}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="h-3.5 w-3.5" />
-                    {post.readingTime} min read
+                    {post.readingTimeMinutes} min read
                   </span>
                 </div>
               </Link>

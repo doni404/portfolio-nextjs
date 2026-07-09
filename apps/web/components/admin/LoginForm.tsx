@@ -21,16 +21,27 @@ export function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
     setError("");
-    // Simulate API call to POST /api/admin/auth/login
-    await new Promise((r) => setTimeout(r, 800));
-
-    // Mock auth — in production this calls the Express API
-    if (data.email === "doniputrapurbawa@gmail.com" && data.password === "admin") {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"}/api/admin/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(data),
+        }
+      );
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.error?.message ?? "Invalid email or password.");
+      }
       router.push("/admin");
-    } else {
-      setError("Invalid email or password.");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -92,7 +103,7 @@ export function LoginForm() {
       </button>
 
       <p className="mt-2 text-center text-xs text-slate-400">
-        Demo: use any email + &quot;admin&quot; as password
+        Use your admin email and password to sign in.
       </p>
     </form>
   );

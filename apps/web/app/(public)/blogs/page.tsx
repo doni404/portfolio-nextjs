@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Calendar, Clock, Search } from "lucide-react";
-import { blogPosts, categories } from "@/lib/mock-data";
+import { publicApi } from "@/lib/server-api";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { BlogSearch } from "@/components/blog/BlogSearch";
@@ -12,6 +12,16 @@ export const metadata: Metadata = {
     "Technical articles by Doni Putra Purbawa on backend engineering, cloud infrastructure, payment systems, AI, and machine learning.",
 };
 
+const categories = [
+  "Backend Engineering",
+  "Cloud & DevOps",
+  "Payment Systems",
+  "AI & LLM",
+  "Machine Learning",
+  "Career & Japan",
+  "Tutorials",
+];
+
 interface BlogsPageProps {
   searchParams: Promise<{ category?: string; q?: string }>;
 }
@@ -19,22 +29,21 @@ interface BlogsPageProps {
 export default async function Blogs({ searchParams }: BlogsPageProps) {
   const params = await searchParams;
   const selectedCategory = params.category;
-  const searchQuery = params.q?.toLowerCase();
+  const searchQuery = params.q;
 
-  const publishedPosts = blogPosts.filter((p) => p.status === "published");
+  const apiParams: Record<string, string> = { pageSize: "20" };
+  if (selectedCategory) apiParams.category = selectedCategory.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  if (searchQuery) apiParams.q = searchQuery;
 
-  const filtered = publishedPosts.filter((post) => {
-    const matchCategory = !selectedCategory || post.category === selectedCategory;
-    const matchSearch =
-      !searchQuery ||
-      post.title.toLowerCase().includes(searchQuery) ||
-      post.excerpt.toLowerCase().includes(searchQuery) ||
-      post.tags.some((t) => t.toLowerCase().includes(searchQuery));
-    return matchCategory && matchSearch;
-  });
+  const [allRes, filteredRes] = await Promise.all([
+    publicApi.getBlogs({ pageSize: "50" }),
+    publicApi.getBlogs(apiParams),
+  ]);
 
-  const featured = publishedPosts.find((p) => p.featured);
-  const showFeatured = !selectedCategory && !searchQuery;
+  const allPosts = allRes?.data ?? [];
+  const filtered = filteredRes?.data ?? [];
+  const featured = allPosts.find((p) => p.featured);
+  const showFeatured = !selectedCategory && !searchQuery && featured;
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -46,7 +55,6 @@ export default async function Blogs({ searchParams }: BlogsPageProps) {
             Technical writing on backend engineering, cloud infrastructure, payment systems, AI, and
             machine learning.
           </p>
-          {/* Search */}
           <div className="mt-5">
             <BlogSearch defaultValue={params.q} />
           </div>
@@ -55,37 +63,39 @@ export default async function Blogs({ searchParams }: BlogsPageProps) {
 
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         {/* Featured article */}
-        {showFeatured && featured && (
+        {showFeatured && (
           <div className="mb-10">
             <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-blue-600">
               Featured Article
             </p>
             <Link
-              href={`/blogs/${featured.slug}`}
+              href={`/blogs/${featured!.slug}`}
               className="group block overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:border-blue-200 hover:shadow-lg"
             >
               <div className="flex flex-col gap-0 lg:flex-row">
                 <div className="flex h-48 items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 p-8 lg:h-auto lg:w-64 lg:flex-shrink-0">
                   <span className="text-6xl font-black text-blue-200 opacity-40">
-                    {featured.category.charAt(0)}
+                    {(featured!.category?.name ?? "A").charAt(0)}
                   </span>
                 </div>
                 <div className="p-6 lg:p-8">
                   <Badge variant="blue" className="mb-3">
-                    {featured.category}
+                    {featured!.category?.name ?? "Article"}
                   </Badge>
                   <h2 className="text-xl font-bold text-slate-900 group-hover:text-blue-700 sm:text-2xl">
-                    {featured.title}
+                    {featured!.title}
                   </h2>
-                  <p className="mt-2 leading-relaxed text-slate-500">{featured.excerpt}</p>
+                  <p className="mt-2 leading-relaxed text-slate-500">{featured!.excerpt}</p>
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      {formatDate(featured.publishedAt)}
-                    </span>
+                    {featured!.publishedAt && (
+                      <span className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {formatDate(featured!.publishedAt)}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1">
                       <Clock className="h-4 w-4" />
-                      {featured.readingTime} min read
+                      {featured!.readingTimeMinutes} min read
                     </span>
                   </div>
                 </div>
@@ -144,14 +154,14 @@ export default async function Blogs({ searchParams }: BlogsPageProps) {
                     className="group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-blue-200 hover:shadow-md sm:flex-row sm:items-start"
                   >
                     <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 text-xl font-bold text-blue-400">
-                      {post.category.charAt(0)}
+                      {(post.category?.name ?? "A").charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                        <Badge variant="blue">{post.category}</Badge>
+                        <Badge variant="blue">{post.category?.name ?? "Article"}</Badge>
                         {post.tags.slice(0, 2).map((tag) => (
-                          <Badge key={tag} variant="gray">
-                            {tag}
+                          <Badge key={tag.id} variant="gray">
+                            {tag.name}
                           </Badge>
                         ))}
                       </div>
@@ -160,13 +170,15 @@ export default async function Blogs({ searchParams }: BlogsPageProps) {
                       </h2>
                       <p className="mt-1 text-sm text-slate-500 line-clamp-2">{post.excerpt}</p>
                       <div className="mt-2 flex items-center gap-3 text-xs text-slate-400">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {formatDate(post.publishedAt)}
-                        </span>
+                        {post.publishedAt && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {formatDate(post.publishedAt)}
+                          </span>
+                        )}
                         <span className="flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" />
-                          {post.readingTime} min read
+                          {post.readingTimeMinutes} min read
                         </span>
                       </div>
                     </div>
@@ -193,11 +205,11 @@ export default async function Blogs({ searchParams }: BlogsPageProps) {
                     }`}
                   >
                     All articles
-                    <span className="ml-1 text-xs text-slate-400">({publishedPosts.length})</span>
+                    <span className="ml-1 text-xs text-slate-400">({allPosts.length})</span>
                   </Link>
                 </li>
                 {categories.map((cat) => {
-                  const count = publishedPosts.filter((p) => p.category === cat).length;
+                  const count = allPosts.filter((p) => p.category?.name === cat).length;
                   return (
                     <li key={cat}>
                       <Link

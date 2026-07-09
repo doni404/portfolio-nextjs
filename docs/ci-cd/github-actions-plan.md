@@ -2,9 +2,9 @@
 
 ## Purpose
 
-Use GitHub Actions as the main CI/CD system for `doni404/portfolio-nextjs`.
+Use GitHub Actions as the main CI system for `doni404/portfolio-nextjs`, with Coolify handling production deployment.
 
-The pipeline should protect code quality on pull requests and deploy the production app to AWS EC2 after changes are merged to `main`.
+The pipeline should protect code quality on pull requests and main branch changes. Production deployment should be managed by Coolify through GitHub integration or a deploy webhook after CI passes.
 
 ## Repository
 
@@ -63,43 +63,23 @@ Runs on:
 
 Deployment strategy:
 
-- GitHub Actions connects to EC2 through SSH.
-- EC2 pulls the latest `main` branch.
-- EC2 installs dependencies.
-- EC2 generates Prisma client.
-- EC2 runs Prisma migrations.
-- EC2 builds the app.
-- EC2 restarts Next.js and Express.js services.
-- GitHub Actions runs post-deploy smoke checks.
+- Preferred MVP: Coolify deploys from `main` using its GitHub integration.
+- Optional later: GitHub Actions calls a Coolify deploy webhook after CI passes.
+- Coolify installs dependencies, builds containers, runs configured deployment commands, and restarts applications.
+- GitHub Actions can still run post-deploy smoke checks if deployment is triggered by webhook.
 
 ## Required GitHub Secrets
 
-- `EC2_HOST`
-  - Public IP address or hostname of the EC2 instance.
-- `EC2_USER`
-  - Linux deploy user, for example `ec2-user`.
-- `EC2_SSH_PRIVATE_KEY`
-  - Private SSH key for the deploy user.
-- `EC2_APP_DIR`
-  - App path on the server, for example `/home/ec2-user/portfolio-nextjs`.
 - `PRODUCTION_URL`
   - Public site URL, for example `https://doniputra.com`.
-- `DATABASE_URL`
-  - Production PostgreSQL connection string.
-- `SESSION_SECRET`
-  - Secret used for admin session signing.
-- `ADMIN_SEED_PASSWORD`
-  - Initial owner password used by the seed script.
 
 Optional secrets:
 
+- `COOLIFY_DEPLOY_WEBHOOK`
+  - Coolify webhook URL if GitHub Actions triggers deployment.
 - `TESTSPRITE_API_KEY`
 - `TESTSPRITE_PROJECT_ID`
 - `SLACK_WEBHOOK_URL`
-- `SMTP_HOST`
-- `SMTP_PORT`
-- `SMTP_USER`
-- `SMTP_PASSWORD`
 
 ## Required GitHub Variables
 
@@ -175,6 +155,8 @@ jobs:
 
 ## Example `deploy.yml`
 
+Use this only if you choose GitHub Actions to trigger a Coolify deploy webhook. If Coolify is configured for automatic push-to-deploy from `main`, this workflow is not required.
+
 ```yaml
 name: Deploy
 
@@ -193,23 +175,8 @@ jobs:
     environment: production
 
     steps:
-      - name: Deploy over SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            set -e
-            cd ${{ secrets.EC2_APP_DIR }}
-            git fetch origin main
-            git reset --hard origin/main
-            pnpm install --frozen-lockfile
-            pnpm prisma:generate
-            pnpm prisma:migrate:deploy
-            pnpm build
-            pm2 restart portfolio-api
-            pm2 restart portfolio-web
+      - name: Trigger Coolify deployment
+        run: curl --fail --request GET "${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}"
 
       - name: Smoke check
         run: |
@@ -248,7 +215,7 @@ The job should use:
 - Use `concurrency` to prevent two deployments from running at the same time.
 - Keep database migrations backward-compatible where possible.
 - Back up PostgreSQL before risky schema changes.
-- Do not expose `DATABASE_URL` in logs.
+- Store production application secrets in Coolify environment variables.
 - Do not run destructive reset commands in production.
 
 ## Release Gate
@@ -256,8 +223,8 @@ The job should use:
 Deployment is considered successful when:
 
 - CI passes.
-- Prisma migrations apply successfully.
-- EC2 services restart successfully.
+- Coolify deployment succeeds.
+- Prisma migrations apply successfully through the Coolify deployment command.
 - `GET /api/health` returns success.
 - Homepage loads.
 - Blog index loads.

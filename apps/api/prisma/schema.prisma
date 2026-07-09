@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum ContentStatus {
+  draft
+  published
+  archived
+}
+
+enum CommentStatus {
+  pending
+  approved
+  rejected
+  spam
+}
+
+enum ContactStatus {
+  new
+  read
+  replied
+  archived
+}
+
+enum AdminRole {
+  owner
+  editor
+}
+
+// ─── Authors ──────────────────────────────────────────────────────────────────
+
+model Author {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(120)
+  slug        String   @unique @db.VarChar(160)
+  title       String?  @db.VarChar(160)
+  bio         String?  @db.Text
+  avatarUrl   String?  @map("avatar_url") @db.Text
+  email       String?  @db.VarChar(255)
+  websiteUrl  String?  @map("website_url") @db.Text
+  linkedinUrl String?  @map("linkedin_url") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  blogPosts BlogPost[]
+
+  @@map("authors")
+}
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+
+model Category {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   @db.VarChar(120)
+  slug        String   @unique @db.VarChar(160)
+  description String?  @db.Text
+  type        String   @default("blog") @db.VarChar(40)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  blogPosts BlogPost[]
+  projects  Project[]
+
+  @@map("categories")
+}
+
+// ─── Tags ─────────────────────────────────────────────────────────────────────
+
+model Tag {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @db.VarChar(80)
+  slug      String   @unique @db.VarChar(120)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blogPostTags BlogPostTag[]
+  projectTags  ProjectTag[]
+
+  @@map("tags")
+}
+
+// ─── Blog Posts ───────────────────────────────────────────────────────────────
+
+model BlogPost {
+  id                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId           String        @map("author_id") @db.Uuid
+  categoryId         String?       @map("category_id") @db.Uuid
+  title              String        @db.VarChar(220)
+  slug               String        @unique @db.VarChar(260)
+  excerpt            String        @db.Text
+  content            String        @db.Text
+  coverImageUrl      String?       @map("cover_image_url") @db.Text
+  status             ContentStatus @default(draft)
+  featured           Boolean       @default(false)
+  readingTimeMinutes Int           @default(1) @map("reading_time_minutes")
+  seoTitle           String?       @map("seo_title") @db.VarChar(220)
+  seoDescription     String?       @map("seo_description") @db.VarChar(320)
+  publishedAt        DateTime?     @map("published_at") @db.Timestamptz
+  updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  deletedAt          DateTime?     @map("deleted_at") @db.Timestamptz
+
+  author   Author    @relation(fields: [authorId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+  tags     BlogPostTag[]
+  comments Comment[]
+
+  @@index([status, publishedAt(sort: Desc)], name: "idx_blog_posts_status_published_at")
+  @@index([categoryId], name: "idx_blog_posts_category_id")
+  @@index([slug], name: "idx_blog_posts_slug")
+  @@map("blog_posts")
+}
+
+model BlogPostTag {
+  blogPostId String @map("blog_post_id") @db.Uuid
+  tagId      String @map("tag_id") @db.Uuid
+
+  blogPost BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogPostId, tagId])
+  @@map("blog_post_tags")
+}
+
+// ─── Comments ─────────────────────────────────────────────────────────────────
+
+model Comment {
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  blogPostId    String        @map("blog_post_id") @db.Uuid
+  parentId      String?       @map("parent_id") @db.Uuid
+  authorName    String        @map("author_name") @db.VarChar(120)
+  authorEmail   String        @map("author_email") @db.VarChar(255)
+  authorWebsite String?       @map("author_website") @db.Text
+  content       String        @db.Text
+  status        CommentStatus @default(pending)
+  ipHash        String?       @map("ip_hash") @db.VarChar(128)
+  userAgent     String?       @map("user_agent") @db.Text
+  approvedAt    DateTime?     @map("approved_at") @db.Timestamptz
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt     DateTime?     @map("deleted_at") @db.Timestamptz
+
+  blogPost BlogPost  @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  @@index([blogPostId, status, createdAt(sort: Desc)], name: "idx_comments_blog_post_status")
+  @@map("comments")
+}
+
+// ─── Projects ─────────────────────────────────────────────────────────────────
+
+model Project {
+  id         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title      String        @db.VarChar(220)
+  slug       String        @unique @db.VarChar(260)
+  summary    String        @db.Text
+  problem    String?       @db.Text
+  solution   String?       @db.Text
+  role       String?       @db.Text
+  outcome    String?       @db.Text
+  stack      String[]
+  categoryId String?       @map("category_id") @db.Uuid
+  featured   Boolean       @default(false)
+  sortOrder  Int           @default(0) @map("sort_order")
+  year       Int?
+  status     ContentStatus @default(published)
+  links      Json          @default("[]")
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime?     @map("deleted_at") @db.Timestamptz
+
+  category Category?    @relation(fields: [categoryId], references: [id])
+  tags     ProjectTag[]
+
+  @@index([status, featured, sortOrder], name: "idx_projects_status_featured")
+  @@map("projects")
+}
+
+model ProjectTag {
+  projectId String @map("project_id") @db.Uuid
+  tagId     String @map("tag_id") @db.Uuid
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tag     Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, tagId])
+  @@map("project_tags")
+}
+
+// ─── Experiences ──────────────────────────────────────────────────────────────
+
+model Experience {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company      String   @db.VarChar(180)
+  role         String   @db.VarChar(180)
+  location     String?  @db.VarChar(180)
+  startDate    DateTime @map("start_date") @db.Date
+  endDate      DateTime? @map("end_date") @db.Date
+  isCurrent    Boolean  @default(false) @map("is_current")
+  summary      String?  @db.Text
+  highlights   String[]
+  technologies String[]
+  sortOrder    Int      @default(0) @map("sort_order")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("experiences")
+}
+
+// ─── Skills ───────────────────────────────────────────────────────────────────
+
+model Skill {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  groupName   String   @map("group_name") @db.VarChar(120)
+  name        String   @db.VarChar(120)
+  proficiency String?  @db.VarChar(40)
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("skills")
+}
+
+// ─── Certifications ───────────────────────────────────────────────────────────
+
+model Certification {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String   @db.VarChar(220)
+  issuer        String?  @db.VarChar(180)
+  score         String?  @db.VarChar(80)
+  issuedAt      DateTime? @map("issued_at") @db.Date
+  expiresAt     DateTime? @map("expires_at") @db.Date
+  credentialUrl String?  @map("credential_url") @db.Text
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("certifications")
+}
+
+// ─── Education ────────────────────────────────────────────────────────────────
+
+model Education {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  institution String   @db.VarChar(220)
+  degree      String   @db.VarChar(220)
+  location    String?  @db.VarChar(180)
+  startYear   Int?     @map("start_year")
+  endYear     Int?     @map("end_year")
+  gpa         String?  @db.VarChar(40)
+  highlights  String[]
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("education")
+}
+
+// ─── Contact Submissions ──────────────────────────────────────────────────────
+
+model ContactSubmission {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String        @db.VarChar(160)
+  email     String        @db.VarChar(255)
+  company   String?       @db.VarChar(180)
+  subject   String?       @db.VarChar(220)
+  message   String        @db.Text
+  source    String        @default("contact_page") @db.VarChar(80)
+  status    ContactStatus @default(new)
+  ipHash    String?       @map("ip_hash") @db.VarChar(128)
+  userAgent String?       @map("user_agent") @db.Text
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([status, createdAt(sort: Desc)], name: "idx_contact_submissions_status_created")
+  @@map("contact_submissions")
+}
+
+// ─── Site Assets ──────────────────────────────────────────────────────────────
+
+model SiteAsset {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key       String   @unique @db.VarChar(120)
+  label     String   @db.VarChar(180)
+  fileUrl   String   @map("file_url") @db.Text
+  mimeType  String?  @map("mime_type") @db.VarChar(120)
+  sizeBytes Int?     @map("size_bytes")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("site_assets")
+}
+
+// ─── Admin Users ──────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String    @unique @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.Text
+  name         String    @db.VarChar(120)
+  role         AdminRole @default(owner)
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz
+
+  auditLogs AuditLog[]
+
+  @@map("admin_users")
+}
+
+// ─── Audit Logs ───────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminUserId String?   @map("admin_user_id") @db.Uuid
+  action      String    @db.VarChar(120)
+  entityType  String    @map("entity_type") @db.VarChar(80)
+  entityId    String?   @map("entity_id") @db.Uuid
+  metadata    Json      @default("{}")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  adminUser AdminUser? @relation(fields: [adminUserId], references: [id])
+
+  @@index([entityType, entityId, createdAt(sort: Desc)], name: "idx_audit_logs_entity")
+  @@index([adminUserId, createdAt(sort: Desc)], name: "idx_audit_logs_admin_user")
+  @@map("audit_logs")
+}

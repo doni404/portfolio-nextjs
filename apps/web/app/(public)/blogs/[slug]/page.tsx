@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, Clock, Tag, Share2 } from "lucide-react";
 import { marked } from "marked";
-import { blogPosts } from "@/lib/mock-data";
+import { publicApi } from "@/lib/server-api";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { CommentSection } from "@/components/blog/CommentSection";
@@ -14,7 +14,8 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = blogPosts.find((p) => p.slug === slug && p.status === "published");
+  const res = await publicApi.getBlog(slug);
+  const post = res?.data;
   if (!post) return { title: "Not Found" };
   return {
     title: post.seoTitle ?? post.title,
@@ -25,29 +26,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "article",
       publishedTime: post.publishedAt,
       modifiedTime: post.updatedAt,
-      tags: post.tags,
+      tags: post.tags.map((t) => t.name),
     },
   };
-}
-
-export function generateStaticParams() {
-  return blogPosts
-    .filter((p) => p.status === "published")
-    .map((p) => ({ slug: p.slug }));
 }
 
 
 export default async function BlogDetail({ params }: PageProps) {
   const { slug } = await params;
-  const post = blogPosts.find((p) => p.slug === slug && p.status === "published");
+  const [postRes, commentsRes, allPostsRes] = await Promise.all([
+    publicApi.getBlog(slug),
+    publicApi.getComments(slug),
+    publicApi.getBlogs({ pageSize: "50" }),
+  ]);
+
+  const post = postRes?.data;
   if (!post) notFound();
+
+  const approvedComments = commentsRes?.data ?? [];
+  const allPosts = allPostsRes?.data ?? [];
 
   const contentHtml = marked.parse(post.content) as string;
 
-  const relatedPosts = blogPosts
-    .filter(
-      (p) => p.status === "published" && p.id !== post.id && p.category === post.category
-    )
+  const relatedPosts = allPosts
+    .filter((p) => p.id !== post.id && p.category?.slug === post.category?.slug)
     .slice(0, 3);
 
   return (
@@ -63,11 +65,11 @@ export default async function BlogDetail({ params }: PageProps) {
           </Link>
 
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <Badge variant="blue">{post.category}</Badge>
+            {post.category && <Badge variant="blue">{post.category.name}</Badge>}
             {post.tags.map((tag) => (
-              <Badge key={tag} variant="gray">
+              <Badge key={tag.id} variant="gray">
                 <Tag className="mr-1 h-3 w-3" />
-                {tag}
+                {tag.name}
               </Badge>
             ))}
           </div>
@@ -88,13 +90,15 @@ export default async function BlogDetail({ params }: PageProps) {
                 />
                 <span className="font-medium text-slate-700">Doni Putra Purbawa</span>
               </div>
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3.5 w-3.5" />
-                {formatDate(post.publishedAt)}
-              </span>
+              {post.publishedAt && (
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3.5 w-3.5" />
+                  {formatDate(post.publishedAt)}
+                </span>
+              )}
               <span className="flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5" />
-                {post.readingTime} min read
+                {post.readingTimeMinutes} min read
               </span>
             </div>
             <button className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-slate-700">
@@ -123,11 +127,11 @@ export default async function BlogDetail({ params }: PageProps) {
         <div className="mt-10 flex flex-wrap gap-2 border-t border-slate-200 pt-6">
           {post.tags.map((tag) => (
             <Link
-              key={tag}
-              href={`/blogs?q=${encodeURIComponent(tag)}`}
+              key={tag.id}
+              href={`/blogs?q=${encodeURIComponent(tag.name)}`}
               className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-sm text-slate-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
             >
-              #{tag}
+              #{tag.name}
             </Link>
           ))}
         </div>
@@ -169,12 +173,12 @@ export default async function BlogDetail({ params }: PageProps) {
                   className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-blue-200 hover:shadow-sm"
                 >
                   <Badge variant="blue" className="mb-2">
-                    {related.category}
+                    {related.category?.name ?? "Article"}
                   </Badge>
                   <h3 className="text-sm font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2">
                     {related.title}
                   </h3>
-                  <p className="mt-1 text-xs text-slate-400">{related.readingTime} min read</p>
+                  <p className="mt-1 text-xs text-slate-400">{related.readingTimeMinutes} min read</p>
                 </Link>
               ))}
             </div>
@@ -182,7 +186,7 @@ export default async function BlogDetail({ params }: PageProps) {
         )}
 
         {/* Comments */}
-        <CommentSection postSlug={post.slug} postId={post.id} />
+        <CommentSection postSlug={post.slug} postId={post.id} initialComments={approvedComments} />
       </div>
     </div>
   );

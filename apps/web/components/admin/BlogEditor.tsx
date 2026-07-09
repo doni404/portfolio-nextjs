@@ -2,13 +2,23 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Eye, Send, FileText } from "lucide-react";
+import { ArrowLeft, Save, Eye, Send, FileText, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import type { BlogPost } from "@/lib/mock-data";
-import { categories } from "@/lib/mock-data";
+import type { BlogPost } from "@/lib/server-api";
+import { adminClient } from "@/lib/admin-api";
 import { Badge } from "@/components/ui/Badge";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { marked } from "marked";
+
+const blogCategories = [
+  { label: "Backend Engineering", slug: "backend-engineering" },
+  { label: "Cloud & DevOps", slug: "cloud-devops" },
+  { label: "Payment Systems", slug: "payment-systems" },
+  { label: "AI & LLM", slug: "ai-llm" },
+  { label: "Machine Learning", slug: "machine-learning" },
+  { label: "Career & Japan", slug: "career-japan" },
+  { label: "Tutorials", slug: "tutorials" },
+];
 
 interface BlogEditorProps {
   post?: BlogPost;
@@ -18,13 +28,12 @@ interface BlogFormData {
   title: string;
   slug: string;
   excerpt: string;
-  content: string;
-  category: string;
+  categorySlug: string;
   tags: string;
-  coverImage: string;
+  coverImageUrl: string;
   seoTitle: string;
   seoDescription: string;
-  readingTime: number;
+  readingTimeMinutes: number;
   featured: boolean;
   status: "draft" | "published" | "archived";
 }
@@ -42,24 +51,26 @@ function prepareInitialContent(content: string | undefined): string {
 }
 
 export function BlogEditor({ post }: BlogEditorProps) {
+
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState<"content" | "seo" | "preview">("content");
   const [editorContent, setEditorContent] = useState<string>(() =>
     prepareInitialContent(post?.content)
   );
+  const [saveError, setSaveError] = useState("");
 
-  const { register, handleSubmit, watch, setValue, getValues } = useForm<BlogFormData>({
+  const { register, handleSubmit, watch, setValue } = useForm<BlogFormData>({
     defaultValues: {
       title: post?.title ?? "",
       slug: post?.slug ?? "",
       excerpt: post?.excerpt ?? "",
-      content: post?.content ?? "",
-      category: post?.category ?? categories[0],
-      tags: post?.tags?.join(", ") ?? "",
-      coverImage: post?.coverImage ?? "",
+      categorySlug: post?.category?.slug ?? blogCategories[0].slug,
+      tags: post?.tags?.map((t) => t.name).join(", ") ?? "",
+      coverImageUrl: post?.coverImageUrl ?? "",
       seoTitle: post?.seoTitle ?? "",
       seoDescription: post?.seoDescription ?? "",
-      readingTime: post?.readingTime ?? 5,
+      readingTimeMinutes: post?.readingTimeMinutes ?? 5,
       featured: post?.featured ?? false,
       status: post?.status ?? "draft",
     },
@@ -78,11 +89,55 @@ export function BlogEditor({ post }: BlogEditorProps) {
 
   const onSubmit = async (data: BlogFormData) => {
     setSaving(true);
-    // Merge in the rich text editor HTML content
-    const payload = { ...data, content: editorContent };
-    await new Promise((r) => setTimeout(r, 800));
-    console.log("Save blog post:", payload);
-    setSaving(false);
+    setSaveError("");
+    try {
+      const tagNames = data.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const payload = {
+        title: data.title,
+        slug: data.slug,
+        excerpt: data.excerpt,
+        content: editorContent,
+        status: data.status,
+        featured: data.featured,
+        categorySlug: data.categorySlug,
+        tags: tagNames,
+        coverImageUrl: data.coverImageUrl || undefined,
+        seoTitle: data.seoTitle || undefined,
+        seoDescription: data.seoDescription || undefined,
+        readingTimeMinutes: data.readingTimeMinutes,
+      };
+
+      if (post) {
+        await adminClient.updateBlog(post.id, payload);
+      } else {
+        await adminClient.createBlog(payload);
+      }
+
+      // Hard navigation clears the Next.js router cache so the list always shows fresh data
+      window.location.href = "/admin/blogs";
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save post.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!post) return;
+    if (!confirm("Are you sure you want to delete this post? This action cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      await adminClient.deleteBlog(post.id);
+      window.location.href = "/admin/blogs";
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete post.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -134,6 +189,12 @@ export function BlogEditor({ post }: BlogEditorProps) {
         </div>
       </div>
 
+      {saveError && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {saveError}
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Main editor area */}
         <div className="lg:col-span-2 space-y-4">
@@ -177,10 +238,9 @@ export function BlogEditor({ post }: BlogEditorProps) {
             ))}
           </div>
 
-          {/* Content tab — rich text editor */}
+          {/* Content tab */}
           {activeTab === "content" && (
             <div className="space-y-4">
-              {/* Excerpt */}
               <div className="rounded-xl border border-slate-200 bg-white p-5">
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Excerpt
@@ -196,7 +256,6 @@ export function BlogEditor({ post }: BlogEditorProps) {
                 </p>
               </div>
 
-              {/* Rich text editor */}
               <div>
                 <div className="mb-2 flex items-center justify-between">
                   <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -246,12 +305,11 @@ export function BlogEditor({ post }: BlogEditorProps) {
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Cover Image URL</label>
                 <input
-                  {...register("coverImage")}
+                  {...register("coverImageUrl")}
                   type="url"
                   placeholder="https://… or /images/…"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
-                <p className="mt-1 text-xs text-slate-400">Used as OG image and article header.</p>
               </div>
 
               {/* SERP Preview */}
@@ -292,7 +350,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
                     <span>Doni Putra Purbawa</span>
                   </div>
                   <span>·</span>
-                  <span>{watch("readingTime")} min read</span>
+                  <span>{watch("readingTimeMinutes")} min read</span>
                 </div>
                 <div className="mt-6 border-t border-slate-100 pt-6">
                   {editorContent ? (
@@ -342,7 +400,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
                   Reading Time (minutes)
                 </label>
                 <input
-                  {...register("readingTime", { valueAsNumber: true })}
+                  {...register("readingTimeMinutes", { valueAsNumber: true })}
                   type="number"
                   min={1}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
@@ -358,11 +416,11 @@ export function BlogEditor({ post }: BlogEditorProps) {
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-slate-500">Category</label>
                 <select
-                  {...register("category")}
+                  {...register("categorySlug")}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none"
                 >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {blogCategories.map((cat) => (
+                    <option key={cat.slug} value={cat.slug}>{cat.label}</option>
                   ))}
                 </select>
               </div>
@@ -391,38 +449,18 @@ export function BlogEditor({ post }: BlogEditorProps) {
             </div>
           </div>
 
-          {/* Editor info */}
-          <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
-            <h3 className="mb-2 text-xs font-semibold text-blue-700">Editor Features</h3>
-            <ul className="space-y-1">
-              {[
-                "Headings H1–H3",
-                "Bold, italic, underline",
-                "Code & code blocks",
-                "Syntax highlighting",
-                "Bullet & numbered lists",
-                "Blockquotes",
-                "Links & images",
-                "Text alignment",
-                "Highlights",
-                "Horizontal rules",
-              ].map((f) => (
-                <li key={f} className="flex items-center gap-1.5 text-xs text-blue-700">
-                  <span className="h-1 w-1 rounded-full bg-blue-400" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-          </div>
-
+          {/* Danger zone */}
           {post && (
             <div className="rounded-xl border border-red-100 bg-red-50 p-5">
               <h3 className="mb-3 text-sm font-semibold text-red-700">Danger Zone</h3>
               <button
                 type="button"
-                className="w-full rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
               >
-                Delete Post
+                <Trash2 className="h-4 w-4" />
+                {deleting ? "Deleting…" : "Delete Post"}
               </button>
             </div>
           )}

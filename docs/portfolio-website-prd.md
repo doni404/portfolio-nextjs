@@ -29,8 +29,8 @@ The first version should be lightweight, fast, polished, and easy to maintain.
 - ORM and migration tool: Prisma.
 - Testing target: TestSprite, supported by local unit, integration, API, and E2E test commands.
 - CI/CD: GitHub Actions.
-- Deployment target: AWS EC2 t3.nano running Amazon Linux 2023.
-- Production database target: PostgreSQL installed on the same EC2 instance for the first deployment.
+- Deployment target: AWS EC2 t3.micro running Amazon Linux 2023 with Coolify.
+- Production database target: PostgreSQL managed by Coolify on the same EC2 instance for the first deployment.
 - GitHub repository: `https://github.com/doni404/portfolio-nextjs`.
 - CMS: simple custom admin CMS under `/admin`.
 - Blog comments: included in MVP with moderation.
@@ -586,18 +586,20 @@ Suggested starter blog posts:
 
 ### Deployment
 
-- Target server: AWS EC2 t3.nano.
+- Target server: AWS EC2 t3.micro.
+- Recommended server if budget allows: AWS EC2 t3.small.
 - Operating system: Amazon Linux 2023.
-- Frontend: Next.js served on the EC2 instance, preferably behind Nginx.
-- Backend: Express.js API served on the EC2 instance with a process manager such as PM2 or systemd.
-- Database: PostgreSQL installed on the same EC2 instance for the first deployment.
-- CI/CD: GitHub Actions runs quality checks and deploys to EC2 over SSH after successful `main` branch builds.
+- Deployment platform: Coolify.
+- Frontend: Next.js deployed as a Coolify application.
+- Backend: Express.js API deployed as a Coolify application.
+- Database: PostgreSQL managed by Coolify on the same EC2 instance for the first deployment.
+- CI/CD: GitHub Actions runs quality checks; Coolify handles production deployment from `main` or via deploy webhook.
 - Static assets: Next.js public directory for MVP; S3-compatible storage later if needed.
-- TLS: Nginx with Let's Encrypt certificate.
+- TLS: Coolify-managed reverse proxy and Let's Encrypt certificate.
 
 Important constraint:
 
-- t3.nano has very limited CPU and memory. It is acceptable for a personal MVP with low traffic, but the deployment must use conservative Node.js memory settings, swap space, log rotation, and simple monitoring. Upgrade to t3.micro or t3.small if builds, PostgreSQL, or runtime memory become unstable.
+- t3.micro is better than t3.nano, but still has only 1 GB RAM. Coolify's official minimum recommendation is 2 CPU cores, 2 GB RAM, and 30 GB storage, so the server should use swap and be monitored closely. Upgrade to t3.small if builds, PostgreSQL, or Coolify become unstable.
 
 ### Repository Shape
 
@@ -624,7 +626,9 @@ Additional planning docs:
 - SQL migration draft: `docs/db/001_initial_schema.sql`
 - Seed plan: `docs/db/seed-plan.md`
 - TestSprite plan: `docs/testing/testsprite-plan.md`
-- AWS EC2 deployment plan: `docs/deployment/aws-ec2-amazon-linux-2023.md`
+- Coolify AWS EC2 deployment plan: `docs/deployment/coolify-aws-ec2-amazon-linux-2023.md`
+- Coolify setup checklist: `docs/deployment/coolify-setup-steps.md`
+- Manual AWS EC2 fallback deployment plan: `docs/deployment/aws-ec2-amazon-linux-2023.md`
 - GitHub Actions CI/CD plan: `docs/ci-cd/github-actions-plan.md`
 
 ## 13. API Plan
@@ -1188,7 +1192,7 @@ Recommended stack:
 - Search: PostgreSQL full-text search for MVP.
 - Testing: TestSprite for generated/assisted product testing, plus local unit, integration, API, and E2E tests.
 - CI/CD: GitHub Actions for pull request checks and production deployment.
-- Deployment: AWS EC2 t3.nano with Amazon Linux 2023, Nginx, Node.js, Express.js, Next.js, PM2 or systemd, and local PostgreSQL.
+- Deployment: AWS EC2 t3.micro with Amazon Linux 2023, Coolify, Docker, Next.js, Express.js, and Coolify-managed PostgreSQL.
 - Analytics: Plausible, Umami, or Vercel Analytics.
 
 Recommended implementation approach:
@@ -1197,7 +1201,7 @@ Recommended implementation approach:
 - Build the backend as an Express.js JSON API.
 - Store portfolio, blog, comments, and contact data in PostgreSQL.
 - Use Prisma for database schema, migrations, generated client, and seed scripts.
-- Use GitHub Actions for CI/CD with PR checks, build verification, Prisma migrations, EC2 deployment, and smoke checks.
+- Use GitHub Actions for CI checks and build verification; use Coolify for deployment, Prisma migrations, environment variables, HTTPS, and container lifecycle.
 - Build a simple custom `/admin` CMS instead of using a heavy external CMS.
 - Add comment moderation endpoints early because comments are part of MVP.
 - Prepare a TestSprite-friendly test specification from the PRD and API contract.
@@ -1235,7 +1239,7 @@ The website is ready for launch when:
 - PostgreSQL schema, migrations, and seed data are available.
 - Prisma schema and seed workflow are available.
 - TestSprite test plan is prepared.
-- AWS EC2 deployment plan is prepared for Amazon Linux 2023.
+- Coolify AWS EC2 deployment plan is prepared for Amazon Linux 2023.
 - GitHub Actions CI/CD plan is prepared.
 - At least 5 blog posts and 3 project case studies are published.
 - The homepage clearly communicates Doni's role and focus within the first viewport.
@@ -1261,8 +1265,8 @@ The website is ready for launch when:
 - ORM and migrations should use Prisma.
 - Testing should include TestSprite.
 - CI/CD should use GitHub Actions.
-- Deployment should target AWS EC2 t3.nano with Amazon Linux 2023.
-- First production database can be PostgreSQL installed on the same EC2 instance.
+- Deployment should target AWS EC2 t3.micro with Amazon Linux 2023 and Coolify.
+- First production database can be PostgreSQL managed by Coolify on the same EC2 instance.
 - Canonical GitHub repository is `doni404/portfolio-nextjs`.
 - Content should be managed by a simple custom CMS under `/admin`.
 - Admin blog editor uses TipTap rich text editor (WYSIWYG), not plain Markdown.
@@ -1273,5 +1277,5 @@ The website is ready for launch when:
 
 - Besides the portfolio repository, which GitHub repositories should be public-facing on the website?
 - Should email notifications be sent for new comments and contact submissions?
-- Should the EC2 deployment use PM2 or systemd for Node.js process management?
+- Should production use separate API subdomain `api.doniputra.com` or same-domain routing under `doniputra.com/api`?
 - Should admin content editing use plain Markdown textarea first, or a richer editor like TipTap later? **Resolved: TipTap rich text editor implemented in MVP.**

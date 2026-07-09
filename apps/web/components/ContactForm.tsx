@@ -25,12 +25,26 @@ export function ContactForm() {
 
   const onSubmit = async (data: ContactFormData) => {
     setSubmitting(true);
-    // Simulate API call to POST /api/contact
-    await new Promise((r) => setTimeout(r, 1000));
-    console.log("Contact form submitted:", data);
-    setSubmitting(false);
-    setSubmitted(true);
-    reset();
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"}/api/contact`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        }
+      );
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json?.error?.message ?? "Failed to send message.");
+      }
+      setSubmitted(true);
+      reset();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (submitted) {

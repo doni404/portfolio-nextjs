@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import type { Comment } from "@/lib/mock-data";
+import type { AdminComment } from "@/lib/server-api";
+import { adminClient } from "@/lib/admin-api";
 import { Badge } from "@/components/ui/Badge";
 import { CheckCircle, XCircle, AlertTriangle, Trash2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 interface Props {
-  comment: Comment;
+  comment: AdminComment;
 }
 
 const statusVariants: Record<string, "green" | "yellow" | "red" | "gray"> = {
@@ -20,13 +21,34 @@ const statusVariants: Record<string, "green" | "yellow" | "red" | "gray"> = {
 export function CommentModerationRow({ comment }: Props) {
   const [status, setStatus] = useState(comment.status);
   const [actioning, setActioning] = useState(false);
+  const [deleted, setDeleted] = useState(false);
 
-  async function doAction(newStatus: Comment["status"]) {
+  async function doAction(newStatus: AdminComment["status"]) {
     setActioning(true);
-    await new Promise((r) => setTimeout(r, 400));
-    setStatus(newStatus);
-    setActioning(false);
+    try {
+      await adminClient.updateCommentStatus(comment.id, newStatus);
+      setStatus(newStatus);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Action failed.");
+    } finally {
+      setActioning(false);
+    }
   }
+
+  async function doDelete() {
+    if (!confirm("Delete this comment permanently?")) return;
+    setActioning(true);
+    try {
+      await adminClient.deleteComment(comment.id);
+      setDeleted(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Delete failed.");
+    } finally {
+      setActioning(false);
+    }
+  }
+
+  if (deleted) return null;
 
   return (
     <div
@@ -41,10 +63,12 @@ export function CommentModerationRow({ comment }: Props) {
               {comment.authorName.charAt(0)}
             </div>
             <span className="font-medium text-slate-900">{comment.authorName}</span>
+            <span className="text-xs text-slate-400">{comment.authorEmail}</span>
             <Badge variant={statusVariants[status] ?? "gray"}>{status}</Badge>
           </div>
           <p className="mt-0.5 text-xs text-slate-400">
-            On: <span className="font-medium text-slate-600">{comment.postTitle}</span>
+            On:{" "}
+            <span className="font-medium text-slate-600">{comment.blogPost?.title}</span>
             {" · "}
             {formatDate(comment.createdAt)}
           </p>
@@ -84,8 +108,10 @@ export function CommentModerationRow({ comment }: Props) {
             </button>
           )}
           <button
-            className="rounded-lg border border-slate-200 p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-            title="Delete"
+            onClick={doDelete}
+            disabled={actioning}
+            className="rounded-lg border border-slate-200 p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+            title="Delete permanently"
           >
             <Trash2 className="h-4 w-4" />
           </button>

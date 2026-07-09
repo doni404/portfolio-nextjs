@@ -4,16 +4,43 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
-import type { Project } from "@/lib/mock-data";
+import type { Project } from "@/lib/server-api";
+import { adminClient } from "@/lib/admin-api";
+
+const projectCategories = [
+  { label: "Backend Engineering", slug: "backend-engineering" },
+  { label: "Payment Systems", slug: "payment-systems" },
+  { label: "Cloud & DevOps", slug: "cloud-devops" },
+  { label: "AI/LLM Applications", slug: "ai-llm-applications" },
+  { label: "Machine Learning", slug: "machine-learning" },
+];
 
 interface ProjectEditorProps {
   project?: Project;
 }
 
-export function ProjectEditor({ project }: ProjectEditorProps) {
-  const [saving, setSaving] = useState(false);
+interface ProjectFormData {
+  title: string;
+  slug: string;
+  summary: string;
+  problem: string;
+  solution: string;
+  role: string;
+  outcome: string;
+  stack: string;
+  year: number;
+  categorySlug: string;
+  featured: boolean;
+  status: "published" | "draft" | "archived";
+}
 
-  const { register, handleSubmit } = useForm({
+export function ProjectEditor({ project }: ProjectEditorProps) {
+
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [saveError, setSaveError] = useState("");
+
+  const { register, handleSubmit } = useForm<ProjectFormData>({
     defaultValues: {
       title: project?.title ?? "",
       slug: project?.slug ?? "",
@@ -24,17 +51,62 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
       outcome: project?.outcome ?? "",
       stack: project?.stack?.join(", ") ?? "",
       year: project?.year ?? new Date().getFullYear(),
-      category: project?.category ?? "",
+      categorySlug: project?.category?.slug ?? projectCategories[0].slug,
       featured: project?.featured ?? false,
-      status: project?.status ?? "draft",
+      status: (project?.status as "published" | "draft" | "archived") ?? "draft",
     },
   });
 
-  const onSubmit = async (data: Record<string, unknown>) => {
+  const onSubmit = async (data: ProjectFormData) => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    console.log("Save project:", data);
-    setSaving(false);
+    setSaveError("");
+    try {
+      const stackArray = data.stack
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const payload = {
+        title: data.title,
+        slug: data.slug,
+        summary: data.summary,
+        problem: data.problem || undefined,
+        solution: data.solution || undefined,
+        role: data.role || undefined,
+        outcome: data.outcome || undefined,
+        stack: stackArray,
+        year: data.year,
+        categorySlug: data.categorySlug,
+        featured: data.featured,
+        status: data.status,
+      };
+
+      if (project) {
+        await adminClient.updateProject(project.id, payload);
+      } else {
+        await adminClient.createProject(payload);
+      }
+
+      window.location.href = "/admin/projects";
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : "Failed to save project.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!project) return;
+    if (!confirm("Are you sure you want to delete this project? This action cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      await adminClient.deleteProject(project.id);
+      window.location.href = "/admin/projects";
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete project.");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -44,11 +116,21 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
           <ArrowLeft className="h-4 w-4" /> Back to projects
         </Link>
         <div className="flex gap-2">
-          <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          >
             <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Project"}
           </button>
         </div>
       </div>
+
+      {saveError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {saveError}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
@@ -79,15 +161,15 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
           <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
             <h2 className="text-sm font-semibold text-slate-700">Case Study</h2>
             {[
-              { name: "problem", label: "Problem", placeholder: "What was the challenge or requirement?" },
-              { name: "solution", label: "Solution", placeholder: "How did you solve it?" },
-              { name: "role", label: "My Role / Contribution", placeholder: "What was your specific responsibility?" },
-              { name: "outcome", label: "Outcome / Result", placeholder: "What was the measurable impact?" },
+              { name: "problem" as const, label: "Problem", placeholder: "What was the challenge or requirement?" },
+              { name: "solution" as const, label: "Solution", placeholder: "How did you solve it?" },
+              { name: "role" as const, label: "My Role / Contribution", placeholder: "What was your specific responsibility?" },
+              { name: "outcome" as const, label: "Outcome / Result", placeholder: "What was the measurable impact?" },
             ].map(({ name, label, placeholder }) => (
               <div key={name}>
                 <label className="mb-1 block text-xs font-medium text-slate-500">{label}</label>
                 <textarea
-                  {...register(name as keyof ReturnType<typeof useForm>["register"])}
+                  {...register(name)}
                   rows={3}
                   placeholder={placeholder}
                   className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -115,12 +197,10 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Category</label>
-              <select {...register("category")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none">
-                <option value="Backend Engineering">Backend Engineering</option>
-                <option value="Payment Systems">Payment Systems</option>
-                <option value="Cloud & DevOps">Cloud & DevOps</option>
-                <option value="AI/LLM Applications">AI/LLM Applications</option>
-                <option value="Machine Learning">Machine Learning</option>
+              <select {...register("categorySlug")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none">
+                {projectCategories.map((cat) => (
+                  <option key={cat.slug} value={cat.slug}>{cat.label}</option>
+                ))}
               </select>
             </div>
             <div className="flex items-center gap-2">
@@ -132,8 +212,14 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
           {project && (
             <div className="rounded-xl border border-red-100 bg-red-50 p-5">
               <h3 className="mb-3 text-sm font-semibold text-red-700">Danger Zone</h3>
-              <button type="button" className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
-                <Trash2 className="h-4 w-4" /> Delete Project
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-300 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                {deleting ? "Deleting…" : "Delete Project"}
               </button>
             </div>
           )}

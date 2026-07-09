@@ -1,7 +1,8 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   FileText,
@@ -17,53 +18,33 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  {
-    href: "/admin",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    href: "/admin/blogs",
-    label: "Blog Posts",
-    icon: FileText,
-  },
-  {
-    href: "/admin/projects",
-    label: "Projects",
-    icon: FolderKanban,
-  },
-  {
-    href: "/admin/experiences",
-    label: "Experience",
-    icon: Briefcase,
-  },
-  {
-    href: "/admin/comments",
-    label: "Comments",
-    icon: MessageSquare,
-    badge: 2,
-  },
-  {
-    href: "/admin/contact-submissions",
-    label: "Contact",
-    icon: Mail,
-    badge: 2,
-  },
-  {
-    href: "/admin/assets",
-    label: "Assets",
-    icon: ImageIcon,
-  },
-  {
-    href: "/admin/settings",
-    label: "Settings",
-    icon: Settings,
-  },
+const navItems: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { href: "/admin",                    label: "Dashboard",  icon: LayoutDashboard },
+  { href: "/admin/blogs",              label: "Blog Posts", icon: FileText },
+  { href: "/admin/projects",           label: "Projects",   icon: FolderKanban },
+  { href: "/admin/experiences",        label: "Experience", icon: Briefcase },
+  { href: "/admin/comments",           label: "Comments",   icon: MessageSquare },
+  { href: "/admin/contact-submissions",label: "Contact",    icon: Mail },
+  { href: "/admin/assets",             label: "Assets",     icon: ImageIcon },
+  { href: "/admin/settings",           label: "Settings",   icon: Settings },
 ];
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000"}/api/admin/auth/logout`,
+        { method: "POST", credentials: "include" }
+      );
+    } catch {
+      // ignore
+    }
+    router.push("/admin/login");
+    router.refresh();
+  }
 
   return (
     <aside className="flex h-full w-60 flex-col border-r border-slate-200 bg-white">
@@ -81,7 +62,7 @@ export function AdminSidebar() {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-3 py-4">
         <ul className="space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon, badge }) => {
+          {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
               href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
             return (
@@ -99,15 +80,7 @@ export function AdminSidebar() {
                     <Icon className="h-4 w-4" />
                     {label}
                   </span>
-                  <span className="flex items-center gap-1.5">
-                    {badge ? (
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
-                        {badge}
-                      </span>
-                    ) : isActive ? (
-                      <ChevronRight className="h-4 w-4" />
-                    ) : null}
-                  </span>
+                  {isActive && <ChevronRight className="h-4 w-4" />}
                 </Link>
               </li>
             );
@@ -128,12 +101,12 @@ export function AdminSidebar() {
             <p className="truncate text-xs text-slate-400">Owner</p>
           </div>
         </div>
-        <Link
-          href="/admin/login"
+        <button
+          onClick={handleLogout}
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
         >
           <LogOut className="h-4 w-4" /> Sign Out
-        </Link>
+        </button>
       </div>
     </aside>
   );
