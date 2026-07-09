@@ -9,6 +9,14 @@ import { requireAuth } from "../../middleware/auth";
 
 const router = Router();
 
+const cookieDomain = process.env.COOKIE_DOMAIN;
+const authCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  ...(cookieDomain ? { domain: cookieDomain } : {}),
+};
+
 // POST /api/admin/auth/login
 router.post("/login", async (req, res, next) => {
   try {
@@ -40,11 +48,8 @@ router.post("/login", async (req, res, next) => {
       { expiresIn } as jwt.SignOptions
     );
 
-    const isProduction = process.env.NODE_ENV === "production";
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? "strict" : "lax",
+      ...authCookieOptions,
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -111,7 +116,7 @@ router.patch("/password", requireAuth, async (req, res, next) => {
 
 // POST /api/admin/auth/logout
 router.post("/logout", (_req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", authCookieOptions);
   return res.json({ data: { message: "Logged out successfully" } });
 });
 
