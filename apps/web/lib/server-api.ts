@@ -167,6 +167,8 @@ export type Project = {
   links: { label: string; url: string }[];
   category?: Category;
   tags: Tag[];
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type Experience = {

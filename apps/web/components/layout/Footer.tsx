@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Mail, Code2 } from "lucide-react";
+import { Mail } from "lucide-react";
+import { BrandMark } from "@/components/brand/BrandMark";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -11,9 +12,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-                <Code2 className="h-4 w-4 text-white" />
-              </div>
+              <BrandMark className="h-8 w-8" />
               <span className="font-semibold text-slate-900">Doni Putra Purbawa</span>
             </Link>
             <p className="mt-3 max-w-sm text-sm text-slate-500">

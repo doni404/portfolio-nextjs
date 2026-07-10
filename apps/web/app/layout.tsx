@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { buildMetadata, siteConfig } from "@/lib/metadata";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,12 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  ...buildMetadata(),
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Doni Putra Purbawa — Senior Backend Engineer",
-    template: "%s | Doni Putra Purbawa",
+    default: siteConfig.title,
+    template: `%s | ${siteConfig.name}`,
   },
-  description:
-    "Senior Backend Engineer specializing in fintech, cloud infrastructure, microservices, and AI-powered systems. Based in Indonesia, open to Japan opportunities.",
   keywords: [
     "Senior Backend Engineer",
     "Fintech Backend Engineer",
@@ -29,27 +30,8 @@ export const metadata: Metadata = {
     "AI Backend Engineer",
     "LLM Integration",
   ],
-  authors: [{ name: "Doni Putra Purbawa" }],
-  creator: "Doni Putra Purbawa",
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://doniputrapurbawa.com",
-    siteName: "Doni Putra Purbawa",
-    title: "Doni Putra Purbawa — Senior Backend Engineer",
-    description:
-      "Senior Backend Engineer specializing in fintech, cloud infrastructure, microservices, and AI-powered systems.",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Doni Putra Purbawa — Senior Backend Engineer",
-    description:
-      "Senior Backend Engineer specializing in fintech, cloud infrastructure, microservices, and AI-powered systems.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  authors: [{ name: siteConfig.name }],
+  creator: siteConfig.creator,
 };
 
 export default function RootLayout({

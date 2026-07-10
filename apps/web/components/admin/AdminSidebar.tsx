@@ -13,9 +13,9 @@ import {
   ImageIcon,
   Settings,
   LogOut,
-  Code2,
   ChevronRight,
 } from "lucide-react";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { cn } from "@/lib/utils";
 
 const navItems: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -50,9 +50,7 @@ export function AdminSidebar() {
     <aside className="flex h-full w-60 flex-col border-r border-slate-200 bg-white">
       {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-          <Code2 className="h-4 w-4 text-white" />
-        </div>
+        <BrandMark className="h-8 w-8" />
         <div>
           <p className="text-sm font-semibold text-slate-900">Admin CMS</p>
           <p className="text-xs text-slate-400">Doni Putra Portfolio</p>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { LoginForm } from "@/components/admin/LoginForm";
-import { Code2, Shield } from "lucide-react";
+import { BrandMark } from "@/components/brand/BrandMark";
+import { Shield } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Admin Login",
@@ -14,14 +16,14 @@ export default function AdminLogin() {
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center">
           <div className="relative mb-4">
-            <img
+            <Image
               src="/profile.png"
               alt="Doni Putra Purbawa"
+              width={64}
+              height={64}
               className="h-16 w-16 rounded-2xl object-cover shadow-lg ring-2 ring-blue-100"
             />
-            <div className="absolute -bottom-1.5 -right-1.5 flex h-6 w-6 items-center justify-center rounded-lg bg-blue-600 shadow">
-              <Code2 className="h-3.5 w-3.5 text-white" />
-            </div>
+            <BrandMark className="absolute -bottom-1.5 -right-1.5 h-7 w-7 ring-2 ring-white" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Admin CMS</h1>
           <p className="mt-1 text-sm text-slate-500">Doni Putra Portfolio</p>

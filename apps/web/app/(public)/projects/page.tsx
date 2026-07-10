@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import { publicApi } from "@/lib/server-api";
+import { buildMetadata } from "@/lib/metadata";
 import { Badge } from "@/components/ui/Badge";
 import { ExternalLink } from "lucide-react";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Projects",
   description:
     "Case studies from Doni Putra Purbawa — payment systems, microservices, AI applications, and machine learning projects.",
-};
+  path: "/projects",
+  imageTitle: "Backend & AI Projects",
+  imageDescription: "Selected case studies in payment systems, microservices, AI applications, and machine learning.",
+});
 
 const categoryColors: Record<string, "blue" | "green" | "purple" | "yellow" | "red" | "gray"> = {
   "Payment Systems": "purple",
@@ -19,7 +23,14 @@ const categoryColors: Record<string, "blue" | "green" | "purple" | "yellow" | "r
 
 export default async function Projects() {
   const res = await publicApi.getProjects({ pageSize: "50" });
-  const publishedProjects = res?.data ?? [];
+  const publishedProjects = [...(res?.data ?? [])].sort((a, b) => {
+    const yearDiff = (b.year ?? 0) - (a.year ?? 0);
+    if (yearDiff !== 0) return yearDiff;
+
+    const bDate = new Date(b.updatedAt ?? b.createdAt).getTime();
+    const aDate = new Date(a.updatedAt ?? a.createdAt).getTime();
+    return bDate - aDate;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">

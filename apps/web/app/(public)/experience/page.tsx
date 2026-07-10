@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import { MapPin, Calendar } from "lucide-react";
 import { publicApi } from "@/lib/server-api";
+import { buildMetadata } from "@/lib/metadata";
 import { formatDateShort } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Experience",
   description:
     "Career timeline of Doni Putra Purbawa — Backend Engineering Manager, Cloud Architect, and Machine Learning Engineer.",
-};
+  path: "/experience",
+  imageTitle: "Engineering Experience",
+  imageDescription: "Career timeline across backend engineering, cloud architecture, fintech, and machine learning.",
+});
 
 export default async function Experience() {
   const res = await publicApi.getExperiences();

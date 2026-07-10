@@ -2,15 +2,19 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Calendar, Clock, Search } from "lucide-react";
 import { publicApi } from "@/lib/server-api";
+import { buildMetadata } from "@/lib/metadata";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { BlogSearch } from "@/components/blog/BlogSearch";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Blog",
   description:
     "Technical articles by Doni Putra Purbawa on backend engineering, cloud infrastructure, payment systems, AI, and machine learning.",
-};
+  path: "/blogs",
+  imageTitle: "Technical Blog",
+  imageDescription: "Backend engineering, cloud infrastructure, payment systems, AI, and machine learning notes.",
+});
 
 const categories = [
   "Backend Engineering",

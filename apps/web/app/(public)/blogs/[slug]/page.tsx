@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, Clock, Tag, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Tag } from "lucide-react";
 import { marked } from "marked";
 import { publicApi } from "@/lib/server-api";
+import { buildMetadata } from "@/lib/metadata";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { CommentSection } from "@/components/blog/CommentSection";
+import { ShareButton } from "@/components/blog/ShareButton";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -16,19 +19,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const res = await publicApi.getBlog(slug);
   const post = res?.data;
-  if (!post) return { title: "Not Found" };
-  return {
+  if (!post) {
+    return buildMetadata({
+      title: "Article Not Found",
+      description: "The requested blog article could not be found.",
+      path: `/blogs/${slug}`,
+      noIndex: true,
+    });
+  }
+
+  const description = post.seoDescription ?? post.excerpt;
+  return buildMetadata({
     title: post.seoTitle ?? post.title,
-    description: post.seoDescription ?? post.excerpt,
-    openGraph: {
-      title: post.title,
-      description: post.excerpt,
-      type: "article",
-      publishedTime: post.publishedAt,
-      modifiedTime: post.updatedAt,
-      tags: post.tags.map((t) => t.name),
-    },
-  };
+    description,
+    path: `/blogs/${post.slug}`,
+    imageTitle: post.title,
+    imageDescription: description,
+    type: "article",
+    publishedTime: post.publishedAt,
+    modifiedTime: post.updatedAt,
+    tags: post.tags.map((t) => t.name),
+  });
 }
 
 
@@ -79,31 +90,35 @@ export default async function BlogDetail({ params }: PageProps) {
           </h1>
           <p className="mt-3 text-lg text-slate-500">{post.excerpt}</p>
 
-          <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-4 text-sm text-slate-500">
-              {/* Author */}
-              <div className="flex items-center gap-2">
-                <img
-                  src="/profile.png"
-                  alt="Doni Putra Purbawa"
-                  className="h-8 w-8 rounded-full object-cover"
-                />
-                <span className="font-medium text-slate-700">Doni Putra Purbawa</span>
-              </div>
+          <div className="mt-5 grid gap-3 text-sm text-slate-500 sm:flex sm:items-center sm:justify-between sm:gap-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <Image
+                src="/profile.png"
+                alt="Doni Putra Purbawa"
+                width={32}
+                height={32}
+                className="h-8 w-8 flex-shrink-0 rounded-full object-cover"
+              />
+              <span className="truncate font-medium text-slate-700">Doni Putra Purbawa</span>
+            </div>
+
+            <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 text-[13px] min-[380px]:text-sm sm:flex sm:gap-4">
               {post.publishedAt && (
-                <span className="flex items-center gap-1">
+                <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
                   <Calendar className="h-3.5 w-3.5" />
-                  {formatDate(post.publishedAt)}
+                  <span className="truncate">{formatDate(post.publishedAt)}</span>
                 </span>
               )}
-              <span className="flex items-center gap-1">
+              <span className="inline-flex min-w-0 items-center gap-1 whitespace-nowrap">
                 <Clock className="h-3.5 w-3.5" />
-                {post.readingTimeMinutes} min read
+                <span className="truncate">{post.readingTimeMinutes} min read</span>
               </span>
+              <ShareButton
+                title={post.title}
+                text={post.excerpt}
+                className="justify-self-start text-slate-400 hover:text-slate-700"
+              />
             </div>
-            <button className="inline-flex items-center gap-1 text-sm text-slate-400 hover:text-slate-700">
-              <Share2 className="h-4 w-4" /> Share
-            </button>
           </div>
         </div>
       </div>
@@ -139,9 +154,11 @@ export default async function BlogDetail({ params }: PageProps) {
         {/* Author bio */}
         <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-6">
           <div className="flex items-start gap-4">
-            <img
+            <Image
               src="/profile.png"
               alt="Doni Putra Purbawa"
+              width={56}
+              height={56}
               className="h-14 w-14 flex-shrink-0 rounded-xl object-cover"
             />
             <div>

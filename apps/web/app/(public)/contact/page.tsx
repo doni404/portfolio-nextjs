@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { Mail, MapPin, Send } from "lucide-react";
+import { buildMetadata } from "@/lib/metadata";
 import { ContactForm } from "@/components/ContactForm";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Contact",
   description:
     "Get in touch with Doni Putra Purbawa — open to backend engineering roles, consulting, and technical discussions.",
-};
+  path: "/contact",
+  imageTitle: "Contact Doni Putra",
+  imageDescription: "Open to senior backend engineering roles, consulting, and technical discussions.",
+});
 
 export default function Contact() {
   return (

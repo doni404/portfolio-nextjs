@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -11,8 +12,18 @@ import {
   Clock,
 } from "lucide-react";
 import { publicApi } from "@/lib/server-api";
+import { buildMetadata } from "@/lib/metadata";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
+
+export const metadata: Metadata = buildMetadata({
+  title: "Senior Backend Engineer",
+  description:
+    "Portfolio of Doni Putra Purbawa, Senior Backend Engineer building fintech systems, cloud infrastructure, and AI-powered backend applications.",
+  path: "/",
+  imageTitle: "Doni Putra Purbawa",
+  imageDescription: "Senior Backend Engineer for fintech, cloud, microservices, and AI systems.",
+});
 
 const expertise = [
   {

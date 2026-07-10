@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import { Download, MapPin, BookOpen, Award, GraduationCap } from "lucide-react";
+import { buildMetadata } from "@/lib/metadata";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "About",
   description:
     "Learn about Doni Putra Purbawa — Senior Backend Engineer with expertise in fintech, cloud infrastructure, and AI systems.",
-};
+  path: "/about",
+  imageTitle: "About Doni Putra Purbawa",
+  imageDescription: "Backend engineering, fintech systems, cloud infrastructure, and AI experience.",
+});
 
 const skills = [
   {

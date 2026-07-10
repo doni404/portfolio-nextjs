@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, X, Code2 } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { AdminSidebar } from "./AdminSidebar";
 
 export function AdminMobileHeader() {
@@ -11,9 +12,7 @@ export function AdminMobileHeader() {
     <>
       <div className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600">
-            <Code2 className="h-3.5 w-3.5 text-white" />
-          </div>
+          <BrandMark className="h-7 w-7" />
           <span className="text-sm font-semibold text-slate-900">Admin CMS</span>
         </div>
         <button

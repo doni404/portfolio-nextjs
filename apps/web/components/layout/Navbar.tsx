@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, X, Code2 } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import { BrandMark } from "@/components/brand/BrandMark";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -27,9 +28,7 @@ export function Navbar() {
           href="/"
           className="flex items-center gap-2 text-slate-900 transition-opacity hover:opacity-75"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-            <Code2 className="h-4 w-4 text-white" />
-          </div>
+          <BrandMark className="h-8 w-8" />
           <span className="font-semibold text-slate-900">Doni Putra</span>
         </Link>
 
