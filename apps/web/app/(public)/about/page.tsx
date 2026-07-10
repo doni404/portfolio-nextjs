@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/Card";
 export const metadata: Metadata = buildMetadata({
   title: "About",
   description:
-    "Learn about Doni Putra Purbawa — Cloud Architect and Senior Backend Engineer with expertise in AWS, fintech platforms, and AI systems.",
+    "Learn about Doni Putra Purbawa — Cloud Architect & Senior Backend Engineer focused on AWS, fintech, cloud platforms, and AI systems.",
   path: "/about",
   imageTitle: "About Doni Putra Purbawa",
-  imageDescription: "Cloud architecture, backend engineering, fintech systems, and AI experience.",
+  imageDescription: "Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI",
 });
 
 const skills = [
@@ -134,7 +134,7 @@ export default function About() {
                 Doni Putra Purbawa
               </h1>
               <p className="mt-1 text-lg font-medium text-blue-600">
-                Cloud Architect & Senior Backend Engineer
+                Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
                 <span className="flex items-center gap-1">

@@ -162,7 +162,9 @@ export function GET(request: Request) {
               fontWeight: 700,
             }}
           >
-            <div style={{ display: "flex" }}>Cloud Architecture | Backend Platforms | Fintech | AI</div>
+            <div style={{ display: "flex" }}>
+              Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI
+            </div>
             <div style={{ display: "flex" }}>doniputra.com</div>
           </div>
         </div>

@@ -17,12 +17,12 @@ import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Cloud Architect & Senior Backend Engineer",
+  title: "Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI",
   description:
-    "Portfolio of Doni Putra Purbawa, Cloud Architect and Senior Backend Engineer building AWS infrastructure, fintech platforms, and AI-powered backend systems.",
+    "Portfolio of Doni Putra Purbawa, Cloud Architect & Senior Backend Engineer for AWS, fintech, cloud platforms, and AI-powered systems.",
   path: "/",
   imageTitle: "Doni Putra Purbawa",
-  imageDescription: "Cloud Architect and Senior Backend Engineer for AWS, fintech, microservices, and AI systems.",
+  imageDescription: "Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI",
 });
 
 const expertise = [
@@ -105,7 +105,7 @@ export default async function Home() {
               Doni Putra Purbawa
             </h1>
             <p className="mt-3 text-xl font-medium text-blue-600 sm:text-2xl">
-              Cloud Architect & Senior Backend Engineer
+              Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI
             </p>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">
               Designing AWS cloud architecture and reliable backend platforms for fintech, SaaS,
