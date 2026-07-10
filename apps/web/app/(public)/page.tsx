@@ -17,28 +17,28 @@ import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Senior Backend Engineer",
+  title: "Cloud Architect & Senior Backend Engineer",
   description:
-    "Portfolio of Doni Putra Purbawa, Senior Backend Engineer building fintech systems, cloud infrastructure, and AI-powered backend applications.",
+    "Portfolio of Doni Putra Purbawa, Cloud Architect and Senior Backend Engineer building AWS infrastructure, fintech platforms, and AI-powered backend systems.",
   path: "/",
   imageTitle: "Doni Putra Purbawa",
-  imageDescription: "Senior Backend Engineer for fintech, cloud, microservices, and AI systems.",
+  imageDescription: "Cloud Architect and Senior Backend Engineer for AWS, fintech, microservices, and AI systems.",
 });
 
 const expertise = [
   {
-    icon: Server,
-    title: "Backend Architecture",
+    icon: Cloud,
+    title: "Cloud Architecture",
     description:
-      "Designing scalable REST APIs and microservices with Node.js, Java, Golang, and gRPC for production systems.",
-    color: "text-blue-600 bg-blue-50",
+      "Designing AWS production environments with EC2, RDS, S3, CloudFront, IAM, observability, and CI/CD foundations.",
+    color: "text-emerald-600 bg-emerald-50",
   },
   {
-    icon: Cloud,
-    title: "Cloud Infrastructure",
+    icon: Server,
+    title: "Backend Platforms",
     description:
-      "AWS production infrastructure: EC2 Auto Scaling, RDS, S3, CloudFront, IAM, and CI/CD with GitHub Actions.",
-    color: "text-emerald-600 bg-emerald-50",
+      "Building scalable REST APIs, microservices, and gRPC services with Node.js, Java, Golang, and PostgreSQL.",
+    color: "text-blue-600 bg-blue-50",
   },
   {
     icon: CreditCard,
@@ -57,9 +57,10 @@ const expertise = [
 ];
 
 const highlights = [
-  "6+ years backend engineering experience",
+  "Cloud architecture for production SaaS workloads on AWS",
+  "6+ years backend and platform engineering experience",
+  "Hands-on infrastructure design across EC2, RDS, S3, CloudFront, IAM, and CI/CD",
   "Payment gateway integrations across 4 providers",
-  "AWS production infrastructure for SaaS products",
   "LLM integrations and ML research published in Q1 journal",
   "Engineering Manager leading a team of 6 engineers",
   "Open to Japan relocation — JLPT N4",
@@ -104,11 +105,12 @@ export default async function Home() {
               Doni Putra Purbawa
             </h1>
             <p className="mt-3 text-xl font-medium text-blue-600 sm:text-2xl">
-              Senior Backend Engineer
+              Cloud Architect & Senior Backend Engineer
             </p>
             <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">
-              Building reliable fintech systems, cloud infrastructure, and AI-powered backends.
-              6+ years turning complex requirements into production-grade software.
+              Designing AWS cloud architecture and reliable backend platforms for fintech, SaaS,
+              and AI-powered products. 6+ years turning complex requirements into production-grade
+              systems.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -141,7 +143,7 @@ export default async function Home() {
           <div className="mb-10 text-center">
             <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">Core Expertise</h2>
             <p className="mt-2 text-slate-500">
-              Focused on the backend systems that power modern products
+              Focused on cloud architecture, backend platforms, and production reliability
             </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -293,9 +295,9 @@ export default async function Home() {
             <div className="flex flex-col justify-center rounded-2xl border border-blue-100 bg-blue-50 p-8">
               <h3 className="text-xl font-bold text-slate-900">Open to Opportunities</h3>
               <p className="mt-3 text-slate-600">
-                I&apos;m available for senior backend, cloud, or AI engineering roles — remote or
-                relocating to Japan. Let&apos;s talk about how I can help your team ship reliable
-                systems.
+                I&apos;m available for cloud architect, senior backend, or platform engineering
+                roles — remote or relocating to Japan. Let&apos;s talk about how I can help your
+                team design and ship reliable systems.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link

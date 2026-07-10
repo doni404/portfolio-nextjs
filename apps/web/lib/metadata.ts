@@ -3,9 +3,9 @@ import type { Metadata } from "next";
 export const siteConfig = {
   name: "Doni Putra Purbawa",
   shortName: "Doni Putra",
-  title: "Doni Putra Purbawa - Senior Backend Engineer",
+  title: "Doni Putra Purbawa - Cloud Architect & Senior Backend Engineer",
   description:
-    "Senior Backend Engineer specializing in fintech, cloud infrastructure, microservices, and AI-powered systems. Based in Indonesia, open to Japan opportunities.",
+    "Cloud Architect and Senior Backend Engineer specializing in AWS infrastructure, scalable backend platforms, fintech systems, and AI-powered applications. Based in Indonesia, open to Japan opportunities.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://doniputra.com",
   creator: "Doni Putra Purbawa",
   email: "doniputrapurbawa@gmail.com",

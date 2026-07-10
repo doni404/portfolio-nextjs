@@ -6,10 +6,10 @@ import { ContactForm } from "@/components/ContactForm";
 export const metadata: Metadata = buildMetadata({
   title: "Contact",
   description:
-    "Get in touch with Doni Putra Purbawa — open to backend engineering roles, consulting, and technical discussions.",
+    "Get in touch with Doni Putra Purbawa — open to cloud architect, platform engineering, backend engineering, and consulting opportunities.",
   path: "/contact",
   imageTitle: "Contact Doni Putra",
-  imageDescription: "Open to senior backend engineering roles, consulting, and technical discussions.",
+  imageDescription: "Open to cloud architecture, platform engineering, backend engineering, and consulting opportunities.",
 });
 
 export default function Contact() {
@@ -20,8 +20,8 @@ export default function Contact() {
         <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6">
           <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Get In Touch</h1>
           <p className="mt-2 max-w-xl text-slate-500">
-            Open to senior backend engineering roles, consulting engagements, and technical
-            discussions. Based in Indonesia — available remotely or willing to relocate to Japan.
+            Open to cloud architect, platform engineering, senior backend, and consulting
+            opportunities. Based in Indonesia — available remotely or willing to relocate to Japan.
           </p>
         </div>
       </section>
@@ -82,8 +82,9 @@ export default function Contact() {
               <h3 className="font-semibold text-slate-900">What I&apos;m open to</h3>
               <ul className="mt-3 space-y-2">
                 {[
-                  "Senior Backend Engineering roles",
+                  "Cloud Architect and AWS platform roles",
                   "Cloud & DevOps consulting",
+                  "Senior Backend Engineering roles",
                   "Fintech and payment system projects",
                   "AI/LLM backend integration work",
                   "Japan-facing remote or relocation roles",

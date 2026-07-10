@@ -8,10 +8,10 @@ import { Badge } from "@/components/ui/Badge";
 export const metadata: Metadata = buildMetadata({
   title: "Experience",
   description:
-    "Career timeline of Doni Putra Purbawa — Backend Engineering Manager, Cloud Architect, and Machine Learning Engineer.",
+    "Career timeline of Doni Putra Purbawa — Cloud Architect, Backend Engineering Manager, and Machine Learning Engineer.",
   path: "/experience",
   imageTitle: "Engineering Experience",
-  imageDescription: "Career timeline across backend engineering, cloud architecture, fintech, and machine learning.",
+  imageDescription: "Career timeline across cloud architecture, backend engineering, fintech, and machine learning.",
 });
 
 export default async function Experience() {
@@ -25,8 +25,8 @@ export default async function Experience() {
         <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6">
           <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Experience</h1>
           <p className="mt-2 max-w-xl text-slate-500">
-            Career progression from backend developer to engineering manager, with a focus on
-            fintech, cloud infrastructure, and AI systems.
+            Career progression from backend developer to hands-on cloud architect and engineering
+            manager, with a focus on AWS infrastructure, fintech platforms, and AI systems.
           </p>
         </div>
       </section>

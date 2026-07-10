@@ -39,8 +39,8 @@ export default async function Projects() {
         <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6">
           <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Projects</h1>
           <p className="mt-2 max-w-xl text-slate-500">
-            Selected case studies demonstrating applied backend engineering across payment systems,
-            cloud infrastructure, AI applications, and machine learning.
+            Selected case studies demonstrating applied cloud architecture, backend platforms,
+            payment systems, AI applications, and machine learning.
           </p>
         </div>
       </section>

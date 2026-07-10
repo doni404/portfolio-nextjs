@@ -162,7 +162,7 @@ export function GET(request: Request) {
               fontWeight: 700,
             }}
           >
-            <div style={{ display: "flex" }}>Backend Systems | Cloud | Fintech | AI</div>
+            <div style={{ display: "flex" }}>Cloud Architecture | Backend Platforms | Fintech | AI</div>
             <div style={{ display: "flex" }}>doniputra.com</div>
           </div>
         </div>

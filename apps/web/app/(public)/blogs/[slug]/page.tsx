@@ -163,10 +163,10 @@ export default async function BlogDetail({ params }: PageProps) {
             />
             <div>
               <h3 className="font-semibold text-slate-900">Doni Putra Purbawa</h3>
-              <p className="text-sm text-blue-600">Senior Backend Engineer</p>
+              <p className="text-sm text-blue-600">Cloud Architect & Senior Backend Engineer</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Building reliable fintech, cloud, and AI-powered backend systems. Based in
-                Indonesia, open to Japan relocation.
+                Designing reliable AWS cloud architecture, fintech platforms, and AI-powered
+                backend systems. Based in Indonesia, open to Japan relocation.
               </p>
               <Link
                 href="/about"

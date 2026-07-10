@@ -7,10 +7,10 @@ import { Card } from "@/components/ui/Card";
 export const metadata: Metadata = buildMetadata({
   title: "About",
   description:
-    "Learn about Doni Putra Purbawa — Senior Backend Engineer with expertise in fintech, cloud infrastructure, and AI systems.",
+    "Learn about Doni Putra Purbawa — Cloud Architect and Senior Backend Engineer with expertise in AWS, fintech platforms, and AI systems.",
   path: "/about",
   imageTitle: "About Doni Putra Purbawa",
-  imageDescription: "Backend engineering, fintech systems, cloud infrastructure, and AI experience.",
+  imageDescription: "Cloud architecture, backend engineering, fintech systems, and AI experience.",
 });
 
 const skills = [
@@ -19,11 +19,11 @@ const skills = [
     items: ["Node.js", "TypeScript", "Java", "Golang", "Python"],
   },
   {
-    group: "Cloud & Infrastructure",
+    group: "Cloud Architecture & Infrastructure",
     items: ["AWS EC2", "RDS", "S3", "CloudFront", "IAM", "CloudWatch", "Docker", "Nginx"],
   },
   {
-    group: "Backend & Architecture",
+    group: "Platform & Backend Architecture",
     items: ["REST API", "gRPC", "Microservices", "PostgreSQL", "Redis", "RabbitMQ", "AWS SQS"],
   },
   {
@@ -133,18 +133,20 @@ export default function About() {
               <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
                 Doni Putra Purbawa
               </h1>
-              <p className="mt-1 text-lg font-medium text-blue-600">Senior Backend Engineer</p>
+              <p className="mt-1 text-lg font-medium text-blue-600">
+                Cloud Architect & Senior Backend Engineer
+              </p>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
                 <span className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" /> Indonesia · Open to Japan relocation
                 </span>
               </div>
               <p className="mt-4 max-w-2xl leading-relaxed text-slate-600">
-                I&apos;m a hands-on backend engineering manager with 6+ years building production
-                systems for a Japanese SaaS company. My expertise spans fintech payment
-                integrations, AWS cloud infrastructure, microservices architecture, and AI-powered
-                application backends. I care about correctness, reliability, and shipping things
-                that work.
+                I&apos;m a hands-on Cloud Architect and backend engineering manager with 6+ years
+                building production systems for a Japanese SaaS company. My expertise spans AWS
+                infrastructure, fintech payment platforms, microservices architecture, and
+                AI-powered application backends. I care about correctness, reliability, and
+                shipping systems that teams can operate with confidence.
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <a
@@ -167,13 +169,13 @@ export default function About() {
             <Card>
               <div className="space-y-4 text-slate-600 leading-relaxed">
                 <p>
-                  Good backend engineering is invisible — your users never think about the systems
-                  keeping their data safe, their payments processing, and their features available.
-                  That invisibility is the goal.
+                  Good cloud architecture is quiet — your users never think about the networks,
+                  databases, deployments, and observability keeping their products available. That
+                  reliability is the goal.
                 </p>
                 <p>
-                  I approach every system with three questions: Is it correct? Is it observable?
-                  Can someone else maintain it in six months? The answer to all three should be yes
+                  I approach every system with three questions: Is it secure? Is it observable? Can
+                  someone else maintain it in six months? The answer to all three should be yes
                   before anything goes to production.
                 </p>
                 <p>

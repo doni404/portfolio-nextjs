@@ -10,10 +10,10 @@ import { BlogSearch } from "@/components/blog/BlogSearch";
 export const metadata: Metadata = buildMetadata({
   title: "Blog",
   description:
-    "Technical articles by Doni Putra Purbawa on backend engineering, cloud infrastructure, payment systems, AI, and machine learning.",
+    "Technical articles by Doni Putra Purbawa on cloud architecture, AWS infrastructure, backend engineering, payment systems, AI, and machine learning.",
   path: "/blogs",
   imageTitle: "Technical Blog",
-  imageDescription: "Backend engineering, cloud infrastructure, payment systems, AI, and machine learning notes.",
+  imageDescription: "Cloud architecture, AWS infrastructure, backend engineering, payment systems, AI, and machine learning notes.",
 });
 
 const categories = [
@@ -56,8 +56,8 @@ export default async function Blogs({ searchParams }: BlogsPageProps) {
         <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
           <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Blog</h1>
           <p className="mt-2 max-w-xl text-slate-500">
-            Technical writing on backend engineering, cloud infrastructure, payment systems, AI, and
-            machine learning.
+            Technical writing on cloud architecture, AWS infrastructure, backend engineering,
+            payment systems, AI, and machine learning.
           </p>
           <div className="mt-5">
             <BlogSearch defaultValue={params.q} />

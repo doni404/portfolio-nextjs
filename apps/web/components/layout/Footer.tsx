@@ -16,8 +16,8 @@ export function Footer() {
               <span className="font-semibold text-slate-900">Doni Putra Purbawa</span>
             </Link>
             <p className="mt-3 max-w-sm text-sm text-slate-500">
-              Senior Backend Engineer building reliable fintech, cloud, and AI-powered systems.
-              Based in Indonesia, open to Japan opportunities.
+              Cloud Architect and Senior Backend Engineer building reliable AWS, fintech, and
+              AI-powered systems. Based in Indonesia, open to Japan opportunities.
             </p>
             <div className="mt-4 flex items-center gap-3">
               <a
