@@ -5,7 +5,13 @@ import { Menu, X } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { AdminSidebar } from "./AdminSidebar";
 
-export function AdminMobileHeader() {
+export function AdminMobileHeader({
+  newContactCount = 0,
+  pendingCommentCount = 0,
+}: {
+  newContactCount?: number;
+  pendingCommentCount?: number;
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -39,7 +45,10 @@ export function AdminMobileHeader() {
             >
               <X className="h-4 w-4" />
             </button>
-            <AdminSidebar />
+            <AdminSidebar
+              newContactCount={newContactCount}
+              pendingCommentCount={pendingCommentCount}
+            />
           </div>
         </div>
       )}

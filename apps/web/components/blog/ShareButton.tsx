@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { Share2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics";
 
 interface Props {
   title: string;
   text?: string;
+  itemId?: string;
   className?: string;
 }
 
-export function ShareButton({ title, text, className }: Props) {
+export function ShareButton({ title, text, itemId, className }: Props) {
   const [status, setStatus] = useState<"idle" | "copied" | "shared">("idle");
 
   function shouldUseNativeShare() {
@@ -24,6 +26,11 @@ export function ShareButton({ title, text, className }: Props) {
     if (shouldUseNativeShare()) {
       try {
         await navigator.share({ title, text, url });
+        trackEvent("share", {
+          method: "web_share",
+          content_type: "blog",
+          item_id: itemId ?? title,
+        });
         setStatus("shared");
         setTimeout(() => setStatus("idle"), 2000);
         return;
@@ -34,6 +41,11 @@ export function ShareButton({ title, text, className }: Props) {
 
     try {
       await navigator.clipboard.writeText(url);
+      trackEvent("share", {
+        method: "copy_link",
+        content_type: "blog",
+        item_id: itemId ?? title,
+      });
       setStatus("copied");
       setTimeout(() => setStatus("idle"), 2000);
     } catch {

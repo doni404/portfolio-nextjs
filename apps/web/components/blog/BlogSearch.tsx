@@ -3,6 +3,7 @@
 import { Search } from "lucide-react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useRef, useTransition } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 interface BlogSearchProps {
   defaultValue?: string;
@@ -21,6 +22,7 @@ export function BlogSearch({ defaultValue }: BlogSearchProps) {
     const params = new URLSearchParams(searchParams.toString());
     if (value) {
       params.set("q", value);
+      trackEvent("search", { search_term: value });
     } else {
       params.delete("q");
     }

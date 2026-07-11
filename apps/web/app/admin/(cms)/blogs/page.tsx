@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, Edit, Eye, Archive } from "lucide-react";
+import { Plus, Edit, Eye } from "lucide-react";
 import { adminApi } from "@/lib/server-api";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 export const metadata: Metadata = { title: "Blog Posts" };
 
 interface Props {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; sort?: string }>;
 }
 
 const statusVariant: Record<string, "green" | "yellow" | "gray"> = {
@@ -18,8 +18,18 @@ const statusVariant: Record<string, "green" | "yellow" | "gray"> = {
 };
 
 export default async function AdminBlogs({ searchParams }: Props) {
-  const { status } = await searchParams;
-  const res = await adminApi.getBlogs(status ? { status } : undefined);
+  const { status, sort } = await searchParams;
+  const sortOptions = [
+    { label: "Latest updated", value: "latest" },
+    { label: "Newest created", value: "created" },
+    { label: "Published date", value: "published" },
+  ];
+  const activeSort = sortOptions.some((option) => option.value === sort) ? sort! : "latest";
+  const requestParams = {
+    ...(status ? { status } : {}),
+    ...(activeSort !== "latest" ? { sort: activeSort } : {}),
+  };
+  const res = await adminApi.getBlogs(Object.keys(requestParams).length ? requestParams : undefined);
   const posts = res?.data ?? [];
   const total = res?.pagination.total ?? 0;
 
@@ -29,6 +39,14 @@ export default async function AdminBlogs({ searchParams }: Props) {
     { label: "Draft", value: "draft" },
     { label: "Archived", value: "archived" },
   ];
+
+  function listHref(next: { status?: string; sort?: string }) {
+    const params = new URLSearchParams();
+    if (next.status) params.set("status", next.status);
+    if (next.sort && next.sort !== "latest") params.set("sort", next.sort);
+    const query = params.toString();
+    return query ? `/admin/blogs?${query}` : "/admin/blogs";
+  }
 
   return (
     <div className="p-6 lg:p-8">
@@ -50,7 +68,7 @@ export default async function AdminBlogs({ searchParams }: Props) {
         {filterTabs.map((tab) => (
           <Link
             key={tab.label}
-            href={tab.value ? `/admin/blogs?status=${tab.value}` : "/admin/blogs"}
+            href={listHref({ status: tab.value, sort: activeSort })}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
               status === tab.value || (!status && !tab.value)
                 ? "border-blue-200 bg-blue-50 text-blue-700"
@@ -62,6 +80,23 @@ export default async function AdminBlogs({ searchParams }: Props) {
         ))}
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-sm font-medium text-slate-500">Sort by</span>
+        {sortOptions.map((option) => (
+          <Link
+            key={option.value}
+            href={listHref({ status, sort: option.value })}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+              activeSort === option.value
+                ? "border-slate-300 bg-slate-900 text-white"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {option.label}
+          </Link>
+        ))}
+      </div>
+
       {/* Table */}
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
         <table className="w-full text-sm">
@@ -69,7 +104,8 @@ export default async function AdminBlogs({ searchParams }: Props) {
             <tr className="border-b border-slate-100 bg-slate-50 text-left">
               <th className="px-4 py-3 font-medium text-slate-600">Title</th>
               <th className="hidden px-4 py-3 font-medium text-slate-600 sm:table-cell">Category</th>
-              <th className="hidden px-4 py-3 font-medium text-slate-600 md:table-cell">Published</th>
+              <th className="hidden px-4 py-3 font-medium text-slate-600 md:table-cell">Updated</th>
+              <th className="hidden px-4 py-3 font-medium text-slate-600 lg:table-cell">Published</th>
               <th className="px-4 py-3 font-medium text-slate-600">Status</th>
               <th className="px-4 py-3 text-right font-medium text-slate-600">Actions</th>
             </tr>
@@ -77,7 +113,7 @@ export default async function AdminBlogs({ searchParams }: Props) {
           <tbody className="divide-y divide-slate-100">
             {posts.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
+                <td colSpan={6} className="px-4 py-12 text-center text-slate-400">
                   No posts found.{" "}
                   <Link href="/admin/blogs/new" className="font-medium text-blue-600 hover:underline">
                     Create one →
@@ -95,6 +131,9 @@ export default async function AdminBlogs({ searchParams }: Props) {
                     {post.category?.name ?? "—"}
                   </td>
                   <td className="hidden px-4 py-3 text-slate-500 md:table-cell">
+                    {formatDate(post.updatedAt)}
+                  </td>
+                  <td className="hidden px-4 py-3 text-slate-500 lg:table-cell">
                     {post.publishedAt ? formatDate(post.publishedAt) : "—"}
                   </td>
                   <td className="px-4 py-3">

@@ -36,6 +36,7 @@ router.get("/", async (req, res, next) => {
       page: z.coerce.number().int().positive().default(1),
       pageSize: z.coerce.number().int().min(1).max(100).default(20),
       status: z.enum(["draft", "published", "archived"]).optional(),
+      sort: z.enum(["latest", "created", "year", "manual"]).default("latest"),
     });
     const query = schema.parse(req.query);
     const skip = (query.page - 1) * query.pageSize;
@@ -43,12 +44,23 @@ router.get("/", async (req, res, next) => {
     const where: Record<string, unknown> = { deletedAt: null };
     if (query.status) where.status = query.status;
 
+    const orderBy = {
+      latest: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+      created: [{ createdAt: "desc" }],
+      year: [{ year: "desc" }, { updatedAt: "desc" }],
+      manual: [{ sortOrder: "asc" }, { updatedAt: "desc" }],
+    }[query.sort] as
+      | { updatedAt: "desc" }[]
+      | { createdAt: "desc" }[]
+      | ({ year: "desc" } | { updatedAt: "desc" })[]
+      | ({ sortOrder: "asc" } | { updatedAt: "desc" })[];
+
     const [projects, total] = await Promise.all([
       prisma.project.findMany({
         where,
         skip,
         take: query.pageSize,
-        orderBy: [{ sortOrder: "asc" }, { updatedAt: "desc" }],
+        orderBy,
         include: {
           category: { select: { id: true, name: true, slug: true } },
           tags: { select: { tag: { select: { id: true, name: true, slug: true } } } },

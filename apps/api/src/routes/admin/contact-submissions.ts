@@ -9,6 +9,16 @@ const router = Router();
 
 router.use(requireAuth);
 
+// GET /api/admin/contact-submissions/new-count
+router.get("/new-count", async (_req, res, next) => {
+  try {
+    const count = await prisma.contactSubmission.count({ where: { status: "new" } });
+    return ok(res, { count });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/admin/contact-submissions
 router.get("/", async (req, res, next) => {
   try {

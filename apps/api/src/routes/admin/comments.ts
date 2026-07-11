@@ -9,6 +9,18 @@ const router = Router();
 
 router.use(requireAuth);
 
+// GET /api/admin/comments/pending-count
+router.get("/pending-count", async (_req, res, next) => {
+  try {
+    const count = await prisma.comment.count({
+      where: { status: "pending", deletedAt: null },
+    });
+    return ok(res, { count });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/admin/comments
 router.get("/", async (req, res, next) => {
   try {

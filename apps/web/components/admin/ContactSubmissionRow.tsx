@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { ContactSubmission } from "@/lib/server-api";
 import { adminClient } from "@/lib/admin-api";
 import { Badge } from "@/components/ui/Badge";
@@ -19,6 +20,7 @@ const statusVariants: Record<string, "blue" | "green" | "gray" | "yellow"> = {
 };
 
 export function ContactSubmissionRow({ submission }: Props) {
+  const router = useRouter();
   const [status, setStatus] = useState(submission.status);
   const [expanded, setExpanded] = useState(false);
   const [actioning, setActioning] = useState(false);
@@ -28,6 +30,7 @@ export function ContactSubmissionRow({ submission }: Props) {
     try {
       await adminClient.updateContactStatus(submission.id, newStatus);
       setStatus(newStatus);
+      router.refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to update status.");
     } finally {

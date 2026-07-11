@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Edit, Eye } from "lucide-react";
 import { adminApi } from "@/lib/server-api";
+import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 
 export const metadata: Metadata = { title: "Projects" };
 
 interface Props {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; sort?: string }>;
 }
 
 const statusVariant: Record<string, "green" | "yellow" | "gray"> = {
@@ -17,8 +18,19 @@ const statusVariant: Record<string, "green" | "yellow" | "gray"> = {
 };
 
 export default async function AdminProjects({ searchParams }: Props) {
-  const { status } = await searchParams;
-  const res = await adminApi.getProjects(status ? { status } : undefined);
+  const { status, sort } = await searchParams;
+  const sortOptions = [
+    { label: "Latest updated", value: "latest" },
+    { label: "Newest created", value: "created" },
+    { label: "Latest year", value: "year" },
+    { label: "Manual order", value: "manual" },
+  ];
+  const activeSort = sortOptions.some((option) => option.value === sort) ? sort! : "latest";
+  const requestParams = {
+    ...(status ? { status } : {}),
+    ...(activeSort !== "latest" ? { sort: activeSort } : {}),
+  };
+  const res = await adminApi.getProjects(Object.keys(requestParams).length ? requestParams : undefined);
   const projects = res?.data ?? [];
   const total = res?.pagination.total ?? 0;
 
@@ -28,6 +40,14 @@ export default async function AdminProjects({ searchParams }: Props) {
     { label: "Draft", value: "draft" },
     { label: "Archived", value: "archived" },
   ];
+
+  function listHref(next: { status?: string; sort?: string }) {
+    const params = new URLSearchParams();
+    if (next.status) params.set("status", next.status);
+    if (next.sort && next.sort !== "latest") params.set("sort", next.sort);
+    const query = params.toString();
+    return query ? `/admin/projects?${query}` : "/admin/projects";
+  }
 
   return (
     <div className="p-6 lg:p-8">
@@ -49,7 +69,7 @@ export default async function AdminProjects({ searchParams }: Props) {
         {filterTabs.map((tab) => (
           <Link
             key={tab.label}
-            href={tab.value ? `/admin/projects?status=${tab.value}` : "/admin/projects"}
+            href={listHref({ status: tab.value, sort: activeSort })}
             className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
               status === tab.value || (!status && !tab.value)
                 ? "border-blue-200 bg-blue-50 text-blue-700"
@@ -57,6 +77,23 @@ export default async function AdminProjects({ searchParams }: Props) {
             }`}
           >
             {tab.label}
+          </Link>
+        ))}
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-sm font-medium text-slate-500">Sort by</span>
+        {sortOptions.map((option) => (
+          <Link
+            key={option.value}
+            href={listHref({ status, sort: option.value })}
+            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+              activeSort === option.value
+                ? "border-slate-300 bg-slate-900 text-white"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {option.label}
           </Link>
         ))}
       </div>
@@ -69,6 +106,7 @@ export default async function AdminProjects({ searchParams }: Props) {
               <th className="px-4 py-3 font-medium text-slate-600">Title</th>
               <th className="hidden px-4 py-3 font-medium text-slate-600 sm:table-cell">Category</th>
               <th className="hidden px-4 py-3 font-medium text-slate-600 md:table-cell">Year</th>
+              <th className="hidden px-4 py-3 font-medium text-slate-600 lg:table-cell">Updated</th>
               <th className="px-4 py-3 font-medium text-slate-600">Status</th>
               <th className="px-4 py-3 text-right font-medium text-slate-600">Actions</th>
             </tr>
@@ -76,7 +114,7 @@ export default async function AdminProjects({ searchParams }: Props) {
           <tbody className="divide-y divide-slate-100">
             {projects.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-12 text-center text-slate-400">
+                <td colSpan={6} className="px-4 py-12 text-center text-slate-400">
                   No projects found.{" "}
                   <Link href="/admin/projects/new" className="font-medium text-blue-600 hover:underline">
                     Create one →
@@ -95,6 +133,9 @@ export default async function AdminProjects({ searchParams }: Props) {
                   </td>
                   <td className="hidden px-4 py-3 text-slate-500 md:table-cell">
                     {project.year ?? "—"}
+                  </td>
+                  <td className="hidden px-4 py-3 text-slate-500 lg:table-cell">
+                    {formatDate(project.updatedAt)}
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={statusVariant[project.status] ?? "gray"}>{project.status}</Badge>

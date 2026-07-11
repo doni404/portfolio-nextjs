@@ -115,10 +115,16 @@ export const adminApi = {
     return adminGet<Paginated<AdminComment>>(`/api/admin/comments${qs}`);
   },
 
+  getPendingCommentCount: () =>
+    adminGet<Single<{ count: number }>>("/api/admin/comments/pending-count"),
+
   getContactSubmissions: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params)}` : "";
     return adminGet<Paginated<ContactSubmission>>(`/api/admin/contact-submissions${qs}`);
   },
+
+  getNewContactSubmissionCount: () =>
+    adminGet<Single<{ count: number }>>("/api/admin/contact-submissions/new-count"),
 
   getAssets: () =>
     adminGet<Single<SiteAsset[]>>("/api/admin/assets"),

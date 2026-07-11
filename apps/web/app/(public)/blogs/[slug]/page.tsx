@@ -10,6 +10,7 @@ import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { CommentSection } from "@/components/blog/CommentSection";
 import { ShareButton } from "@/components/blog/ShareButton";
+import { BlogViewAnalytics } from "@/components/analytics/BlogViewAnalytics";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -65,6 +66,11 @@ export default async function BlogDetail({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white">
+      <BlogViewAnalytics
+        slug={post.slug}
+        title={post.title}
+        category={post.category?.name}
+      />
       {/* Article header */}
       <div className="border-b border-slate-200 bg-slate-50">
         <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -116,6 +122,7 @@ export default async function BlogDetail({ params }: PageProps) {
               <ShareButton
                 title={post.title}
                 text={post.excerpt}
+                itemId={post.slug}
                 className="justify-self-start text-slate-400 hover:text-slate-700"
               />
             </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import type { AdminComment } from "@/lib/server-api";
 import { adminClient } from "@/lib/admin-api";
 import { Badge } from "@/components/ui/Badge";
@@ -19,6 +20,7 @@ const statusVariants: Record<string, "green" | "yellow" | "red" | "gray"> = {
 };
 
 export function CommentModerationRow({ comment }: Props) {
+  const router = useRouter();
   const [status, setStatus] = useState(comment.status);
   const [actioning, setActioning] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -28,6 +30,7 @@ export function CommentModerationRow({ comment }: Props) {
     try {
       await adminClient.updateCommentStatus(comment.id, newStatus);
       setStatus(newStatus);
+      router.refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Action failed.");
     } finally {
@@ -41,6 +44,7 @@ export function CommentModerationRow({ comment }: Props) {
     try {
       await adminClient.deleteComment(comment.id);
       setDeleted(true);
+      router.refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Delete failed.");
     } finally {

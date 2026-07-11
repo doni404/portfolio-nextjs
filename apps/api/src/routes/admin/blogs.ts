@@ -32,6 +32,7 @@ router.get("/", async (req, res, next) => {
       pageSize: z.coerce.number().int().min(1).max(100).default(20),
       status: z.enum(["draft", "published", "archived"]).optional(),
       q: z.string().optional(),
+      sort: z.enum(["latest", "created", "published"]).default("latest"),
     });
 
     const query = schema.parse(req.query);
@@ -46,12 +47,21 @@ router.get("/", async (req, res, next) => {
       ];
     }
 
+    const orderBy = {
+      latest: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+      created: [{ createdAt: "desc" }],
+      published: [{ publishedAt: "desc" }, { updatedAt: "desc" }],
+    }[query.sort] as
+      | ({ updatedAt: "desc" } | { createdAt: "desc" })[]
+      | { createdAt: "desc" }[]
+      | ({ publishedAt: "desc" } | { updatedAt: "desc" })[];
+
     const [posts, total] = await Promise.all([
       prisma.blogPost.findMany({
         where,
         skip,
         take: query.pageSize,
-        orderBy: { updatedAt: "desc" },
+        orderBy,
         select: {
           id: true,
           title: true,

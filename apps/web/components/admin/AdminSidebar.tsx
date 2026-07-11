@@ -29,7 +29,12 @@ const navItems: { href: string; label: string; icon: React.ComponentType<{ class
   { href: "/admin/settings",           label: "Settings",   icon: Settings },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  newContactCount?: number;
+  pendingCommentCount?: number;
+}
+
+export function AdminSidebar({ newContactCount = 0, pendingCommentCount = 0 }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -63,6 +68,8 @@ export function AdminSidebar() {
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
               href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+            const showContactBadge = href === "/admin/contact-submissions" && newContactCount > 0;
+            const showCommentBadge = href === "/admin/comments" && pendingCommentCount > 0;
             return (
               <li key={href}>
                 <Link
@@ -78,7 +85,25 @@ export function AdminSidebar() {
                     <Icon className="h-4 w-4" />
                     {label}
                   </span>
-                  {isActive && <ChevronRight className="h-4 w-4" />}
+                  <span className="flex items-center gap-1.5">
+                    {showContactBadge && (
+                      <span
+                        className="min-w-5 rounded-full bg-rose-500 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white"
+                        aria-label={`${newContactCount} new contact message${newContactCount === 1 ? "" : "s"}`}
+                      >
+                        {newContactCount > 99 ? "99+" : newContactCount}
+                      </span>
+                    )}
+                    {showCommentBadge && (
+                      <span
+                        className="min-w-5 rounded-full bg-amber-500 px-1.5 py-0.5 text-center text-[10px] font-bold leading-none text-white"
+                        aria-label={`${pendingCommentCount} pending comment${pendingCommentCount === 1 ? "" : "s"}`}
+                      >
+                        {pendingCommentCount > 99 ? "99+" : pendingCommentCount}
+                      </span>
+                    )}
+                    {isActive && <ChevronRight className="h-4 w-4" />}
+                  </span>
                 </Link>
               </li>
             );
