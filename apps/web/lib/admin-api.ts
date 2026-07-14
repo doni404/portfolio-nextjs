@@ -79,10 +79,31 @@ export const adminClient = {
   getProject: (id: string) => req(`/api/admin/projects/${id}`),
 
   createProject: (data: Record<string, unknown>) =>
-    req("/api/admin/projects", { method: "POST", body: JSON.stringify(data) }),
+    req<{ data: { id: string; slug: string } }>("/api/admin/projects", { method: "POST", body: JSON.stringify(data) }),
 
   updateProject: (id: string, data: Record<string, unknown>) =>
-    req(`/api/admin/projects/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+    req<{ data: { id: string; slug: string } }>(`/api/admin/projects/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  uploadProjectCover: async (file: File, projectSlug: string) => {
+    const formData = new FormData();
+    formData.append("projectSlug", projectSlug);
+    formData.append("file", file);
+
+    const res = await fetch(`${BASE}/api/admin/uploads/project-cover`, {
+      method: "POST",
+      credentials: "include",
+      body: formData,
+    });
+
+    if (res.status === 401) {
+      window.location.href = "/admin/login";
+      throw new Error("Unauthorized");
+    }
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error?.message ?? `HTTP ${res.status}`);
+    return json as { data: { url: string; path: string; filename: string; mimeType: string; sizeBytes: number } };
+  },
 
   deleteProject: (id: string) =>
     req(`/api/admin/projects/${id}`, { method: "DELETE" }),

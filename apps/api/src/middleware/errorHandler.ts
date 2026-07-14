@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { AppError } from "../lib/errors";
 import { ZodError } from "zod";
+import multer from "multer";
 
 export function errorHandler(
   err: unknown,
@@ -25,6 +26,15 @@ export function errorHandler(
         message: "Invalid request payload",
         details: err.flatten().fieldErrors,
       },
+    });
+  }
+
+  if (err instanceof multer.MulterError) {
+    const message = err.code === "LIMIT_FILE_SIZE"
+      ? "The image must be 8 MB or smaller."
+      : "The image upload could not be processed.";
+    return res.status(400).json({
+      error: { code: "UPLOAD_ERROR", message },
     });
   }
 

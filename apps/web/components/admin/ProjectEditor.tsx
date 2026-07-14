@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, FileImage, Save, Trash2, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import type { Project } from "@/lib/server-api";
 import { adminClient } from "@/lib/admin-api";
@@ -28,6 +28,8 @@ interface ProjectFormData {
   role: string;
   outcome: string;
   stack: string;
+  coverImageUrl: string;
+  links: string;
   year: number;
   categorySlug: string;
   featured: boolean;
@@ -39,6 +41,7 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
 
   const { register, handleSubmit } = useForm<ProjectFormData>({
     defaultValues: {
@@ -50,6 +53,8 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
       role: project?.role ?? "",
       outcome: project?.outcome ?? "",
       stack: project?.stack?.join(", ") ?? "",
+      coverImageUrl: project?.coverImageUrl ?? "",
+      links: project?.links?.map((link) => `${link.label} | ${link.url}`).join("\n") ?? "",
       year: project?.year ?? new Date().getFullYear(),
       categorySlug: project?.category?.slug ?? projectCategories[0].slug,
       featured: project?.featured ?? false,
@@ -65,6 +70,13 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
+      const links = data.links
+        .split("\n")
+        .map((line) => {
+          const [label, ...urlParts] = line.split("|");
+          return { label: label?.trim() ?? "", url: urlParts.join("|").trim() };
+        })
+        .filter((link) => link.label && link.url);
 
       const payload = {
         title: data.title,
@@ -75,16 +87,20 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
         role: data.role || undefined,
         outcome: data.outcome || undefined,
         stack: stackArray,
+        coverImageUrl: data.coverImageUrl.trim() || undefined,
+        links,
         year: data.year,
         categorySlug: data.categorySlug,
         featured: data.featured,
         status: data.status,
       };
 
-      if (project) {
-        await adminClient.updateProject(project.id, payload);
-      } else {
-        await adminClient.createProject(payload);
+      const saved = project
+        ? (await adminClient.updateProject(project.id, payload)).data
+        : (await adminClient.createProject(payload)).data;
+
+      if (coverFile) {
+        await adminClient.uploadProjectCover(coverFile, saved.slug);
       }
 
       window.location.href = "/admin/projects";
@@ -154,6 +170,39 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Summary</label>
               <textarea {...register("summary")} rows={2} placeholder="One-paragraph overview of the project…" className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Cover Image or Workflow Path</label>
+              <label className="mb-2 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-sm text-slate-600 hover:border-blue-400 hover:bg-blue-50">
+                <Upload className="h-4 w-4 text-blue-600" />
+                <span>{coverFile ? coverFile.name : "Upload an image"}</span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="sr-only"
+                  onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
+                />
+              </label>
+              <div className="mb-2 flex items-center gap-2 text-xs text-slate-400">
+                <FileImage className="h-3.5 w-3.5" /> PNG, JPEG, WebP, or GIF up to 8 MB
+              </div>
+              <input
+                {...register("coverImageUrl")}
+                type="text"
+                placeholder="/projects/inosec19.png or https://example.com/image.png"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+              <p className="mt-1 text-xs text-slate-400">Upload a new image, or use a public path/URL as a fallback. A new upload replaces the current image after saving.</p>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-slate-500">Related Links</label>
+              <textarea
+                {...register("links")}
+                rows={3}
+                placeholder={'University news | https://example.com/news\nResearch paper | https://example.com/paper'}
+                className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+              <p className="mt-1 text-xs text-slate-400">One link per line using: Label | URL</p>
             </div>
           </div>
 

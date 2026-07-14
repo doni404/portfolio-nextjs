@@ -8,6 +8,7 @@ import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 
 import { errorHandler } from "./middleware/errorHandler";
+import { UPLOAD_ROOT } from "./lib/uploads";
 
 // Public routes
 import healthRouter from "./routes/health";
@@ -26,6 +27,7 @@ import adminExperiencesRouter from "./routes/admin/experiences";
 import adminCommentsRouter from "./routes/admin/comments";
 import adminContactRouter from "./routes/admin/contact-submissions";
 import adminAssetsRouter from "./routes/admin/assets";
+import adminUploadsRouter from "./routes/admin/uploads";
 
 const app = express();
 const PORT = process.env.PORT ?? 4000;
@@ -67,6 +69,10 @@ app.use(compression());
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 app.use(cookieParser());
+
+// Uploaded media is served by the API and should be backed by persistent storage
+// in production (for example, a Coolify volume mounted at /app/storage/uploads).
+app.use("/uploads", express.static(UPLOAD_ROOT, { maxAge: "1d" }));
 
 if (process.env.NODE_ENV !== "test") {
   app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
@@ -112,6 +118,7 @@ app.use("/api/admin/experiences", adminExperiencesRouter);
 app.use("/api/admin/comments", adminCommentsRouter);
 app.use("/api/admin/contact-submissions", adminContactRouter);
 app.use("/api/admin/assets", adminAssetsRouter);
+app.use("/api/admin/uploads", adminUploadsRouter);
 
 // ─── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

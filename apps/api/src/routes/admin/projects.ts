@@ -24,6 +24,13 @@ const projectBodySchema = z.object({
   sortOrder: z.number().int().default(0),
   year: z.number().int().optional(),
   status: z.enum(["draft", "published", "archived"]).default("published"),
+  coverImageUrl: z
+    .string()
+    .max(1000)
+    .refine((value) => value === "" || value.startsWith("/") || /^https?:\/\//.test(value), {
+      message: "Cover image must be an absolute URL or a path starting with /",
+    })
+    .optional(),
   links: z
     .array(z.object({ label: z.string(), url: z.string().url() }))
     .default([]),
@@ -127,6 +134,7 @@ router.post("/", async (req, res, next) => {
         sortOrder: body.sortOrder,
         year: body.year ?? null,
         status: body.status,
+        coverImageUrl: body.coverImageUrl || null,
         links: body.links,
         tags: { create: tagIds.map((id) => ({ tagId: id })) },
       },
@@ -158,6 +166,10 @@ router.patch("/:id", async (req, res, next) => {
     const updateData: Record<string, unknown> = { ...body, categoryId };
     delete updateData.categorySlug;
     delete updateData.tags;
+
+    if (body.coverImageUrl !== undefined) {
+      updateData.coverImageUrl = body.coverImageUrl || null;
+    }
 
     if (body.tags !== undefined) {
       await prisma.projectTag.deleteMany({ where: { projectId: req.params.id } });

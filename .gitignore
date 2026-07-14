@@ -11,12 +11,14 @@ build/
 **/build/
 dist/
 **/dist/
+*.tsbuildinfo
 coverage/
 **/coverage/
 
 # Prisma
 **/prisma/dev.db
 **/prisma/dev.db-journal
+*.dump
 
 # Environment files
 .env
@@ -37,6 +39,9 @@ playwright-report/
 test-results/
 **/playwright-report/
 **/test-results/
+
+# Runtime uploads (persist these outside Git in production)
+apps/api/storage/
 
 # Hosting and deployment
 .vercel/

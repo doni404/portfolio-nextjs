@@ -172,6 +172,7 @@ model Project {
   sortOrder  Int           @default(0) @map("sort_order")
   year       Int?
   status     ContentStatus @default(published)
+  coverImageUrl String?     @map("cover_image_url") @db.Text
   links      Json          @default("[]")
   createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime      @updatedAt @map("updated_at") @db.Timestamptz

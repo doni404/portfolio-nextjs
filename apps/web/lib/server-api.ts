@@ -170,6 +170,7 @@ export type Project = {
   featured: boolean;
   sortOrder: number;
   status: string;
+  coverImageUrl?: string;
   links: { label: string; url: string }[];
   category?: Category;
   tags: Tag[];

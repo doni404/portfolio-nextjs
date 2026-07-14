@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { publicApi } from "@/lib/server-api";
 import { buildMetadata } from "@/lib/metadata";
 import { Badge } from "@/components/ui/Badge";
@@ -84,6 +85,21 @@ export default async function Projects() {
                 </div>
                 <p className="mt-2 text-slate-600 leading-relaxed">{project.summary}</p>
               </div>
+
+              {project.coverImageUrl && (
+                <div className="border-b border-slate-100 bg-slate-50 px-4 py-5 sm:px-6">
+                  <Image
+                    src={project.coverImageUrl}
+                    alt={`${project.title} research workflow`}
+                    width={1306}
+                    height={1204}
+                    // Uploaded media is served directly by the API; avoid proxying it
+                    // through Next's optimizer, which may reject local API hosts.
+                    unoptimized={project.coverImageUrl.includes("/uploads/")}
+                    className="mx-auto max-h-[34rem] w-full rounded-lg object-contain"
+                  />
+                </div>
+              )}
 
               {/* Body */}
               <div className="grid gap-0 divide-y divide-slate-100 sm:grid-cols-2 sm:divide-x sm:divide-y-0">

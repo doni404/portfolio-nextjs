@@ -6,6 +6,24 @@ import { notFound } from "../lib/errors";
 
 const router = Router();
 
+function publicAssetUrl(req: Parameters<Parameters<typeof router.get>[1]>[0], value: string | null) {
+  if (!value) return value;
+
+  // Accept both the new portable path and older rows that stored localhost/API URLs.
+  const pathname = value.startsWith("/uploads/")
+    ? value
+    : (() => {
+        try {
+          const parsed = new URL(value);
+          return parsed.pathname.startsWith("/uploads/") ? parsed.pathname : null;
+        } catch {
+          return null;
+        }
+      })();
+
+  return pathname ? `${req.protocol}://${req.get("host")}${pathname}` : value;
+}
+
 const projectSelect = {
   id: true,
   title: true,
@@ -20,6 +38,7 @@ const projectSelect = {
   featured: true,
   sortOrder: true,
   status: true,
+  coverImageUrl: true,
   links: true,
   createdAt: true,
   updatedAt: true,
@@ -57,7 +76,11 @@ router.get("/", async (req, res, next) => {
 
     return paginated(
       res,
-      projects.map((p) => ({ ...p, tags: p.tags.map((t) => t.tag) })),
+      projects.map((p) => ({
+        ...p,
+        coverImageUrl: publicAssetUrl(req, p.coverImageUrl),
+        tags: p.tags.map((t) => t.tag),
+      })),
       total,
       query.page,
       query.pageSize
@@ -77,7 +100,11 @@ router.get("/:slug", async (req, res, next) => {
 
     if (!project) throw notFound("Project");
 
-    return ok(res, { ...project, tags: project.tags.map((t) => t.tag) });
+    return ok(res, {
+      ...project,
+      coverImageUrl: publicAssetUrl(req, project.coverImageUrl),
+      tags: project.tags.map((t) => t.tag),
+    });
   } catch (err) {
     next(err);
   }

@@ -107,9 +107,6 @@ export function Footer() {
             © {year} Doni Putra Purbawa. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <Link href="/admin" className="text-xs text-slate-400 hover:text-slate-600">
-              Admin
-            </Link>
             <a href="/rss.xml" className="text-xs text-slate-400 hover:text-slate-600">
               RSS
             </a>

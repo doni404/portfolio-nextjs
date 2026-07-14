@@ -645,60 +645,43 @@ The work was published in an Elsevier Q1 journal with 94% classification accurac
   // ── Projects ────────────────────────────────────────────────────────────────
   const projectsData = [
     {
-      title: "Payment Gateway & Subscription Platform",
-      slug: "payment-gateway-subscription-platform",
+      title: "Trajectory AI Chatbot for Drone Flight Route Reservations",
+      slug: "ai-chatbot-drone-flight-route-reservations",
       summary:
-        "A unified payment backend supporting Stripe, PayPal, GMO, and Square with subscription billing, webhook processing, and financial reconciliation.",
+        "Conversational AI platform built for Trajectory's drone flight operations, helping operators query flight areas, routes, and reservation schedules through Rocket.Chat, Amazon Lex V2, and Go-based backend services.",
       problem:
-        "The company needed to support payments across multiple providers (Stripe for global, GMO for Japan, PayPal for legacy integrations) with consistent subscription management and reliable reconciliation.",
+        "Users needed a reliable conversational way to retrieve drone flight route and reservation information across multiple systems. The solution also had to handle Japanese NLU constraints, authentication, time ranges, and service-to-service communication.",
       solution:
-        "Built a provider-agnostic payment abstraction layer in Node.js with adapter patterns for each provider. Implemented idempotent webhook processing with PostgreSQL event deduplication, automated retry logic, and a reconciliation job that runs nightly.",
-      role: "Lead Backend Engineer — designed the architecture, implemented all payment adapters, led code review, and maintained production operations.",
-      stack: ["Node.js", "TypeScript", "Stripe", "PayPal", "GMO", "Square", "PostgreSQL", "Redis", "AWS SQS"],
+        "Built a Rocket.Chat-integrated chatbot server using Go and Gin with Amazon Lex V2 for intent and slot extraction. Connected it to a Go and Gin reservation resource server over gRPC and PostgreSQL/RDS, with MongoDB for chat data and Amazon S3 for attachments. Refined slot design with FreeFormInput, TimeEnd, session timeout, and error handling.",
+      role: "Cloud Architect & Senior Backend Engineer - designed service boundaries and integration flows, implemented chatbot and reservation services, integrated Amazon Lex and Rocket.Chat webhooks, refined Japanese conversation flows, supported authentication and deployment, and led end-to-end testing.",
+      stack: ["Go", "Gin", "Amazon Lex V2", "Rocket.Chat", "gRPC", "PostgreSQL", "Amazon RDS", "MongoDB", "Amazon S3", "Docker", "AWS EC2", "AWS ALB", "Route 53", "CloudWatch"],
       outcome:
-        "Processed over $2M in transactions with 99.97% webhook processing reliability. Reduced payment failures by 40% through intelligent retry logic.",
-      year: 2022,
-      category: "Payment Systems",
-      featured: true,
-      sortOrder: 1,
-      links: [],
-    },
-    {
-      title: "Scalable Backend Microservices on AWS",
-      slug: "scalable-backend-microservices-aws",
-      summary:
-        "Decomposed a monolithic backend into domain-focused microservices on AWS with Docker, gRPC internal communication, and auto-scaling infrastructure.",
-      problem:
-        "A growing monolith was causing deployment friction, scaling bottlenecks, and increasingly complex CI/CD pipelines.",
-      solution:
-        "Migrated to microservices with clear domain boundaries (auth, payments, notifications, analytics). Used gRPC for internal service communication and REST for public APIs.",
-      role: "Cloud Solution Architect and Backend Lead — defined service boundaries, designed gRPC contracts, led infrastructure migration, and mentored team.",
-      stack: ["Node.js", "Docker", "gRPC", "AWS EC2", "AWS ALB", "RDS", "Redis", "GitHub Actions"],
-      outcome:
-        "Reduced deployment time from 45 minutes to 8 minutes. Enabled independent scaling of payment processing (3x) during peak periods.",
-      year: 2021,
-      category: "Cloud & DevOps",
-      featured: true,
-      sortOrder: 2,
-      links: [],
-    },
-    {
-      title: "AI Chatbot & Recommendation Backend",
-      slug: "ai-chatbot-recommendation-backend",
-      summary:
-        "Backend orchestration layer for an AI-powered customer support chatbot with product recommendations using OpenAI GPT-4, vector similarity search, and real-time streaming.",
-      problem:
-        "Customer support volume was growing faster than the team. Goal was to resolve 60%+ of common queries automatically.",
-      solution:
-        "Built a backend orchestration service that manages conversation context, handles streaming responses, integrates with a vector database for product knowledge retrieval (RAG pattern), and falls back gracefully to human agents.",
-      role: "Backend Lead — designed the orchestration architecture, built the RAG pipeline, implemented streaming, and integrated with the existing product catalog API.",
-      stack: ["Node.js", "TypeScript", "OpenAI", "Gemini", "pgvector", "PostgreSQL", "Redis", "AWS Lambda"],
-      outcome:
-        "Automated resolution of 68% of support queries. Average response time dropped from 4 hours to under 30 seconds.",
-      year: 2023,
+        "Delivered ChatBot Server v0.4.2 with all eight functional test cases passing in the final report. Resolved route-list presentation, time-range queries, Japanese slot handling, admin-user filtering, and session-timeout issues.",
+      year: 2026,
       category: "AI & LLM",
       featured: true,
-      sortOrder: 3,
+      sortOrder: 1,
+      coverImageUrl: null,
+      links: [],
+    },
+    {
+      title: "Interactive AI Learning Platform PoC",
+      slug: "interactive-ai-learning-platform-poc",
+      summary:
+        "AI-powered interactive lecture platform designed to help students ask questions in real time, receive instant explanations, and complete adaptive knowledge checks.",
+      problem:
+        "Traditional video-based learning can leave students waiting for clarification and makes it difficult to identify knowledge gaps. The PoC needed to combine real-time Q&A, progress visibility, and personalized follow-up within one learning experience.",
+      solution:
+        "Defined a phased PoC architecture combining lecture content processing, AI question answering, automatically generated or instructor-authored checkpoints, instant explanation generation, learning history, and an AI tutor avatar. The plan included model and API comparison, structured content ingestion, backend services, a responsive student UI, admin history management, and AWS deployment.",
+      role: "Cloud Architect & Senior Backend Engineer - contributed to the cloud and backend architecture, AI integration boundaries, data flows, API and error-handling approach, and operational plan for a secure, extensible education platform.",
+      stack: ["AWS", "OpenAI API", "Google Cloud AI", "LLM Evaluation", "Backend APIs", "PostgreSQL", "Responsive Web UI", "AI Tutor Avatar"],
+      outcome:
+        "Defined a 10-month, four-phase PoC plan covering AI model research, real-time Q&A, checkpoint generation, student UI, history and admin workflows, pilot evaluation, and tuning. Success criteria targeted at least 80% question-answering accuracy, responses within 10 seconds, and a smooth interactive learning experience, with production-scale delivery treated as a follow-on phase.",
+      year: 2025,
+      category: "AI & LLM",
+      featured: false,
+      sortOrder: 2,
+      coverImageUrl: null,
       links: [],
     },
     {
@@ -707,18 +690,28 @@ The work was published in an Elsevier Q1 journal with 94% classification accurac
       summary:
         "Deep learning model for non-invasive COVID-19 detection using electronic nose sensor arrays, deployed for edge inference on Raspberry Pi.",
       problem:
-        "Needed a fast, non-invasive preliminary COVID-19 screening tool that could work without lab equipment.",
+        "Electronic nose signals from underarm sweat can contain invalid or anomalous observations that reduce data quality and make downstream respiratory-infection screening less reliable.",
       solution:
-        "Designed and trained a CNN-LSTM hybrid model in TensorFlow to classify 8-channel time-series sensor data. Built the data preprocessing pipeline and optimized the model for TFLite edge deployment.",
-      role: "Machine Learning Engineer — led model design, preprocessing pipeline, training experiments, quantization for edge deployment, and co-authored the research paper.",
+        "Developed an adaptive filtering approach that combines a deep neural network with self-feature extraction to detect outliers in electronic-nose signals. Compared the method with SVM, Naive Bayes, k-NN, Random Forest, XGBoost, and Euclidean z-score baselines, with a focus on real-time use.",
+      role: "First author and Machine Learning Engineer - contributed to the signal-processing and machine-learning design, feature extraction, model training and evaluation, comparative analysis, and research publication.",
       stack: ["Python", "TensorFlow", "TFLite", "NumPy", "scikit-learn", "Raspberry Pi"],
       outcome:
-        "Achieved 94% classification accuracy. Published in Elsevier Q1 journal. TFLite model ran in under 200ms on Raspberry Pi 4.",
+        "The adaptive DNN with self-feature extraction achieved 90.4% average balanced accuracy for outlier detection and outperformed the evaluated baseline methods. The approach was designed to support real-time electronic-nose filtering and improve downstream screening performance. Published in the peer-reviewed Elsevier journal Sensing and Bio-Sensing Research, Volume 36, Article 100492 (2022).",
       year: 2021,
       category: "Machine Learning",
       featured: false,
-      sortOrder: 4,
-      links: [],
+      sortOrder: 3,
+      coverImageUrl: null,
+      links: [
+        {
+          label: "University news",
+          url: "https://www.its.ac.id/news/en/its-develops-i-nose-c-19-covid-19-detector-through-underarm-sweat-odor/",
+        },
+        {
+          label: "Research paper",
+          url: "https://www.sciencedirect.com/science/article/pii/S2214180422000216",
+        },
+      ],
     },
   ];
 
@@ -742,6 +735,7 @@ The work was published in an Elsevier Q1 journal with 94% classification accurac
         featured: proj.featured,
         sortOrder: proj.sortOrder,
         status: "published",
+        coverImageUrl: proj.coverImageUrl,
         links: proj.links,
       },
     });
