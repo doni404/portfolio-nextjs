@@ -1,232 +1,72 @@
-# GitHub Actions CI/CD Plan
+# GitHub Images and Coolify Deployment
 
-## Purpose
+The implemented workflow is `.github/workflows/images.yml`. Production images
+are built on GitHub-hosted Ubuntu runners, not on the portfolio EC2 instance.
+Coolify pulls and runs the images; PostgreSQL and uploads remain on EC2.
 
-Use GitHub Actions as the main CI system for `doni404/portfolio-nextjs`, with Coolify handling production deployment.
+## Pipeline
 
-The pipeline should protect code quality on pull requests and main branch changes. Production deployment should be managed by Coolify through GitHub integration or a deploy webhook after CI passes.
+1. Pull requests and relevant `main` pushes run the deployment-script tests, API
+   build/tests, and web lint/tests/typecheck with Node 22 and the npm lockfiles.
+2. Main pushes build separate Linux AMD64 API and web images. The web image uses
+   Next.js standalone output. Both images run as the non-root `node` user.
+3. Images are published to private GHCR packages with immutable commit tags:
+   - `ghcr.io/doni404/portfolio-nextjs-api:sha-<full-commit-sha>`
+   - `ghcr.io/doni404/portfolio-nextjs-web:sha-<full-commit-sha>`
+4. When `COOLIFY_DEPLOY_ENABLED=true`, the deploy job validates that both targets
+   are Docker Image applications, sets the API tag, and requests deployment.
+5. It waits for Coolify success and an HTTPS health response with the exact
+   revision before deploying and checking the web image.
 
-## Repository
+The workflow is serialized. API and web builds may run in parallel on separate
+GitHub runners, but deployments to the small EC2 instance run sequentially.
+Pull requests never publish images or use production credentials. Manual runs
+can build without deploying by clearing the `deploy` input.
 
-- GitHub: `https://github.com/doni404/portfolio-nextjs`
-- Default branch: `main`
+## Repository Variables
 
-## Pipeline Overview
+Set these under GitHub Settings > Secrets and variables > Actions > Variables.
 
-### Pull Request CI
+| Variable | Value |
+| --- | --- |
+| `COOLIFY_URL` | `https://coolify.doniputra.com` |
+| `COOLIFY_API_APP_UUID` | UUID of the new API Docker Image application |
+| `COOLIFY_WEB_APP_UUID` | UUID of the new web Docker Image application |
+| `COOLIFY_DEPLOY_ENABLED` | `false` during setup; `true` after cutover |
+| `NEXT_PUBLIC_SITE_URL` | `https://doniputra.com` |
+| `NEXT_PUBLIC_API_URL` | `https://api.doniputra.com` |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | Existing public GA4 measurement ID |
+| `GOOGLE_SITE_VERIFICATION` | Existing public verification value, if used |
 
-Runs on:
+The public URL defaults are in the workflow, but the GA and verification values
+must be supplied to preserve those integrations. `NEXT_PUBLIC_*` values are
+compiled into the web image; changing them requires a new image build.
 
-- Pull requests targeting `main`.
+## Credentials
 
-Required jobs:
+- The workflow uses its short-lived `GITHUB_TOKEN` to publish packages. No
+  personal write token is needed for builds.
+- GitHub secret `COOLIFY_TOKEN` holds a Coolify API token with Read, Write, and
+  Deploy permissions, without Root or Read sensitive data. Treat it as a
+  production credential. Use a bounded expiry and rotate it before expiration.
+- EC2 needs a GitHub credential with only `read:packages` for private GHCR pulls.
+  Authenticate Docker as Coolify's configured server user. Do not put this
+  credential in the repository, image, build arguments, or workflow logs.
+- Runtime database/authentication secrets stay in Coolify and are not passed to
+  the image build. Docker contexts exclude `.env*`, keys, dumps, and uploads.
 
-- Install dependencies with pnpm.
-- Generate Prisma client.
-- Run lint.
-- Run typecheck.
-- Run unit tests.
-- Run API tests against a test PostgreSQL service.
-- Run build for Next.js and Express.js.
-- Optionally run Playwright E2E tests.
+See `docs/deployment/github-images-coolify.md` for the first cutover, storage,
+migrations, verification, and rollback. Leave the old source applications on
+manual deployment and keep them until the image deployment has been verified.
 
-Recommended commands:
+## Billing
 
-```bash
-pnpm install --frozen-lockfile
-pnpm prisma:generate
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm test:api
-pnpm build
-```
+Standard GitHub-hosted runners are free for public repositories. Personal
+GitHub Free accounts include 2,000 minutes per month for private repositories;
+check account usage before enabling paid overages. GHCR container storage and
+bandwidth are currently free, but this can change. External builds improve EC2
+deployment load; they do not eliminate EC2, EBS, or public IPv4 charges.
 
-### Main Branch CI
-
-Runs on:
-
-- Push to `main`.
-
-Required jobs:
-
-- Run the same checks as pull request CI.
-- Build production artifacts.
-- Deploy to AWS EC2 only after checks pass.
-
-### Production Deploy
-
-Runs on:
-
-- Successful push to `main`.
-- Optional manual trigger through `workflow_dispatch`.
-
-Deployment strategy:
-
-- Preferred MVP: Coolify deploys from `main` using its GitHub integration.
-- Optional later: GitHub Actions calls a Coolify deploy webhook after CI passes.
-- Coolify installs dependencies, builds containers, runs configured deployment commands, and restarts applications.
-- GitHub Actions can still run post-deploy smoke checks if deployment is triggered by webhook.
-
-## Required GitHub Secrets
-
-- `PRODUCTION_URL`
-  - Public site URL, for example `https://doniputra.com`.
-
-Optional secrets:
-
-- `COOLIFY_DEPLOY_WEBHOOK`
-  - Coolify webhook URL if GitHub Actions triggers deployment.
-- `TESTSPRITE_API_KEY`
-- `TESTSPRITE_PROJECT_ID`
-- `SLACK_WEBHOOK_URL`
-
-## Required GitHub Variables
-
-- `NODE_VERSION`
-  - Recommended: current LTS used by the project.
-- `PNPM_VERSION`
-  - Pin the pnpm version used by the project.
-
-## Suggested Workflow Files
-
-```text
-.github/
-  workflows/
-    ci.yml
-    deploy.yml
-```
-
-## Example `ci.yml`
-
-```yaml
-name: CI
-
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_DB: portfolio_test
-          POSTGRES_USER: portfolio
-          POSTGRES_PASSWORD: portfolio
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    env:
-      DATABASE_URL: postgresql://portfolio:portfolio@localhost:5432/portfolio_test
-      NODE_ENV: test
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: ${{ vars.PNPM_VERSION }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ vars.NODE_VERSION }}
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm prisma:generate
-      - run: pnpm prisma:migrate:deploy
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm test:api
-      - run: pnpm build
-```
-
-## Example `deploy.yml`
-
-Use this only if you choose GitHub Actions to trigger a Coolify deploy webhook. If Coolify is configured for automatic push-to-deploy from `main`, this workflow is not required.
-
-```yaml
-name: Deploy
-
-on:
-  workflow_dispatch:
-  push:
-    branches: [main]
-
-concurrency:
-  group: production-deploy
-  cancel-in-progress: false
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment: production
-
-    steps:
-      - name: Trigger Coolify deployment
-        run: curl --fail --request GET "${{ secrets.COOLIFY_DEPLOY_WEBHOOK }}"
-
-      - name: Smoke check
-        run: |
-          curl --fail ${{ secrets.PRODUCTION_URL }}
-          curl --fail ${{ secrets.PRODUCTION_URL }}/api/health
-```
-
-## TestSprite Placement
-
-Use TestSprite after the app is available in staging or production-like preview.
-
-Recommended flow:
-
-- Pull request CI runs deterministic local tests.
-- Main branch deploys to staging or production.
-- TestSprite runs critical user flows against the deployed URL.
-- Production smoke checks run after deploy.
-
-If TestSprite provides a GitHub Action or CLI in the implementation phase, add a separate job:
-
-```text
-testsprite:
-  needs: deploy
-  runs-on: ubuntu-latest
-```
-
-The job should use:
-
-- `TESTSPRITE_API_KEY`
-- `TESTSPRITE_PROJECT_ID`
-- `PRODUCTION_URL` or staging URL.
-
-## Deployment Safety
-
-- Use GitHub Environments for production approval if manual review is desired.
-- Use `concurrency` to prevent two deployments from running at the same time.
-- Keep database migrations backward-compatible where possible.
-- Back up PostgreSQL before risky schema changes.
-- Store production application secrets in Coolify environment variables.
-- Do not run destructive reset commands in production.
-
-## Release Gate
-
-Deployment is considered successful when:
-
-- CI passes.
-- Coolify deployment succeeds.
-- Prisma migrations apply successfully through the Coolify deployment command.
-- `GET /api/health` returns success.
-- Homepage loads.
-- Blog index loads.
-- CV download works.
-- TestSprite critical flows pass when enabled.
+Official references:
+- https://docs.github.com/en/billing/concepts/product-billing/github-actions
+- https://docs.github.com/en/billing/concepts/product-billing/github-packages

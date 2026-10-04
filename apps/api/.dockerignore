@@ -1,0 +1,15 @@
+node_modules
+dist
+storage
+.git
+.env
+.env.*
+*.log
+*.tsbuildinfo
+*.pem
+*.key
+*.dump
+.DS_Store
+coverage
+tests
+prisma/seed.ts
