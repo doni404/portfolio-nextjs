@@ -13,6 +13,8 @@ COPY src ./src
 RUN npm run db:generate && npm run build && npm prune --omit=dev
 
 FROM base AS runtime
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 ARG APP_REVISION=development
 ENV NODE_ENV=production \
     PORT=4000 \

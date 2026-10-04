@@ -30,6 +30,8 @@
 Create two **Docker Image** resources in the existing production environment.
 Use the exact image names and `sha-<full-commit-sha>` tag from the successful
 GitHub run. No install, build, or custom start command is needed.
+Both runtime images include `curl` for Coolify's generated health checks as
+well as their own Node-based Docker health check.
 
 | Setting | API | Web |
 | --- | --- | --- |
