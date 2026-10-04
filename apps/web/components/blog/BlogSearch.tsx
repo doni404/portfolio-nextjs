@@ -27,6 +27,7 @@ export function BlogSearch({ defaultValue }: BlogSearchProps) {
       params.delete("q");
     }
     params.delete("category");
+    params.delete("page");
     startTransition(() => {
       router.push(`${pathname}?${params.toString()}`);
     });
@@ -38,6 +39,7 @@ export function BlogSearch({ defaultValue }: BlogSearchProps) {
       <input
         ref={inputRef}
         type="search"
+        aria-label="Search articles"
         defaultValue={defaultValue}
         placeholder="Search articles…"
         className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"

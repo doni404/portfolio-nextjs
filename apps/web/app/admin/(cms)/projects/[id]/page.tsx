@@ -16,7 +16,7 @@ export default async function EditProject({ params }: Props) {
   if (!project) notFound();
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="admin-page">
       <ProjectEditor project={project} />
     </div>
   );

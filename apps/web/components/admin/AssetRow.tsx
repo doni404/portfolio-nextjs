@@ -35,15 +35,15 @@ export function AssetRow({ asset }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6">
+    <section className="admin-asset-section">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-4">
+        <div className="flex min-w-0 items-start gap-4">
           <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
             <Icon className="h-6 w-6 text-slate-500" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="font-semibold text-slate-900">{asset.label}</h3>
-            <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
               <span>{asset.mimeType ?? "—"}</span>
               {asset.sizeBytes && <span>{Math.round(asset.sizeBytes / 1024)} KB</span>}
               <span>Updated {formatDate(asset.updatedAt)}</span>
@@ -88,9 +88,10 @@ export function AssetRow({ asset }: Props) {
       </div>
 
       <div className="mt-4 border-t border-slate-100 pt-4">
-        <label className="mb-1.5 block text-xs font-medium text-slate-500">File URL</label>
+        <label htmlFor={`asset-${asset.key}`} className="mb-1.5 block text-xs font-medium text-slate-500">File URL</label>
         <input
-          type="url"
+          type="text"
+          id={`asset-${asset.key}`}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           disabled={!editing}
@@ -98,6 +99,6 @@ export function AssetRow({ asset }: Props) {
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-500"
         />
       </div>
-    </div>
+    </section>
   );
 }

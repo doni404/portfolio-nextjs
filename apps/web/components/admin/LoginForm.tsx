@@ -47,13 +47,14 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+        <label htmlFor="admin-email" className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
         <input
           {...register("email", {
             required: "Email is required",
             pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Invalid email" },
           })}
           type="email"
+          id="admin-email"
           autoComplete="email"
           placeholder="doniputrapurbawa@gmail.com"
           className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -62,11 +63,12 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+        <label htmlFor="admin-password" className="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
         <div className="relative">
           <input
             {...register("password", { required: "Password is required" })}
             type={showPassword ? "text" : "password"}
+            id="admin-password"
             autoComplete="current-password"
             placeholder="••••••••"
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -84,7 +86,7 @@ export function LoginForm() {
       </div>
 
       {error && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+        <div role="alert" className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
           {error}
         </div>
       )}
@@ -102,9 +104,6 @@ export function LoginForm() {
         {loading ? "Signing in…" : "Sign In"}
       </button>
 
-      <p className="mt-2 text-center text-xs text-slate-400">
-        Use your admin email and password to sign in.
-      </p>
     </form>
   );
 }

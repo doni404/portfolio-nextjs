@@ -14,12 +14,16 @@ function escapeXml(value: string) {
 
 function formatRssDate(value: string) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? new Date().toUTCString() : date.toUTCString();
+  return Number.isNaN(date.getTime()) ? undefined : date.toUTCString();
 }
 
 export async function GET() {
   const response = await publicApi.getBlogs({ pageSize: "50" });
-  const posts = response?.data ?? [];
+  if (!response) return new Response("The journal feed is temporarily unavailable.", {
+    status: 503,
+    headers: { "Retry-After": "60", "Cache-Control": "no-store" },
+  });
+  const posts = response.data;
   const feedUrl = absoluteUrl("/rss.xml");
 
   const items = posts
@@ -27,6 +31,7 @@ export async function GET() {
     .map((post) => {
       const postUrl = absoluteUrl(`/blogs/${post.slug}`);
       const description = post.seoDescription ?? post.excerpt;
+      const publishedDate = formatRssDate(post.publishedAt ?? post.updatedAt);
 
       return `
         <item>
@@ -34,7 +39,7 @@ export async function GET() {
           <link>${escapeXml(postUrl)}</link>
           <guid isPermaLink="true">${escapeXml(postUrl)}</guid>
           <description>${escapeXml(description)}</description>
-          <pubDate>${formatRssDate(post.publishedAt ?? post.updatedAt)}</pubDate>
+          ${publishedDate ? `<pubDate>${publishedDate}</pubDate>` : ""}
           ${post.category ? `<category>${escapeXml(post.category.name)}</category>` : ""}
         </item>`;
     })
@@ -43,7 +48,7 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${escapeXml(siteConfig.title)}</title>
+    <title>Doni Putra - AI &amp; Engineering Journal</title>
     <link>${escapeXml(siteConfig.url)}</link>
     <description>${escapeXml(siteConfig.description)}</description>
     <language>en</language>

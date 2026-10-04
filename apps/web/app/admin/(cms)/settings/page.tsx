@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Save, User, Lock, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { adminClient } from "@/lib/admin-api";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type Status = { type: "success" | "error"; message: string } | null;
 
@@ -11,6 +12,7 @@ function StatusBanner({ status }: { status: Status }) {
   const isSuccess = status.type === "success";
   return (
     <div
+      role={isSuccess ? "status" : "alert"}
       className={`flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium ${
         isSuccess
           ? "bg-green-50 text-green-700 border border-green-200"
@@ -104,15 +106,12 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="mt-1 text-slate-500">Manage your admin account</p>
-      </div>
+    <div className="admin-page">
+      <AdminPageHeader title="Settings" description="Account & security" />
 
-      <div className="max-w-2xl space-y-6">
+      <div className="admin-settings">
         {/* ── Admin Profile ─────────────────────────────────────────────── */}
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
+        <section className="admin-settings-section">
           <h2 className="mb-5 flex items-center gap-2 font-semibold text-slate-900">
             <User className="h-4 w-4 text-blue-600" /> Admin Profile
           </h2>
@@ -127,20 +126,24 @@ export default function AdminSettings() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Name</label>
+                  <label htmlFor="settings-name" className="mb-1.5 block text-sm font-medium text-slate-700">Name</label>
                   <input
                     type="text"
                     value={name}
+                    id="settings-name"
+                    autoComplete="name"
                     onChange={(e) => setName(e.target.value)}
                     required
                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+                  <label htmlFor="settings-email" className="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
                   <input
                     type="email"
                     value={email}
+                    id="settings-email"
+                    autoComplete="email"
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -167,7 +170,7 @@ export default function AdminSettings() {
         </section>
 
         {/* ── Change Password ───────────────────────────────────────────── */}
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
+        <section className="admin-settings-section">
           <h2 className="mb-5 flex items-center gap-2 font-semibold text-slate-900">
             <Lock className="h-4 w-4 text-blue-600" /> Change Password
           </h2>
@@ -176,12 +179,14 @@ export default function AdminSettings() {
             <StatusBanner status={passwordStatus} />
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              <label htmlFor="settings-current-password" className="mb-1.5 block text-sm font-medium text-slate-700">
                 Current Password
               </label>
               <input
                 type="password"
                 value={currentPassword}
+                id="settings-current-password"
+                autoComplete="current-password"
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -189,12 +194,14 @@ export default function AdminSettings() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="settings-new-password" className="mb-1.5 block text-sm font-medium text-slate-700">
                   New Password
                 </label>
                 <input
                   type="password"
                   value={newPassword}
+                  id="settings-new-password"
+                  autoComplete="new-password"
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   minLength={8}
@@ -202,12 +209,14 @@ export default function AdminSettings() {
                 />
               </div>
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label htmlFor="settings-confirm-password" className="mb-1.5 block text-sm font-medium text-slate-700">
                   Confirm New Password
                 </label>
                 <input
                   type="password"
                   value={confirmPassword}
+                  id="settings-confirm-password"
+                  autoComplete="new-password"
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   minLength={8}

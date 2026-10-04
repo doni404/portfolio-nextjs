@@ -13,18 +13,17 @@ import {
   ImageIcon,
   Settings,
   LogOut,
-  ChevronRight,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { cn } from "@/lib/utils";
 
 const navItems: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { href: "/admin",                    label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/admin/blogs",              label: "Blog Posts", icon: FileText },
+  { href: "/admin/blogs",              label: "Journal", icon: FileText },
   { href: "/admin/projects",           label: "Projects",   icon: FolderKanban },
   { href: "/admin/experiences",        label: "Experience", icon: Briefcase },
   { href: "/admin/comments",           label: "Comments",   icon: MessageSquare },
-  { href: "/admin/contact-submissions",label: "Contact",    icon: Mail },
+  { href: "/admin/contact-submissions",label: "Messages",    icon: Mail },
   { href: "/admin/assets",             label: "Assets",     icon: ImageIcon },
   { href: "/admin/settings",           label: "Settings",   icon: Settings },
 ];
@@ -32,9 +31,10 @@ const navItems: { href: string; label: string; icon: React.ComponentType<{ class
 interface AdminSidebarProps {
   newContactCount?: number;
   pendingCommentCount?: number;
+  onNavigate?: () => void;
 }
 
-export function AdminSidebar({ newContactCount = 0, pendingCommentCount = 0 }: AdminSidebarProps) {
+export function AdminSidebar({ newContactCount = 0, pendingCommentCount = 0, onNavigate }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -52,18 +52,18 @@ export function AdminSidebar({ newContactCount = 0, pendingCommentCount = 0 }: A
   }
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-slate-200 bg-white">
+    <aside className="admin-sidebar flex h-full w-60 flex-col border-r border-slate-200 bg-white">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-2 border-b border-slate-200 px-4">
+      <Link href="/admin" onClick={onNavigate} className="admin-sidebar-brand">
         <BrandMark className="h-8 w-8" />
         <div>
-          <p className="text-sm font-semibold text-slate-900">Admin CMS</p>
-          <p className="text-xs text-slate-400">Doni Putra Portfolio</p>
+          <p className="text-sm font-semibold text-slate-900">Doni Putra.</p>
+          <p className="text-xs text-slate-500">Admin</p>
         </div>
-      </div>
+      </Link>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Admin navigation">
         <ul className="space-y-0.5">
           {navItems.map(({ href, label, icon: Icon }) => {
             const isActive =
@@ -74,6 +74,8 @@ export function AdminSidebar({ newContactCount = 0, pendingCommentCount = 0 }: A
               <li key={href}>
                 <Link
                   href={href}
+                  onClick={onNavigate}
+                  aria-current={isActive ? "page" : undefined}
                   className={cn(
                     "flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     isActive
@@ -102,7 +104,6 @@ export function AdminSidebar({ newContactCount = 0, pendingCommentCount = 0 }: A
                         {pendingCommentCount > 99 ? "99+" : pendingCommentCount}
                       </span>
                     )}
-                    {isActive && <ChevronRight className="h-4 w-4" />}
                   </span>
                 </Link>
               </li>
@@ -113,12 +114,7 @@ export function AdminSidebar({ newContactCount = 0, pendingCommentCount = 0 }: A
 
       {/* Footer */}
       <div className="border-t border-slate-200 p-3">
-        <div className="mb-2 flex items-center gap-2 rounded-lg px-3 py-2">
-          <img
-            src="/profile.png"
-            alt="Doni Putra Purbawa"
-            className="h-8 w-8 rounded-full object-cover ring-2 ring-blue-100"
-          />
+        <div className="mb-2 flex items-center gap-2 px-3 py-2">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium text-slate-900">Doni Putra Purbawa</p>
             <p className="truncate text-xs text-slate-400">Owner</p>
@@ -126,7 +122,7 @@ export function AdminSidebar({ newContactCount = 0, pendingCommentCount = 0 }: A
         </div>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50"
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
         >
           <LogOut className="h-4 w-4" /> Sign Out
         </button>

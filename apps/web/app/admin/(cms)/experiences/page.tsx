@@ -9,14 +9,7 @@ export default async function AdminExperiences() {
   const experiences = res?.data ?? [];
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Experience</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          {experiences.length} {experiences.length === 1 ? "entry" : "entries"} · drag to reorder
-        </p>
-      </div>
-
+    <div className="admin-page">
       <ExperienceList initialExperiences={experiences} />
     </div>
   );

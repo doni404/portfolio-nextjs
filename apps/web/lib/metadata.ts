@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
+import { mediaUrl } from "./media";
+
+export function siteOrigin(value?: string) {
+  const url = new URL(value?.trim() || "https://doniputra.com");
+  if (!/^https?:$/.test(url.protocol) || url.username || url.password)
+    throw new Error("NEXT_PUBLIC_SITE_URL must be a public HTTP(S) URL.");
+  return url.origin;
+}
 
 export const siteConfig = {
   name: "Doni Putra Purbawa",
   shortName: "Doni Putra",
-  title: "Doni Putra Purbawa - Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI",
+  title: "Doni Putra Purbawa | Cloud Architect & Backend Engineer",
   description:
-    "Cloud Architect & Senior Backend Engineer specializing in AWS, fintech, cloud platforms, and AI-powered systems. Based in Indonesia, open to Japan opportunities.",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://doniputra.com",
+    "AI insights and technical case studies by Doni Putra Purbawa, a Cloud Architect and Senior Backend Engineer working with AWS, fintech, and AI systems.",
+  url: siteOrigin(process.env.NEXT_PUBLIC_SITE_URL),
   creator: "Doni Putra Purbawa",
   email: "doniputrapurbawa@gmail.com",
 };
@@ -17,11 +25,14 @@ type PageMetadataInput = {
   path?: string;
   imageTitle?: string;
   imageDescription?: string;
+  image?: string;
   type?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
   tags?: string[];
   noIndex?: boolean;
+  noFollow?: boolean;
+  authorName?: string;
 };
 
 export function absoluteUrl(path = "/") {
@@ -42,31 +53,53 @@ export function ogImageUrl(params: {
   return absoluteUrl(`/api/og?${search.toString()}`);
 }
 
+export function socialImageUrl(image?: string) {
+  if (!image) return undefined;
+  try {
+    const url = new URL(mediaUrl(image)!, siteConfig.url);
+    return /^https?:$/.test(url.protocol) ? url.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function buildMetadata({
   title,
   description = siteConfig.description,
   path = "/",
   imageTitle = title ?? siteConfig.shortName,
   imageDescription = description,
+  image: coverImage,
   type = "website",
   publishedTime,
   modifiedTime,
   tags,
   noIndex = false,
+  noFollow = false,
+  authorName = siteConfig.name,
 }: PageMetadataInput = {}): Metadata {
-  const pageTitle = title ? `${title} | ${siteConfig.name}` : siteConfig.title;
-  const url = absoluteUrl(path);
-  const image = ogImageUrl({
-    title: imageTitle,
-    description: imageDescription,
-    label: type === "article" ? "Technical Article" : "Portfolio",
-  });
+  const pageTitle = title ? `${title} | ${siteConfig.shortName}` : siteConfig.title;
+  const canonical = new URL(absoluteUrl(path));
+  canonical.hash = "";
+  const url = canonical.toString();
+  const suppliedImage = socialImageUrl(coverImage);
+  const image = suppliedImage ??
+    ogImageUrl({
+      title: imageTitle,
+      description: imageDescription,
+      label: type === "article" ? "The Journal" : "Journal & Portfolio",
+    });
 
   return {
-    title: title ?? siteConfig.title,
+    title: { absolute: pageTitle },
     description,
     alternates: {
       canonical: url,
+      types: {
+        "application/rss+xml": [
+          { url: absoluteUrl("/rss.xml"), title: "Doni Putra's Journal" },
+        ],
+      },
     },
     openGraph: {
       title: pageTitle,
@@ -78,8 +111,7 @@ export function buildMetadata({
       images: [
         {
           url: image,
-          width: 1200,
-          height: 630,
+          ...(!suppliedImage ? { width: 1200, height: 630 } : {}),
           alt: imageTitle,
         },
       ],
@@ -88,6 +120,7 @@ export function buildMetadata({
             publishedTime,
             modifiedTime,
             tags,
+            authors: [authorName],
           }
         : {}),
     },
@@ -96,16 +129,21 @@ export function buildMetadata({
       title: pageTitle,
       description,
       images: [image],
-      creator: "@doni404",
     },
-    robots: noIndex
-      ? {
-          index: false,
-          follow: false,
-        }
-      : {
-          index: true,
-          follow: true,
-        },
+    robots: {
+      index: !noIndex,
+      follow: !noFollow,
+      ...(!noIndex
+        ? {
+            googleBot: {
+              index: true,
+              follow: true,
+              "max-image-preview": "large",
+              "max-snippet": -1,
+              "max-video-preview": -1,
+            },
+          }
+        : {}),
+    },
   };
 }

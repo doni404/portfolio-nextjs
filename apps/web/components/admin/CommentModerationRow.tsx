@@ -56,7 +56,7 @@ export function CommentModerationRow({ comment }: Props) {
 
   return (
     <div
-      className={`rounded-xl border bg-white p-5 transition-colors ${
+      className={`admin-comment-row border bg-white p-5 transition-colors ${
         status === "pending" ? "border-amber-200" : "border-slate-200"
       }`}
     >
@@ -80,13 +80,14 @@ export function CommentModerationRow({ comment }: Props) {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-shrink-0 items-center gap-1">
+        <div className="admin-row-actions">
           {status !== "approved" && (
             <button
               onClick={() => doAction("approved")}
               disabled={actioning}
               className="rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-emerald-600 hover:bg-emerald-100 disabled:opacity-50"
               title="Approve"
+              aria-label="Approve comment"
             >
               <CheckCircle className="h-4 w-4" />
             </button>
@@ -97,6 +98,7 @@ export function CommentModerationRow({ comment }: Props) {
               disabled={actioning}
               className="rounded-lg border border-red-200 bg-red-50 p-2 text-red-600 hover:bg-red-100 disabled:opacity-50"
               title="Reject"
+              aria-label="Reject comment"
             >
               <XCircle className="h-4 w-4" />
             </button>
@@ -107,6 +109,7 @@ export function CommentModerationRow({ comment }: Props) {
               disabled={actioning}
               className="rounded-lg border border-amber-200 bg-amber-50 p-2 text-amber-600 hover:bg-amber-100 disabled:opacity-50"
               title="Mark as spam"
+              aria-label="Mark comment as spam"
             >
               <AlertTriangle className="h-4 w-4" />
             </button>
@@ -116,6 +119,7 @@ export function CommentModerationRow({ comment }: Props) {
             disabled={actioning}
             className="rounded-lg border border-slate-200 p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
             title="Delete permanently"
+            aria-label="Delete comment"
           >
             <Trash2 className="h-4 w-4" />
           </button>

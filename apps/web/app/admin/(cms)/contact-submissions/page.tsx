@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { adminApi } from "@/lib/server-api";
 import { ContactSubmissionRow } from "@/components/admin/ContactSubmissionRow";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminFilters } from "@/components/admin/AdminFilters";
 
 export const metadata: Metadata = { title: "Contact Submissions" };
 
@@ -24,34 +25,23 @@ export default async function AdminContactSubmissions({ searchParams }: Props) {
   ];
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Contact Submissions</h1>
-        <p className="mt-0.5 text-sm text-slate-500">{total} message{total !== 1 ? "s" : ""}</p>
-      </div>
+    <div className="admin-page">
+      <AdminPageHeader title="Messages" description={`${total} message${total !== 1 ? "s" : ""}`} />
 
       {/* Status filter tabs */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {filterTabs.map((tab) => (
-          <Link
-            key={tab.label}
-            href={tab.value ? `/admin/contact-submissions?status=${tab.value}` : "/admin/contact-submissions"}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-              status === tab.value || (!status && !tab.value)
-                ? "border-blue-200 bg-blue-50 text-blue-700"
-                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
+      <div className="admin-list-toolbar">
+        <AdminFilters options={filterTabs.map((tab) => ({
+          label: tab.label,
+          href: tab.value ? `/admin/contact-submissions?status=${tab.value}` : "/admin/contact-submissions",
+          active: status === tab.value || (!status && !tab.value),
+        }))} />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="admin-table-wrap">
         {submissions.length === 0 ? (
           <div className="py-16 text-center text-slate-400">No submissions found.</div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="admin-message-table w-full text-sm" aria-label="Contact messages">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50 text-left">
                 <th className="px-4 py-3 font-medium text-slate-600">From</th>

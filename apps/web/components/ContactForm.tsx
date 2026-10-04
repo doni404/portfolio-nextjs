@@ -32,7 +32,7 @@ export function ContactForm() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data),
-        }
+        },
       );
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
@@ -41,7 +41,11 @@ export function ContactForm() {
       setSubmitted(true);
       reset();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+      alert(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -51,7 +55,9 @@ export function ContactForm() {
     return (
       <div className="flex flex-col items-center justify-center py-10 text-center">
         <CheckCircle className="h-12 w-12 text-emerald-500" />
-        <h3 className="mt-4 text-lg font-semibold text-slate-900">Message Sent!</h3>
+        <h3 className="mt-4 text-lg font-semibold text-slate-900">
+          Message Sent!
+        </h3>
         <p className="mt-2 text-slate-500">
           Thanks for reaching out. I&apos;ll get back to you within 24–48 hours.
         </p>
@@ -69,21 +75,33 @@ export function ContactForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="contact-name"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
             Name <span className="text-red-500">*</span>
           </label>
           <input
             {...register("name", { required: "Name is required" })}
+            id="contact-name"
+            autoComplete="name"
+            aria-invalid={Boolean(errors.name)}
+            aria-describedby={errors.name ? "contact-name-error" : undefined}
             type="text"
             placeholder="Your full name"
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
           {errors.name && (
-            <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>
+            <p id="contact-name-error" className="mt-1 text-xs text-red-600">
+              {errors.name.message}
+            </p>
           )}
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">
+          <label
+            htmlFor="contact-email"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
             Email <span className="text-red-500">*</span>
           </label>
           <input
@@ -95,29 +113,48 @@ export function ContactForm() {
               },
             })}
             type="email"
+            id="contact-email"
+            autoComplete="email"
+            aria-invalid={Boolean(errors.email)}
+            aria-describedby={errors.email ? "contact-email-error" : undefined}
             placeholder="your@email.com"
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
           {errors.email && (
-            <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>
+            <p id="contact-email-error" className="mt-1 text-xs text-red-600">
+              {errors.email.message}
+            </p>
           )}
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">Company</label>
+          <label
+            htmlFor="contact-company"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
+            Company
+          </label>
           <input
             {...register("company")}
+            id="contact-company"
+            autoComplete="organization"
             type="text"
             placeholder="Your company (optional)"
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-slate-700">Subject</label>
+          <label
+            htmlFor="contact-subject"
+            className="mb-1.5 block text-sm font-medium text-slate-700"
+          >
+            Subject
+          </label>
           <input
             {...register("subject")}
+            id="contact-subject"
             type="text"
             placeholder="What's this about?"
             className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -126,20 +163,33 @@ export function ContactForm() {
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-slate-700">
+        <label
+          htmlFor="contact-message"
+          className="mb-1.5 block text-sm font-medium text-slate-700"
+        >
           Message <span className="text-red-500">*</span>
         </label>
         <textarea
           {...register("message", {
             required: "Message is required",
-            minLength: { value: 20, message: "Please write at least 20 characters" },
+            minLength: {
+              value: 20,
+              message: "Please write at least 20 characters",
+            },
           })}
           rows={5}
+          id="contact-message"
+          aria-invalid={Boolean(errors.message)}
+          aria-describedby={
+            errors.message ? "contact-message-error" : undefined
+          }
           placeholder="Tell me about the role, project, or question you have..."
           className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
         />
         {errors.message && (
-          <p className="mt-1 text-xs text-red-600">{errors.message.message}</p>
+          <p id="contact-message-error" className="mt-1 text-xs text-red-600">
+            {errors.message.message}
+          </p>
         )}
       </div>
 

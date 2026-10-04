@@ -48,11 +48,15 @@ export function ContactSubmissionRow({ submission }: Props) {
       >
         <td className="px-4 py-3">
           <div>
-            <p className="font-medium text-slate-900">{submission.name}</p>
+            <button type="button" className="admin-message-toggle" aria-expanded={expanded} aria-controls={`message-${submission.id}`} onClick={(event) => { event.stopPropagation(); setExpanded(!expanded); }}>
+              {submission.name}
+            </button>
             <p className="text-xs text-slate-500">{submission.email}</p>
             {submission.company && (
               <p className="text-xs text-slate-400">{submission.company}</p>
             )}
+            <p className="admin-message-subject">{submission.subject ?? "(no subject)"}</p>
+            <p className="admin-table-mobile-meta">{formatDate(submission.createdAt)}</p>
           </div>
         </td>
         <td className="hidden px-4 py-3 text-slate-700 sm:table-cell">
@@ -65,12 +69,13 @@ export function ContactSubmissionRow({ submission }: Props) {
           <Badge variant={statusVariants[status] ?? "gray"}>{status}</Badge>
         </td>
         <td className="px-4 py-3">
-          <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <div className="admin-row-actions">
             <button
               onClick={(e) => { e.stopPropagation(); updateStatus("read"); }}
               disabled={actioning || status === "read"}
               className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-40"
               title="Mark as read"
+              aria-label="Mark as read"
             >
               <Eye className="h-4 w-4" />
             </button>
@@ -79,6 +84,7 @@ export function ContactSubmissionRow({ submission }: Props) {
               disabled={actioning || status === "replied"}
               className="rounded-md p-1.5 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 disabled:opacity-40"
               title="Mark as replied"
+              aria-label="Mark as replied"
             >
               <MailCheck className="h-4 w-4" />
             </button>
@@ -87,6 +93,7 @@ export function ContactSubmissionRow({ submission }: Props) {
               disabled={actioning || status === "archived"}
               className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-500 disabled:opacity-40"
               title="Archive"
+              aria-label="Archive message"
             >
               <Archive className="h-4 w-4" />
             </button>
@@ -96,7 +103,7 @@ export function ContactSubmissionRow({ submission }: Props) {
       {expanded && (
         <tr className="bg-slate-50">
           <td colSpan={5} className="px-4 py-3">
-            <div className="max-w-2xl">
+            <div id={`message-${submission.id}`} className="max-w-2xl">
               <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">Message</p>
               <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">{submission.message}</p>
               <div className="mt-3 flex gap-2">

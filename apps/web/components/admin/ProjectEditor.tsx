@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, FileImage, Save, Trash2, Upload } from "lucide-react";
 import { useForm } from "react-hook-form";
 import type { Project } from "@/lib/server-api";
 import { adminClient } from "@/lib/admin-api";
+import { mediaUrl } from "@/lib/media";
 
 const projectCategories = [
   { label: "Backend Engineering", slug: "backend-engineering" },
@@ -37,11 +40,13 @@ interface ProjectFormData {
 }
 
 export function ProjectEditor({ project }: ProjectEditorProps) {
+  const router = useRouter();
 
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [coverFile, setCoverFile] = useState<File | null>(null);
+  const coverPreviewUrl = mediaUrl(project?.coverImageUrl);
 
   const { register, handleSubmit } = useForm<ProjectFormData>({
     defaultValues: {
@@ -103,7 +108,8 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
         await adminClient.uploadProjectCover(coverFile, saved.slug);
       }
 
-      window.location.href = "/admin/projects";
+      router.push("/admin/projects");
+      router.refresh();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Failed to save project.");
     } finally {
@@ -117,7 +123,8 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
     setDeleting(true);
     try {
       await adminClient.deleteProject(project.id);
-      window.location.href = "/admin/projects";
+      router.push("/admin/projects");
+      router.refresh();
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete project.");
     } finally {
@@ -126,16 +133,19 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="flex items-center justify-between">
-        <Link href="/admin/projects" className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800">
+    <form onSubmit={handleSubmit(onSubmit)} className="admin-editor">
+      <div className="admin-editor-toolbar">
+        <div>
+        <Link href="/admin/projects" className="admin-editor-back">
           <ArrowLeft className="h-4 w-4" /> Back to projects
         </Link>
-        <div className="flex gap-2">
+        <h1>{project ? "Edit project" : "New project"}</h1>
+        </div>
+        <div className="admin-editor-actions">
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="admin-primary-button disabled:opacity-50"
           >
             <Save className="h-4 w-4" /> {saving ? "Saving…" : "Save Project"}
           </button>
@@ -143,41 +153,43 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
       </div>
 
       {saveError && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {saveError}
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="admin-editor-grid">
+        <div className="admin-editor-fields">
           {/* Basic info */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+          <section className="admin-form-section space-y-4">
             <h2 className="text-sm font-semibold text-slate-700">Project Info</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-xs font-medium text-slate-500">Title</label>
-                <input {...register("title", { required: true })} type="text" placeholder="Payment Gateway & Subscription Platform" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+                <input {...register("title", { required: true })} aria-label="Title" type="text" placeholder="Payment Gateway & Subscription Platform" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500">Slug</label>
-                <input {...register("slug")} type="text" placeholder="payment-gateway-platform" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
+                <input {...register("slug")} aria-label="Slug" type="text" placeholder="payment-gateway-platform" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-slate-500">Year</label>
-                <input {...register("year", { valueAsNumber: true })} type="number" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
+                <input {...register("year", { valueAsNumber: true })} aria-label="Year" type="number" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
               </div>
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Summary</label>
-              <textarea {...register("summary")} rows={2} placeholder="One-paragraph overview of the project…" className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" />
+              <textarea {...register("summary")} aria-label="Summary" rows={2} placeholder="One-paragraph overview of the project…" className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Cover Image or Workflow Path</label>
+              {coverPreviewUrl && <Image src={coverPreviewUrl} alt="Current project cover" width={1200} height={675} unoptimized className="admin-cover-preview" />}
               <label className="mb-2 flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-3 text-sm text-slate-600 hover:border-blue-400 hover:bg-blue-50">
                 <Upload className="h-4 w-4 text-blue-600" />
                 <span>{coverFile ? coverFile.name : "Upload an image"}</span>
                 <input
                   type="file"
+                  aria-label="Upload project cover"
                   accept="image/png,image/jpeg,image/webp,image/gif"
                   className="sr-only"
                   onChange={(event) => setCoverFile(event.target.files?.[0] ?? null)}
@@ -188,6 +200,7 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
               </div>
               <input
                 {...register("coverImageUrl")}
+                aria-label="Cover image or workflow path"
                 type="text"
                 placeholder="/projects/inosec19.png or https://example.com/image.png"
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -198,16 +211,17 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
               <label className="mb-1 block text-xs font-medium text-slate-500">Related Links</label>
               <textarea
                 {...register("links")}
+                aria-label="Related links"
                 rows={3}
                 placeholder={'University news | https://example.com/news\nResearch paper | https://example.com/paper'}
                 className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
               <p className="mt-1 text-xs text-slate-400">One link per line using: Label | URL</p>
             </div>
-          </div>
+          </section>
 
           {/* Case study content */}
-          <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+          <section className="admin-form-section space-y-4">
             <h2 className="text-sm font-semibold text-slate-700">Case Study</h2>
             {[
               { name: "problem" as const, label: "Problem", placeholder: "What was the challenge or requirement?" },
@@ -219,6 +233,7 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
                 <label className="mb-1 block text-xs font-medium text-slate-500">{label}</label>
                 <textarea
                   {...register(name)}
+                  aria-label={label}
                   rows={3}
                   placeholder={placeholder}
                   className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -227,18 +242,18 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
             ))}
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Tech Stack (comma-separated)</label>
-              <input {...register("stack")} type="text" placeholder="Node.js, PostgreSQL, Redis, Docker" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
+              <input {...register("stack")} aria-label="Tech stack" type="text" placeholder="Node.js, PostgreSQL, Redis, Docker" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none" />
             </div>
-          </div>
+          </section>
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4">
-          <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+        <div className="admin-editor-sidebar">
+          <section className="admin-form-section space-y-4">
             <h3 className="text-sm font-semibold text-slate-700">Settings</h3>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Status</label>
-              <select {...register("status")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none">
+              <select {...register("status")} aria-label="Status" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none">
                 <option value="published">Published</option>
                 <option value="draft">Draft</option>
                 <option value="archived">Archived</option>
@@ -246,7 +261,7 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-slate-500">Category</label>
-              <select {...register("categorySlug")} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none">
+              <select {...register("categorySlug")} aria-label="Category" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none">
                 {projectCategories.map((cat) => (
                   <option key={cat.slug} value={cat.slug}>{cat.label}</option>
                 ))}
@@ -256,10 +271,10 @@ export function ProjectEditor({ project }: ProjectEditorProps) {
               <input {...register("featured")} type="checkbox" id="proj-featured" className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
               <label htmlFor="proj-featured" className="text-sm text-slate-700">Featured project</label>
             </div>
-          </div>
+          </section>
 
           {project && (
-            <div className="rounded-xl border border-red-100 bg-red-50 p-5">
+            <div className="admin-editor-danger">
               <h3 className="mb-3 text-sm font-semibold text-red-700">Danger Zone</h3>
               <button
                 type="button"

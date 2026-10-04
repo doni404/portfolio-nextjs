@@ -24,6 +24,7 @@ function fromDateInput(val: string) {
 export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
   const isEdit = !!experience;
   const backdropRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const [company, setCompany] = useState(experience?.company ?? "");
   const [role, setRole] = useState(experience?.role ?? "");
@@ -41,11 +42,22 @@ export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // Close on Escape
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const previous = document.activeElement as HTMLElement | null;
+    dialogRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+      if (event.key !== "Tab") return;
+      const controls = dialogRef.current?.querySelectorAll<HTMLElement>("button:not([disabled]), input:not([disabled]), textarea, select");
+      const first = controls?.[0], last = controls?.[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last?.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first?.focus();
+      }
+    };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    return () => { window.removeEventListener("keydown", handler); previous?.focus(); };
   }, [onClose]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -86,15 +98,17 @@ export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
       className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8 backdrop-blur-sm"
       onClick={(e) => { if (e.target === backdropRef.current) onClose(); }}
     >
-      <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
+      <div ref={dialogRef} className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="experience-editor-title">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <h2 className="font-semibold text-slate-900">
+          <h2 id="experience-editor-title" className="font-semibold text-slate-900">
             {isEdit ? "Edit Experience" : "Add Experience"}
           </h2>
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close experience editor"
+            title="Close"
             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
           >
             <X className="h-5 w-5" />
@@ -111,20 +125,22 @@ export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Company *</label>
+              <label htmlFor="exp-company" className="mb-1.5 block text-sm font-medium text-slate-700">Company *</label>
               <input
                 type="text"
                 value={company}
+                id="exp-company"
                 onChange={(e) => setCompany(e.target.value)}
                 required
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Role / Title *</label>
+              <label htmlFor="exp-role" className="mb-1.5 block text-sm font-medium text-slate-700">Role / Title *</label>
               <input
                 type="text"
                 value={role}
+                id="exp-role"
                 onChange={(e) => setRole(e.target.value)}
                 required
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -133,10 +149,11 @@ export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Location</label>
+            <label htmlFor="exp-location" className="mb-1.5 block text-sm font-medium text-slate-700">Location</label>
             <input
               type="text"
               value={location}
+              id="exp-location"
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Jakarta, Indonesia · Remote"
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -145,20 +162,22 @@ export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">Start Date *</label>
+              <label htmlFor="exp-start" className="mb-1.5 block text-sm font-medium text-slate-700">Start Date *</label>
               <input
                 type="month"
                 value={startDate}
+                id="exp-start"
                 onChange={(e) => setStartDate(e.target.value)}
                 required
                 className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">End Date</label>
+              <label htmlFor="exp-end" className="mb-1.5 block text-sm font-medium text-slate-700">End Date</label>
               <input
                 type="month"
                 value={endDate}
+                id="exp-end"
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={isCurrent}
                 placeholder="Present"
@@ -184,9 +203,10 @@ export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">Summary</label>
+            <label htmlFor="exp-summary" className="mb-1.5 block text-sm font-medium text-slate-700">Summary</label>
             <textarea
               value={summary}
+              id="exp-summary"
               onChange={(e) => setSummary(e.target.value)}
               rows={3}
               placeholder="Brief description of your role…"
@@ -195,11 +215,12 @@ export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label htmlFor="exp-highlights" className="mb-1.5 block text-sm font-medium text-slate-700">
               Highlights <span className="font-normal text-slate-400">(one per line)</span>
             </label>
             <textarea
               value={highlights}
+              id="exp-highlights"
               onChange={(e) => setHighlights(e.target.value)}
               rows={4}
               placeholder={"Led migration to microservices\nReduced latency by 40%"}
@@ -208,12 +229,13 @@ export function ExperienceEditor({ experience, onClose, onSaved }: Props) {
           </div>
 
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+            <label htmlFor="exp-technologies" className="mb-1.5 block text-sm font-medium text-slate-700">
               Technologies <span className="font-normal text-slate-400">(comma-separated)</span>
             </label>
             <input
               type="text"
               value={technologies}
+              id="exp-technologies"
               onChange={(e) => setTechnologies(e.target.value)}
               placeholder="Go, Kubernetes, PostgreSQL, Redis"
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"

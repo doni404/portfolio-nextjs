@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Download, MapPin, BookOpen, Award, GraduationCap } from "lucide-react";
-import { buildMetadata } from "@/lib/metadata";
+import { absoluteUrl, buildMetadata } from "@/lib/metadata";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { personSchema } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
   title: "About",
@@ -100,11 +103,12 @@ const education = [
 
 const publications = [
   {
-    title: "Deep Learning-Based Anomaly Detection for i-Nose C-19 Electronic Nose System",
-    journal: "Heliyon (Elsevier) — Q1 Journal",
+    title: "Adaptive filter for detection outlier data on electronic nose signal",
+    journal: "Sensing and Bio-Sensing Research (Elsevier), Volume 36, Article 100492",
     year: "2022",
     description:
-      "Classification of COVID-19 exhaled breath biomarkers using CNN-LSTM hybrid model trained on MOS sensor time-series data. Achieved 94% accuracy on held-out test set.",
+      "First-author research on an adaptive deep-neural-network filter for electronic-nose sensor outliers. Reported 90.4% average balanced accuracy for outlier detection, not clinical COVID-19 diagnosis.",
+    url: "https://doi.org/10.1016/j.sbsr.2022.100492",
   },
   {
     title: "Machine Learning & Deep Learning using Python",
@@ -117,15 +121,23 @@ const publications = [
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="about-page min-h-screen bg-slate-50">
+      <JsonLd data={{
+        "@context": "https://schema.org",
+        "@type": "ProfilePage",
+        url: absoluteUrl("/about"),
+        mainEntity: personSchema,
+      }} />
       {/* Header */}
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
             <div className="flex-shrink-0">
-              <img
+              <Image
                 src="/profile.png"
                 alt="Doni Putra Purbawa"
+                width={96}
+                height={96}
                 className="h-24 w-24 rounded-2xl object-cover shadow-lg ring-2 ring-blue-100"
               />
             </div>
@@ -166,7 +178,7 @@ export default function About() {
           {/* Engineering Philosophy */}
           <section>
             <h2 className="mb-6 text-xl font-bold text-slate-900">Engineering Philosophy</h2>
-            <Card>
+            <Card className="philosophy-copy">
               <div className="space-y-4 text-slate-600 leading-relaxed">
                 <p>
                   Good cloud architecture is quiet — your users never think about the networks,
@@ -285,6 +297,11 @@ export default function About() {
                   </div>
                   <p className="mt-1 text-xs font-medium text-blue-600">{pub.journal}</p>
                   <p className="mt-2 text-sm text-slate-600 leading-relaxed">{pub.description}</p>
+                  {"url" in pub && (
+                    <a href={pub.url} target="_blank" rel="noopener noreferrer" className="text-link mt-3 inline-flex">
+                      Read the paper
+                    </a>
+                  )}
                 </Card>
               ))}
             </div>

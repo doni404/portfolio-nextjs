@@ -4,6 +4,9 @@ import { Plus, Edit, Eye } from "lucide-react";
 import { adminApi } from "@/lib/server-api";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { AdminFilters } from "@/components/admin/AdminFilters";
+import { AdminSortSelect } from "@/components/admin/AdminSortSelect";
 
 export const metadata: Metadata = { title: "Blog Posts" };
 
@@ -49,63 +52,36 @@ export default async function AdminBlogs({ searchParams }: Props) {
   }
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Blog Posts</h1>
-          <p className="mt-0.5 text-sm text-slate-500">{total} post{total !== 1 ? "s" : ""} total</p>
-        </div>
+    <div className="admin-page">
+      <AdminPageHeader title="Journal" description={`${total} post${total !== 1 ? "s" : ""}`} actions={
         <Link
           href="/admin/blogs/new"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="admin-primary-button"
         >
           <Plus className="h-4 w-4" /> New Post
         </Link>
-      </div>
+      } />
 
-      {/* Status filter tabs */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        {filterTabs.map((tab) => (
-          <Link
-            key={tab.label}
-            href={listHref({ status: tab.value, sort: activeSort })}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-              status === tab.value || (!status && !tab.value)
-                ? "border-blue-200 bg-blue-50 text-blue-700"
-                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            {tab.label}
-          </Link>
-        ))}
-      </div>
-
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="text-sm font-medium text-slate-500">Sort by</span>
-        {sortOptions.map((option) => (
-          <Link
-            key={option.value}
-            href={listHref({ status, sort: option.value })}
-            className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-              activeSort === option.value
-                ? "border-slate-300 bg-slate-900 text-white"
-                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-            }`}
-          >
-            {option.label}
-          </Link>
-        ))}
+      <div className="admin-list-toolbar">
+        <AdminFilters options={filterTabs.map((tab) => ({
+          label: tab.label,
+          href: listHref({ status: tab.value, sort: activeSort }),
+          active: status === tab.value || (!status && !tab.value),
+        }))} />
+        <AdminSortSelect value={activeSort} options={sortOptions.map((option) => ({
+          ...option, href: listHref({ status, sort: option.value }),
+        }))} />
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-        <table className="w-full text-sm">
+      <div className="admin-table-wrap">
+        <table className="admin-content-table w-full text-sm" aria-label="Journal posts">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50 text-left">
               <th className="px-4 py-3 font-medium text-slate-600">Title</th>
               <th className="hidden px-4 py-3 font-medium text-slate-600 sm:table-cell">Category</th>
               <th className="hidden px-4 py-3 font-medium text-slate-600 md:table-cell">Updated</th>
-              <th className="hidden px-4 py-3 font-medium text-slate-600 lg:table-cell">Published</th>
+              <th className="hidden px-4 py-3 font-medium text-slate-600 xl:table-cell">Published</th>
               <th className="px-4 py-3 font-medium text-slate-600">Status</th>
               <th className="px-4 py-3 text-right font-medium text-slate-600">Actions</th>
             </tr>
@@ -124,8 +100,9 @@ export default async function AdminBlogs({ searchParams }: Props) {
               posts.map((post) => (
                 <tr key={post.id} className="group hover:bg-slate-50">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-900 line-clamp-1">{post.title}</p>
+                    <Link href={`/admin/blogs/${post.id}`} className="font-medium text-slate-900 line-clamp-1 hover:text-blue-700">{post.title}</Link>
                     <p className="text-xs text-slate-400">/blogs/{post.slug}</p>
+                    <p className="admin-table-mobile-meta">{post.category?.name ?? "Uncategorized"} · {formatDate(post.updatedAt)}</p>
                   </td>
                   <td className="hidden px-4 py-3 text-slate-600 sm:table-cell">
                     {post.category?.name ?? "—"}
@@ -133,7 +110,7 @@ export default async function AdminBlogs({ searchParams }: Props) {
                   <td className="hidden px-4 py-3 text-slate-500 md:table-cell">
                     {formatDate(post.updatedAt)}
                   </td>
-                  <td className="hidden px-4 py-3 text-slate-500 lg:table-cell">
+                  <td className="hidden px-4 py-3 text-slate-500 xl:table-cell">
                     {post.publishedAt ? formatDate(post.publishedAt) : "—"}
                   </td>
                   <td className="px-4 py-3">
@@ -143,11 +120,12 @@ export default async function AdminBlogs({ searchParams }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                    <div className="admin-row-actions">
                       <Link
                         href={`/admin/blogs/${post.id}`}
                         className="rounded-md p-1.5 text-slate-400 hover:bg-blue-50 hover:text-blue-600"
                         title="Edit"
+                        aria-label={`Edit ${post.title}`}
                       >
                         <Edit className="h-4 w-4" />
                       </Link>
@@ -155,8 +133,10 @@ export default async function AdminBlogs({ searchParams }: Props) {
                         <Link
                           href={`/blogs/${post.slug}`}
                           target="_blank"
+                          rel="noopener noreferrer"
                           className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
                           title="View live"
+                          aria-label={`View ${post.title}`}
                         >
                           <Eye className="h-4 w-4" />
                         </Link>

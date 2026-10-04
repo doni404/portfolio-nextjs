@@ -1,0 +1,46 @@
+{
+  "version": "product-projects-2026",
+  "projects": [
+    {
+      "slug": "milc-voice-ai-text-editing",
+      "title": "milc: Voice-Powered AI Text Editing for Windows & Mac",
+      "summary": "An Electron desktop app that brings voice input, rewriting, translation, and shortcuts into everyday writing, backed by a Node.js and Express API.",
+      "problem": "AI writing tools often require people to leave their email, document, or chat application, paste text elsewhere, and then move the result back. milc addresses that interruption by bringing voice commands and text editing into the user's current desktop workflow.",
+      "solutionFile": "projects/milc.md",
+      "role": "**Product Creator & Software Engineer.** Created milc, including the Electron desktop application and the Node.js/Express API. Connected a voice-first editing experience with AI-assisted text transformations and the surrounding product experience.",
+      "outcome": "**Published a voice-first desktop product and its public product experience.** milc presents voice input, selected-text editing, configurable shortcuts, and writing transformations for Windows and macOS. This case study describes the product and documented service boundaries; it does not claim independently measured adoption, latency, or productivity gains.",
+      "stack": ["Electron", "Node.js", "Express", "OpenAI API", "Google Gemini API", "Stripe", "Voice Input", "Windows", "macOS"],
+      "year": 2026,
+      "month": 1,
+      "categorySlug": "ai-llm",
+      "featured": true,
+      "sortOrder": -1,
+      "asset": "milc",
+      "links": [
+        { "label": "Live product", "url": "https://milc.work/en" },
+        { "label": "Security policy", "url": "https://milc.work/en/security" }
+      ]
+    },
+    {
+      "slug": "smartmatch-ocr-ai-document-processing",
+      "title": "SmartMatch OCR: AI Document Processing & Verified Data",
+      "summary": "A Node.js and Express document-intelligence API that turns scans and PDFs into structured data through configurable extraction, validation, human review, and finalized output.",
+      "problem": "Reading characters from a document is not enough to make its contents safe for business systems. Scans, PDFs, and faxed documents contain ambiguous values, inconsistent formats, and incomplete information. Teams need evidence for extracted fields, clear validation rules, and a review boundary before data is released downstream.",
+      "solutionFile": "projects/smartmatch.md",
+      "role": "**Product Creator & Backend Engineer.** Created SmartMatch OCR with a Node.js/Express API. Built an API-oriented document-processing product centered on structured extraction, validation, review, and a clear boundary between intermediate results and finalized business data.",
+      "outcome": "**Published a live product site and an OpenAPI reference for the document-processing lifecycle.** The documented contract supports versioned extraction profiles, asynchronous jobs, validation, separate review and approval, audit history, and finalized output. The public site's adoption, accuracy, and speed figures are not presented here as independently verified engineering benchmarks.",
+      "stack": ["Node.js", "Express", "AI OCR", "REST APIs", "OpenAPI 3.1", "OIDC / JWT", "Human Review", "Document Validation", "Asynchronous Jobs"],
+      "year": 2026,
+      "month": 4,
+      "categorySlug": "ai-llm",
+      "featured": true,
+      "sortOrder": -2,
+      "asset": "smartmatch",
+      "links": [
+        { "label": "Live product", "url": "https://smartmatch.gloding.com/" },
+        { "label": "API documentation", "url": "https://smartmatch.gloding.com/api/docs" },
+        { "label": "Public OpenAPI specification", "url": "https://smartmatch.gloding.com/openapi.yaml" }
+      ]
+    }
+  ]
+}

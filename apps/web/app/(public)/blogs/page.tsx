@@ -1,22 +1,18 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Calendar, Clock, Search } from "lucide-react";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Rss, Search } from "lucide-react";
 import { publicApi } from "@/lib/server-api";
-import { buildMetadata } from "@/lib/metadata";
-import { formatDate } from "@/lib/utils";
-import { Badge } from "@/components/ui/Badge";
+import { blogIndexMetadata, blogPage, normalizeBlogParams, type BlogIndexParams } from "@/lib/seo";
 import { BlogSearch } from "@/components/blog/BlogSearch";
+import { ArticleMeta } from "@/components/public/ArticleMeta";
 
-export const metadata: Metadata = buildMetadata({
-  title: "Blog",
-  description:
-    "Technical articles by Doni Putra Purbawa on cloud architecture, AWS infrastructure, backend engineering, payment systems, AI, and machine learning.",
-  path: "/blogs",
-  imageTitle: "Technical Blog",
-  imageDescription: "Cloud architecture, AWS infrastructure, backend engineering, payment systems, AI, and machine learning notes.",
-});
+export async function generateMetadata({ searchParams }: { searchParams: Promise<BlogIndexParams> }): Promise<Metadata> {
+  return blogIndexMetadata(await searchParams);
+}
 
-const categories = [
+const defaultCategories = [
   "Backend Engineering",
   "Cloud & DevOps",
   "Payment Systems",
@@ -26,216 +22,204 @@ const categories = [
   "Tutorials",
 ];
 
-interface BlogsPageProps {
-  searchParams: Promise<{ category?: string; q?: string }>;
-}
-
-export default async function Blogs({ searchParams }: BlogsPageProps) {
-  const params = await searchParams;
-  const selectedCategory = params.category;
-  const searchQuery = params.q;
-
-  const apiParams: Record<string, string> = { pageSize: "20" };
-  if (selectedCategory) apiParams.category = selectedCategory.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-  if (searchQuery) apiParams.q = searchQuery;
-
-  const [allRes, filteredRes] = await Promise.all([
-    publicApi.getBlogs({ pageSize: "50" }),
-    publicApi.getBlogs(apiParams),
-  ]);
-
+export default async function Blogs({
+  searchParams,
+}: {
+  searchParams: Promise<BlogIndexParams>;
+}) {
+  const params = normalizeBlogParams(await searchParams);
+  const page = blogPage(params.page);
+  const allRes = await publicApi.getBlogs({ pageSize: "50" });
   const allPosts = allRes?.data ?? [];
-  const filtered = filteredRes?.data ?? [];
-  const featured = allPosts.find((p) => p.featured);
-  const showFeatured = !selectedCategory && !searchQuery && featured;
+  const categories = [
+    ...new Set([
+      ...defaultCategories,
+      ...allPosts.flatMap((post) =>
+        post.category ? [post.category.name] : [],
+      ),
+    ]),
+  ];
+  const apiParams: Record<string, string> = {
+    pageSize: "20",
+    page: String(page),
+  };
+  if (params.category)
+    apiParams.category =
+      allPosts.find(
+        (post) =>
+          post.category?.name === params.category ||
+          post.category?.slug === params.category,
+      )?.category?.slug ??
+      params.category
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+  if (params.q) apiParams.q = params.q;
+  const filteredRes = await publicApi.getBlogs(apiParams);
+  const posts = filteredRes?.data ?? [];
+  const featured =
+    !params.category && !params.q && page === 1
+      ? posts.find((post) => post.featured)
+      : undefined;
+  const totalPages = filteredRes?.pagination.totalPages ?? 1;
+  if (filteredRes && page > Math.max(1, totalPages)) notFound();
+
+  function href(category?: string, targetPage = 1) {
+    const query = new URLSearchParams();
+    if (category) query.set("category", category);
+    if (params.q) query.set("q", params.q);
+    if (targetPage > 1) query.set("page", String(targetPage));
+    return `/blogs${query.size ? `?${query}` : ""}`;
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <section className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-14 sm:px-6">
-          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">Blog</h1>
-          <p className="mt-2 max-w-xl text-slate-500">
-            Technical writing on cloud architecture, AWS infrastructure, backend engineering,
-            payment systems, AI, and machine learning.
-          </p>
-          <div className="mt-5">
-            <BlogSearch defaultValue={params.q} />
+    <div className="journal-page">
+      <section className="page-masthead">
+        <div className="site-container journal-masthead">
+          <div>
+            <p className="eyebrow">The journal</p>
+            <h1>
+              Stay curious<span>.</span>
+            </h1>
+            <p>
+              Ideas, lessons, and perspectives on AI, cloud,
+              <br />
+              and the engineering behind it all.
+            </p>
+          </div>
+          <div className="journal-search">
+            <BlogSearch key={params.q ?? ""} defaultValue={params.q} />
+            <a href="/rss.xml" className="text-link">
+              <Rss size={14} /> Follow via RSS
+            </a>
           </div>
         </div>
       </section>
-
-      <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        {/* Featured article */}
-        {showFeatured && (
-          <div className="mb-10">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-blue-600">
-              Featured Article
-            </p>
+      <div className="site-container journal-body">
+        <nav className="journal-categories" aria-label="Article categories">
+          <Link
+            href={href()}
+            aria-current={!params.category ? "page" : undefined}
+          >
+            All articles
+          </Link>
+          {categories.map((category) => (
             <Link
-              href={`/blogs/${featured!.slug}`}
-              className="group block overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all hover:border-blue-200 hover:shadow-lg"
+              key={category}
+              href={href(category)}
+              aria-current={params.category === category ? "page" : undefined}
             >
-              <div className="flex flex-col gap-0 lg:flex-row">
-                <div className="flex h-48 items-center justify-center bg-gradient-to-br from-blue-600 to-blue-800 p-8 lg:h-auto lg:w-64 lg:flex-shrink-0">
-                  <span className="text-6xl font-black text-blue-200 opacity-40">
-                    {(featured!.category?.name ?? "A").charAt(0)}
-                  </span>
+              {category}
+            </Link>
+          ))}
+        </nav>
+        {featured && (
+          <Link href={`/blogs/${featured.slug}`} className="featured-story">
+            {featured.coverImageUrl && (
+              <Image
+                src={featured.coverImageUrl}
+                width={1200}
+                height={630}
+                alt={featured.title}
+                unoptimized={featured.coverImageUrl.includes("/uploads/")}
+                className="article-cover"
+                sizes="(max-width: 767px) 100vw, 700px"
+              />
+            )}
+            <div>
+              <p className="eyebrow">
+                Editor&apos;s pick <span>{featured.category?.name}</span>
+              </p>
+              <h2>{featured.title}</h2>
+              <p>{featured.excerpt}</p>
+              <ArticleMeta post={featured} />
+              <span className="text-link">
+                Read the story <ArrowUpRight size={17} />
+              </span>
+            </div>
+          </Link>
+        )}
+        <div className="journal-results-heading">
+          <h2>
+            {params.q
+              ? `Results for "${params.q}"`
+              : (params.category ?? "Latest articles")}
+          </h2>
+          <span>{filteredRes?.pagination.total ?? posts.length} articles</span>
+        </div>
+        <div className="article-index">
+          {posts
+            .filter((post) => post.id !== featured?.id)
+            .map((post) => (
+              <Link
+                key={post.id}
+                href={`/blogs/${post.slug}`}
+                className="article-index-entry"
+              >
+                {post.coverImageUrl && (
+                  <Image
+                    src={post.coverImageUrl}
+                    width={320}
+                    height={180}
+                    alt=""
+                    unoptimized={post.coverImageUrl.includes("/uploads/")}
+                    className="article-index-image"
+                    sizes="180px"
+                  />
+                )}
+                <div>
+                  <p className="article-category">
+                    {post.category?.name ?? "Article"}
+                  </p>
+                  <h2>{post.title}</h2>
+                  <p>{post.excerpt}</p>
+                  <ArticleMeta post={post} />
                 </div>
-                <div className="p-6 lg:p-8">
-                  <Badge variant="blue" className="mb-3">
-                    {featured!.category?.name ?? "Article"}
-                  </Badge>
-                  <h2 className="text-xl font-bold text-slate-900 group-hover:text-blue-700 sm:text-2xl">
-                    {featured!.title}
-                  </h2>
-                  <p className="mt-2 leading-relaxed text-slate-500">{featured!.excerpt}</p>
-                  <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-slate-400">
-                    {featured!.publishedAt && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {formatDate(featured!.publishedAt)}
-                      </span>
-                    )}
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {featured!.readingTimeMinutes} min read
-                    </span>
-                  </div>
-                </div>
-              </div>
+                <ArrowUpRight size={20} />
+              </Link>
+            ))}
+        </div>
+        {posts.length === 0 && (
+          <div className="empty-state">
+            <Search size={24} />
+            <h2>No articles found</h2>
+            <p>
+              {filteredRes
+                ? "Try another category or search term."
+                : "The journal is temporarily unavailable. Please try again shortly."}
+            </p>
+            <Link href="/blogs" className="text-link">
+              Clear filters <ArrowRight size={16} />
             </Link>
           </div>
         )}
-
-        <div className="flex flex-col gap-8 lg:flex-row">
-          {/* Articles */}
-          <div className="flex-1">
-            {/* Category pills (mobile) */}
-            <div className="mb-6 flex flex-wrap gap-2 lg:hidden">
+        {totalPages > 1 && (
+          <nav className="journal-pagination" aria-label="Article pages">
+            {page > 1 ? (
               <Link
-                href="/blogs"
-                className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
-                  !selectedCategory
-                    ? "bg-blue-600 text-white"
-                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                }`}
+                href={href(params.category, page - 1)}
+                className="text-link"
               >
-                All
+                <ArrowLeft size={16} /> Previous
               </Link>
-              {categories.map((cat) => (
-                <Link
-                  key={cat}
-                  href={`/blogs?category=${encodeURIComponent(cat)}`}
-                  className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
-                    selectedCategory === cat
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  {cat}
-                </Link>
-              ))}
-            </div>
-
-            {filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white py-16 text-center">
-                <Search className="mb-3 h-8 w-8 text-slate-300" />
-                <h3 className="font-medium text-slate-700">No articles found</h3>
-                <p className="mt-1 text-sm text-slate-400">
-                  Try a different category or search term.
-                </p>
-                <Link href="/blogs" className="mt-4 text-sm font-medium text-blue-600 hover:text-blue-700">
-                  Clear filters
-                </Link>
-              </div>
             ) : (
-              <div className="space-y-4">
-                {filtered.map((post) => (
-                  <Link
-                    key={post.id}
-                    href={`/blogs/${post.slug}`}
-                    className="group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-5 transition-all hover:border-blue-200 hover:shadow-md sm:flex-row sm:items-start"
-                  >
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 text-xl font-bold text-blue-400">
-                      {(post.category?.name ?? "A").charAt(0)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                        <Badge variant="blue">{post.category?.name ?? "Article"}</Badge>
-                        {post.tags.slice(0, 2).map((tag) => (
-                          <Badge key={tag.id} variant="gray">
-                            {tag.name}
-                          </Badge>
-                        ))}
-                      </div>
-                      <h2 className="font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2">
-                        {post.title}
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-500 line-clamp-2">{post.excerpt}</p>
-                      <div className="mt-2 flex items-center gap-3 text-xs text-slate-400">
-                        {post.publishedAt && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3.5 w-3.5" />
-                            {formatDate(post.publishedAt)}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {post.readingTimeMinutes} min read
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
+              <span />
             )}
-          </div>
-
-          {/* Sidebar — categories (desktop) */}
-          <aside className="hidden w-52 flex-shrink-0 lg:block">
-            <div className="sticky top-24 rounded-xl border border-slate-200 bg-white p-4">
-              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Categories
-              </h3>
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    href="/blogs"
-                    className={`block rounded-md px-3 py-1.5 text-sm transition-colors ${
-                      !selectedCategory
-                        ? "bg-blue-50 font-medium text-blue-700"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    All articles
-                    <span className="ml-1 text-xs text-slate-400">({allPosts.length})</span>
-                  </Link>
-                </li>
-                {categories.map((cat) => {
-                  const count = allPosts.filter((p) => p.category?.name === cat).length;
-                  return (
-                    <li key={cat}>
-                      <Link
-                        href={`/blogs?category=${encodeURIComponent(cat)}`}
-                        className={`block rounded-md px-3 py-1.5 text-sm transition-colors ${
-                          selectedCategory === cat
-                            ? "bg-blue-50 font-medium text-blue-700"
-                            : "text-slate-600 hover:bg-slate-50"
-                        }`}
-                      >
-                        {cat}
-                        {count > 0 && (
-                          <span className="ml-1 text-xs text-slate-400">({count})</span>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </aside>
-        </div>
+            <span>
+              Page {page} of {totalPages}
+            </span>
+            {page < totalPages ? (
+              <Link
+                href={href(params.category, page + 1)}
+                className="text-link"
+              >
+                Next <ArrowRight size={16} />
+              </Link>
+            ) : (
+              <span />
+            )}
+          </nav>
+        )}
       </div>
     </div>
   );

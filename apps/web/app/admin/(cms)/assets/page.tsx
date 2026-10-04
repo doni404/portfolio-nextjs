@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { adminApi } from "@/lib/server-api";
 import { AssetRow } from "@/components/admin/AssetRow";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export const metadata: Metadata = { title: "Assets" };
 
@@ -9,14 +10,11 @@ export default async function AdminAssets() {
   const assets = res?.data ?? [];
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Assets</h1>
-        <p className="mt-1 text-sm text-slate-500">Manage CV, profile image, and Open Graph image</p>
-      </div>
+    <div className="admin-page">
+      <AdminPageHeader title="Assets" description={`${assets.length} site asset${assets.length === 1 ? "" : "s"}`} />
 
       {assets.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-white py-16 text-center text-slate-400">
+        <div className="admin-empty">
           No assets configured yet.
         </div>
       ) : (

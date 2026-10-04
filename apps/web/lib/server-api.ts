@@ -3,6 +3,7 @@
  * Calls the Express backend with optional ISR revalidation.
  */
 import { cookies } from "next/headers";
+import { mediaUrl } from "./media";
 
 const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
@@ -10,7 +11,7 @@ const API_URL = process.env.API_URL ?? "http://localhost:4000";
 
 async function get<T>(
   path: string,
-  opts: { revalidate?: number } = {}
+  opts: { revalidate?: number; notFoundOnly?: boolean } = {},
 ): Promise<T | null> {
   try {
     const res = await fetch(`${API_URL}${path}`, {
@@ -20,9 +21,15 @@ async function get<T>(
         ? { next: { revalidate: opts.revalidate } }
         : { cache: "no-store" }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (opts.notFoundOnly && res.status !== 404)
+        throw new Error(`Public content API unavailable (${res.status}).`);
+      return null;
+    }
     return res.json() as Promise<T>;
-  } catch {
+  } catch (error) {
+    // A transient API failure must not turn a published URL into a crawlable 404.
+    if (opts.notFoundOnly) throw error;
     return null;
   }
 }
@@ -48,7 +55,12 @@ async function adminGet<T>(path: string): Promise<T | null> {
 
 export type Paginated<T> = {
   data: T[];
-  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 };
 
 export type Single<T> = { data: T };
@@ -59,12 +71,35 @@ export const publicApi = {
   /** GET /api/blogs — paginated, filterable */
   getBlogs: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params)}` : "";
-    return get<Paginated<BlogPost>>(`/api/blogs${qs}`);
+    return get<Paginated<BlogPost>>(`/api/blogs${qs}`).then((res) =>
+      res
+        ? {
+            ...res,
+            data: res.data.map((post) => ({
+              ...post,
+              coverImageUrl: mediaUrl(post.coverImageUrl),
+            })),
+          }
+        : null,
+    );
   },
 
   /** GET /api/blogs/:slug */
   getBlog: (slug: string) =>
-    get<Single<BlogPost>>(`/api/blogs/${slug}`),
+    get<Single<BlogPost>>(`/api/blogs/${encodeURIComponent(slug)}`, { notFoundOnly: true }).then(
+      (res) =>
+        res
+          ? {
+              data: {
+                ...res.data,
+                coverImageUrl: mediaUrl(res.data.coverImageUrl),
+              },
+            }
+          : null,
+    ),
+
+  getProject: (slug: string) =>
+    get<Single<Project>>(`/api/projects/${encodeURIComponent(slug)}`, { notFoundOnly: true }),
 
   /** GET /api/blogs/:slug/comments */
   getComments: (slug: string) =>
@@ -77,19 +112,16 @@ export const publicApi = {
   },
 
   /** GET /api/experiences */
-  getExperiences: () =>
-    get<Single<Experience[]>>("/api/experiences"),
+  getExperiences: () => get<Single<Experience[]>>("/api/experiences"),
 
   /** GET /api/profile */
-  getProfile: () =>
-    get<Single<Profile>>("/api/profile"),
+  getProfile: () => get<Single<Profile>>("/api/profile"),
 };
 
 // ─── Admin API (server-side, requires JWT cookie) ────────────────────────────
 
 export const adminApi = {
-  getDashboard: () =>
-    adminGet<Single<Dashboard>>("/api/admin/dashboard"),
+  getDashboard: () => adminGet<Single<Dashboard>>("/api/admin/dashboard"),
 
   getBlogs: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params)}` : "";
@@ -97,7 +129,16 @@ export const adminApi = {
   },
 
   getBlog: (id: string) =>
-    adminGet<Single<BlogPost>>(`/api/admin/blogs/${id}`),
+    adminGet<Single<BlogPost>>(`/api/admin/blogs/${id}`).then((res) =>
+      res
+        ? {
+            data: {
+              ...res.data,
+              coverImageUrl: mediaUrl(res.data.coverImageUrl),
+            },
+          }
+        : null,
+    ),
 
   getProjects: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params)}` : "";
@@ -120,21 +161,31 @@ export const adminApi = {
 
   getContactSubmissions: (params?: Record<string, string>) => {
     const qs = params ? `?${new URLSearchParams(params)}` : "";
-    return adminGet<Paginated<ContactSubmission>>(`/api/admin/contact-submissions${qs}`);
+    return adminGet<Paginated<ContactSubmission>>(
+      `/api/admin/contact-submissions${qs}`,
+    );
   },
 
   getNewContactSubmissionCount: () =>
-    adminGet<Single<{ count: number }>>("/api/admin/contact-submissions/new-count"),
+    adminGet<Single<{ count: number }>>(
+      "/api/admin/contact-submissions/new-count",
+    ),
 
-  getAssets: () =>
-    adminGet<Single<SiteAsset[]>>("/api/admin/assets"),
+  getAssets: () => adminGet<Single<SiteAsset[]>>("/api/admin/assets"),
 };
 
 // ─── Shared types matching API response shape ─────────────────────────────────
 
 export type Tag = { id: string; name: string; slug: string };
 export type Category = { id: string; name: string; slug: string };
-export type Author = { id: string; name: string; slug: string; avatarUrl?: string; title?: string; bio?: string };
+export type Author = {
+  id: string;
+  name: string;
+  slug: string;
+  avatarUrl?: string;
+  title?: string;
+  bio?: string;
+};
 
 export type BlogPost = {
   id: string;
@@ -273,5 +324,8 @@ export type Dashboard = {
     featuredProjects: number;
   };
   recentComments: AdminComment[];
-  recentSubmissions: Pick<ContactSubmission, "id" | "name" | "email" | "subject" | "createdAt" | "status">[];
+  recentSubmissions: Pick<
+    ContactSubmission,
+    "id" | "name" | "email" | "subject" | "createdAt" | "status"
+  >[];
 };

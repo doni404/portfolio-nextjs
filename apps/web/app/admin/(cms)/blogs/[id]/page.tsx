@@ -16,7 +16,7 @@ export default async function EditBlog({ params }: Props) {
   if (!post) notFound();
 
   return (
-    <div className="p-6 lg:p-8">
+    <div className="admin-page">
       <BlogEditor post={post} />
     </div>
   );

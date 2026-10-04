@@ -1,0 +1,79 @@
+{
+  "version": "editorial-2026",
+  "blogs": [
+    {
+      "slug": "practical-aws-architecture-small-engineering-teams",
+      "title": "Practical AWS Architecture for Small Engineering Teams",
+      "excerpt": "A practical starting point for AWS: clear service boundaries, private data, tested backups, useful monitoring, and a deployment plan a small team can operate.",
+      "contentFile": "blogs/aws.md",
+      "asset": "cloud"
+    },
+    {
+      "slug": "designing-reliable-payment-webhooks-production-systems",
+      "title": "Designing Reliable Payment Webhooks for Production Systems",
+      "excerpt": "Treat payment events as a delivery system: verify the request, store it durably, process it idempotently, and reconcile what retries cannot resolve.",
+      "contentFile": "blogs/payments.md",
+      "asset": "payments"
+    },
+    {
+      "slug": "structure-backend-services-microservices-grpc",
+      "title": "How I Structure Backend Services with Microservices and gRPC",
+      "excerpt": "Start with ownership and contracts, then choose service boundaries. A practical guide to deadlines, safe retries, data ownership, and operating gRPC services.",
+      "contentFile": "blogs/backend.md",
+      "asset": "backend"
+    },
+    {
+      "slug": "building-ai-chatbots-llm-apis-backend-systems",
+      "title": "Building AI Chatbots with LLM APIs in Backend Systems",
+      "excerpt": "The model is only one dependency. Reliable AI products also need authorization, grounded context, bounded tools, evaluations, and useful failure behavior.",
+      "contentFile": "blogs/ai.md",
+      "asset": "learning-ai"
+    },
+    {
+      "slug": "lessons-deep-learning-anomaly-detection-sensor-data",
+      "title": "Lessons from Deep Learning Anomaly Detection on Sensor Data",
+      "excerpt": "What electronic-nose research taught me about signal quality, baseline comparisons, and the difference between detecting outliers and making a diagnosis.",
+      "contentFile": "blogs/sensors.md",
+      "asset": "sensor-research"
+    }
+  ],
+  "projects": [
+    {
+      "slug": "ai-chatbot-drone-flight-route-reservations",
+      "title": "Trajectory AI Chatbot for Drone Flight Route Reservations",
+      "summary": "A Japanese-language chatbot connecting drone operators to flight areas, routes, and reservation schedules through Rocket.Chat, Amazon Lex V2, and Go services.",
+      "problem": "Operators needed a reliable way to query flight areas, routes, and reservations across separate systems. The integration had to handle Japanese language input, time ranges, conversation state, and dependency errors without making the chat interface harder to use.",
+      "solutionFile": "projects/trajectory.md",
+      "role": "**Cloud Architect & Senior Backend Engineer.** Designed and implemented the cloud/backend integration, conversation-to-resource boundaries, and end-to-end functional checks. Worked on preprocessing requests, Japanese slot handling, session behavior, error responses, and route presentation.",
+      "outcome": "**ChatBotServer v0.4.2 passed all eight documented functional test cases.** The work resolved issues in route presentation, time ranges, Japanese slot values, administrative filtering, and session timeouts. This is a functional integration result, not a production availability or throughput benchmark.",
+      "asset": "drone"
+    },
+    {
+      "slug": "interactive-ai-learning-platform-poc",
+      "originalImageLabel": "Original project visual",
+      "title": "Kawaijuku Interactive AI Learning Platform PoC",
+      "summary": "A proof-of-concept architecture for real-time lecture Q&A, adaptive knowledge checks, learning history, and an AI tutor experience.",
+      "problem": "Video-based learning can leave students waiting for clarification and make knowledge gaps difficult to identify. The proposed PoC needed to bring questions, explanations, checkpoints, and progress into one coherent learning experience.",
+      "solutionFile": "projects/learning.md",
+      "role": "**Cloud Architect & Senior Backend Engineer.** Contributed to cloud/backend architecture, AI integration boundaries, structured data flows, API and error-handling design, and the operational plan for a secure, extensible learning platform.",
+      "outcome": "**Defined a ten-month, four-phase PoC plan.** It covered AI model research, real-time Q&A, checkpoint generation, student UI, history and administration, pilot evaluation, and tuning. Acceptance targets included at least 80% question-answering accuracy and responses within ten seconds. These were planned criteria, not measured outcomes; production-scale delivery was a follow-on phase.",
+      "asset": "kawaijuku-campus"
+    },
+    {
+      "slug": "i-nose-c19-ml-model",
+      "title": "i-Nose C-19: Deep Learning for Sensor Outlier Detection",
+      "summary": "An adaptive deep-learning filter for detecting outliers in electronic-nose sensor signals, developed within the i-Nose C-19 research initiative.",
+      "problem": "Electronic-nose signal data can contain outlying or invalid observations that undermine later analysis. The research needed a way to identify these observations and assess the filter against established machine-learning and statistical baselines.",
+      "solutionFile": "projects/inose.md",
+      "role": "**First Author & Machine Learning Engineer.** Contributed to adaptive model design, signal preprocessing, feature extraction, training experiments, baseline comparisons, evaluation, and research writing.",
+      "outcome": "**90.4% average balanced accuracy for outlier detection.** Published in Elsevier's *Sensing and Bio-Sensing Research*, volume 36, article 100492 (2022). This metric applies to detecting outliers in electronic-nose signals, not to diagnosing COVID-19. No clinical diagnostic accuracy or Raspberry Pi latency claim is made here.",
+      "asset": "inose-equipment",
+      "referenceAssets": [
+        {
+          "asset": "inose-device",
+          "label": "Original device photograph (ITS News)"
+        }
+      ]
+    }
+  ]
+}

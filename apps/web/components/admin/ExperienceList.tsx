@@ -25,6 +25,7 @@ import { adminClient } from "@/lib/admin-api";
 import { formatDateShort } from "@/lib/utils";
 import type { Experience } from "@/lib/server-api";
 import { ExperienceEditor } from "./ExperienceEditor";
+import { AdminPageHeader } from "./AdminPageHeader";
 
 // ─── Sortable row ─────────────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ function SortableRow({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-5"
+      className="admin-experience-row flex items-start gap-3 bg-white"
     >
       {/* Drag handle */}
       <button
@@ -63,6 +64,7 @@ function SortableRow({
         {...listeners}
         type="button"
         aria-label="Drag to reorder"
+        title="Drag to reorder"
         className="mt-0.5 flex-shrink-0 cursor-grab touch-none text-slate-300 hover:text-slate-500 active:cursor-grabbing"
       >
         <GripVertical className="h-5 w-5" />
@@ -92,12 +94,13 @@ function SortableRow({
       </div>
 
       {/* Actions */}
-      <div className="flex flex-shrink-0 items-center gap-1">
+      <div className="admin-row-actions">
         <button
           type="button"
           onClick={onEdit}
           className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
           aria-label="Edit"
+          title="Edit experience"
         >
           <Pencil className="h-4 w-4" />
         </button>
@@ -106,6 +109,7 @@ function SortableRow({
           onClick={onDelete}
           className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
           aria-label="Delete"
+          title="Delete experience"
         >
           <Trash2 className="h-4 w-4" />
         </button>
@@ -195,15 +199,15 @@ export function ExperienceList({ initialExperiences }: { initialExperiences: Exp
   return (
     <>
       {/* Add button */}
-      <div className="mb-4 flex justify-end">
+      <AdminPageHeader title="Experience" description={`${items.length} ${items.length === 1 ? "entry" : "entries"}`} actions={
         <button
           type="button"
           onClick={openAdd}
-          className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          className="admin-primary-button"
         >
           <Plus className="h-4 w-4" /> Add Experience
         </button>
-      </div>
+      } />
 
       {/* Reorder status */}
       {saveState === "saving" && (
@@ -230,9 +234,9 @@ export function ExperienceList({ initialExperiences }: { initialExperiences: Exp
           </button>
         </div>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <DndContext id="admin-experience-order" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={items.map((e) => e.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-3">
+            <div className="admin-experience-list">
               {items.map((exp) => (
                 <SortableRow
                   key={exp.id}

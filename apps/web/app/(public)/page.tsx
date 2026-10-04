@@ -1,322 +1,314 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
-  Download,
-  Mail,
-  Server,
+  ArrowUpRight,
+  Brain,
   Cloud,
   CreditCard,
-  Brain,
-  Calendar,
-  Clock,
+  Download,
+  Plus,
+  Rss,
+  Server,
 } from "lucide-react";
 import { publicApi } from "@/lib/server-api";
 import { buildMetadata } from "@/lib/metadata";
-import { formatDate } from "@/lib/utils";
-import { Badge } from "@/components/ui/Badge";
+import { ArticleMeta } from "@/components/public/ArticleMeta";
+import { ProjectImage } from "@/components/public/ProjectImage";
+import { ArchitectureScene } from "@/components/public/ArchitectureScene";
 
 export const metadata: Metadata = buildMetadata({
-  title: "Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI",
   description:
-    "Portfolio of Doni Putra Purbawa, Cloud Architect & Senior Backend Engineer for AWS, fintech, cloud platforms, and AI-powered systems.",
+    "Doni Putra Purbawa's journal and portfolio. Practical perspectives on AI, cloud architecture, fintech, and the engineering behind reliable products.",
   path: "/",
   imageTitle: "Doni Putra Purbawa",
-  imageDescription: "Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI",
+  imageDescription:
+    "Independent thinking. Practical engineering. AI, cloud, and what comes next.",
 });
 
 const expertise = [
   {
     icon: Cloud,
-    title: "Cloud Architecture",
-    description:
-      "Designing AWS production environments with EC2, RDS, S3, CloudFront, IAM, observability, and CI/CD foundations.",
-    color: "text-emerald-600 bg-emerald-50",
+    title: "Cloud architecture",
+    text: "AWS production environments with EC2, RDS, S3, CloudFront, IAM, observability, and CI/CD. Infrastructure that teams can operate with confidence.",
   },
   {
     icon: Server,
-    title: "Backend Platforms",
-    description:
-      "Building scalable REST APIs, microservices, and gRPC services with Node.js, Java, Golang, and PostgreSQL.",
-    color: "text-blue-600 bg-blue-50",
-  },
-  {
-    icon: CreditCard,
-    title: "Payment Systems",
-    description:
-      "Stripe, PayPal, GMO, Square integrations with subscription billing, webhook processing, and reconciliation.",
-    color: "text-violet-600 bg-violet-50",
+    title: "Backend platforms",
+    text: "REST APIs, microservices, and gRPC services with Node.js, Java, Go, and PostgreSQL. Clear boundaries, reliable data flows, and maintainable integrations.",
   },
   {
     icon: Brain,
-    title: "AI-Powered Applications",
-    description:
-      "LLM orchestration with OpenAI and Gemini, RAG pipelines, vector search, and ML model deployment.",
-    color: "text-amber-600 bg-amber-50",
+    title: "Applied AI",
+    text: "LLM orchestration with OpenAI and Gemini, RAG pipelines, vector search, and machine learning model deployment. Connecting intelligence to useful product experiences.",
   },
-];
-
-const highlights = [
-  "Cloud architecture for production SaaS workloads on AWS",
-  "6+ years backend and platform engineering experience",
-  "Hands-on infrastructure design across EC2, RDS, S3, CloudFront, IAM, and CI/CD",
-  "Payment gateway integrations across 4 providers",
-  "LLM integrations and ML research published in Q1 journal",
-  "Engineering Manager leading a team of 6 engineers",
-  "Open to Japan relocation — JLPT N4",
+  {
+    icon: CreditCard,
+    title: "Fintech & payments",
+    text: "Stripe, PayPal, GMO, and Square integrations, including subscription billing, resilient webhooks, and reconciliation.",
+  },
 ];
 
 export default async function Home() {
   const [projectsRes, blogsRes] = await Promise.all([
-    publicApi.getProjects({ featured: "true", pageSize: "3" }),
-    publicApi.getBlogs({ pageSize: "3" }),
+    publicApi.getProjects({ pageSize: "3" }),
+    publicApi.getBlogs({ pageSize: "4" }),
   ]);
-
-  const featuredProjects = projectsRes?.data ?? [];
-  const latestPosts = blogsRes?.data ?? [];
+  const projects = projectsRes?.data ?? [];
+  const posts = blogsRes?.data ?? [];
+  const [lead, ...otherPosts] = posts;
 
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-slate-200 bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-blue-50 via-white to-white" />
-        <div className="relative mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-          <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16">
-            {/* Profile photo */}
-            <div className="order-first flex-shrink-0 lg:order-last">
-              <div className="relative mx-auto w-fit lg:mx-0">
-                <img
-                  src="/profile.png"
-                  alt="Doni Putra Purbawa"
-                  className="h-48 w-48 rounded-2xl object-cover shadow-xl ring-4 ring-white sm:h-56 sm:w-56"
-                />
-                <div className="absolute -bottom-3 -right-3 rounded-xl border border-white bg-blue-600 px-3 py-1.5 shadow-lg">
-                  <p className="text-xs font-semibold text-white">Available</p>
+    <>
+      <section className="home-hero">
+        <div className="site-container hero-grid">
+          <div className="hero-copy">
+            <p className="eyebrow">
+              AI, engineering &amp; a little perspective
+            </p>
+            <h1>
+              Doni Putra<span>.</span>
+            </h1>
+            <p className="hero-statement">
+              Making sense of AI.
+              <br />
+              Building what comes <em>next.</em>
+            </p>
+            <p className="hero-description">
+              A cloud architect&apos;s perspective on AI, the systems behind it,
+              and the ideas shaping how we work.
+            </p>
+            <div className="hero-actions">
+              <Link href="/blogs" className="action-button mint-button">
+                Explore the journal <ArrowUpRight size={18} />
+              </Link>
+              <Link href="/projects" className="hero-text-link">
+                Selected work <ArrowRight size={17} />
+              </Link>
+            </div>
+            <Link href="/about" className="hero-author">
+              <Image
+                src="/profile.png"
+                width={44}
+                height={44}
+                alt="Doni Putra Purbawa"
+                preload
+              />
+              <span>
+                Doni Putra Purbawa
+                <small>Cloud Architect &amp; Senior Backend Engineer</small>
+              </span>
+            </Link>
+          </div>
+          <ArchitectureScene />
+        </div>
+        <div className="site-container hero-footnote">
+          <span>Independent thinking. Practical engineering.</span>
+          <span>
+            Indonesia <span aria-hidden="true">/</span> Open to the world{" "}
+            <ArrowUpRight size={14} />
+          </span>
+        </div>
+      </section>
+
+      <section className="editorial-section" id="journal">
+        <div className="site-container">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">The journal</p>
+              <h2>
+                Ideas worth a closer look<span>.</span>
+              </h2>
+            </div>
+            <Link href="/blogs" className="text-link">
+              All articles <ArrowUpRight size={17} />
+            </Link>
+          </div>
+          {lead ? (
+            <div className="journal-grid">
+              <Link href={`/blogs/${lead.slug}`} className="lead-article">
+                {lead.coverImageUrl && (
+                  <Image
+                    src={lead.coverImageUrl}
+                    width={1200}
+                    height={630}
+                    unoptimized={lead.coverImageUrl.includes("/uploads/")}
+                    alt={lead.title}
+                    className="article-cover"
+                    sizes="(max-width: 767px) 100vw, 700px"
+                  />
+                )}
+                <div className="article-category">
+                  {lead.category?.name ?? "Engineering"}
+                  <ArrowUpRight size={22} />
                 </div>
+                <h3>{lead.title}</h3>
+                <p>{lead.excerpt}</p>
+                <ArticleMeta post={lead} />
+                <span className="text-link">
+                  Read the story <ArrowRight size={17} />
+                </span>
+              </Link>
+              <div className="journal-list">
+                {otherPosts.map((post, index) => (
+                  <Link
+                    key={post.id}
+                    href={`/blogs/${post.slug}`}
+                    className="journal-entry"
+                  >
+                    <span className="entry-number">0{index + 2}</span>
+                    <div>
+                      <p className="article-category">
+                        {post.category?.name ?? "Engineering"}
+                      </p>
+                      <h3>{post.title}</h3>
+                      <ArticleMeta post={post} />
+                    </div>
+                    <ArrowUpRight size={18} />
+                  </Link>
+                ))}
               </div>
             </div>
-
-          <div className="max-w-2xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-sm text-blue-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-              Available for new opportunities
+          ) : (
+            <div className="empty-state">
+              <p>The next story is on its way.</p>
+              <Link href="/blogs" className="text-link">
+                Visit the journal <ArrowUpRight size={17} />
+              </Link>
             </div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl">
-              Doni Putra Purbawa
-            </h1>
-            <p className="mt-3 text-xl font-medium text-blue-600 sm:text-2xl">
-              Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI
+          )}
+        </div>
+      </section>
+
+      <section className="follow-band">
+        <div className="site-container follow-inner">
+          <div>
+            <p className="eyebrow">Stay curious</p>
+            <h2>
+              A little signal.
+              <br />
+              Less noise.
+            </h2>
+          </div>
+          <div>
+            <p>
+              New articles on AI, cloud, and the engineering behind it all.
+              Follow the journal in your favorite feed reader.
             </p>
-            <p className="mt-4 max-w-2xl text-lg leading-relaxed text-slate-600">
-              Designing AWS cloud architecture and reliable backend platforms for fintech, SaaS,
-              and AI-powered products. 6+ years turning complex requirements into production-grade
-              systems.
+            <a href="/rss.xml" className="action-button forest-button">
+              <Rss size={17} /> Follow via RSS <ArrowUpRight size={17} />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="editorial-section" id="work">
+        <div className="site-container">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">From thinking to building</p>
+              <h2>
+                Selected work<span>.</span>
+              </h2>
+            </div>
+            <Link href="/projects" className="text-link">
+              All projects <ArrowUpRight size={17} />
+            </Link>
+          </div>
+          <div className="selected-projects">
+            {projects.map((project, index) => (
+              <Link
+                key={project.id}
+                href={`/projects/${project.slug}`}
+                className={`selected-project ${index === 0 ? "primary-project" : ""}`}
+              >
+                {project.coverImageUrl && (
+                  <div className="project-image-wrap">
+                    <ProjectImage project={project} />
+                  </div>
+                )}
+                <div className="project-preview-copy">
+                  <p className="article-category">
+                    {project.category?.name ?? "Project"}
+                    {project.year && <span>{project.year}</span>}
+                  </p>
+                  <h3>{project.title}</h3>
+                  <p>{project.summary}</p>
+                  <div className="stack-list">
+                    {project.stack.slice(0, 4).map((tech) => (
+                      <span key={tech}>{tech}</span>
+                    ))}
+                  </div>
+                  <span className="text-link">
+                    Explore project <ArrowUpRight size={17} />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+          {projects.length === 0 && (
+            <div className="empty-state">
+              <Link href="/projects" className="text-link">
+                Browse projects <ArrowUpRight size={17} />
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="expertise-section" id="expertise">
+        <div className="site-container expertise-grid">
+          <div>
+            <p className="eyebrow">Behind the work</p>
+            <h2>
+              Built on
+              <br />
+              real experience<span>.</span>
+            </h2>
+            <p>
+              6+ years building backend and platform systems, leading a team of
+              6 engineers, and connecting cloud, fintech, and AI.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href="/projects"
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
-              >
-                View Projects <ArrowRight className="h-4 w-4" />
+            <div className="expertise-links">
+              <Link href="/experience" className="text-link">
+                My experience <ArrowUpRight size={17} />
               </Link>
-              <Link
-                href="/blogs"
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                Read Blogs
-              </Link>
-              <a
-                href="/files/doni-putra-purbawa-cv.pdf"
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
-              >
-                <Download className="h-4 w-4" /> Download CV
+              <a href="/files/doni-putra-purbawa-cv.pdf" className="text-link">
+                <Download size={16} /> Download CV
               </a>
             </div>
           </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Expertise */}
-      <section className="border-b border-slate-200 bg-slate-50 py-16">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 text-center">
-            <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">Core Expertise</h2>
-            <p className="mt-2 text-slate-500">
-              Focused on cloud architecture, backend platforms, and production reliability
-            </p>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {expertise.map(({ icon: Icon, title, description, color }) => (
-              <div
-                key={title}
-                className="rounded-xl border border-slate-200 bg-white p-6 transition-shadow hover:shadow-md"
-              >
-                <div className={`mb-4 inline-flex rounded-lg p-2.5 ${color}`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h3 className="mb-2 font-semibold text-slate-900">{title}</h3>
-                <p className="text-sm leading-relaxed text-slate-500">{description}</p>
-              </div>
+          <div className="expertise-accordion">
+            {expertise.map(({ icon: Icon, title, text }, index) => (
+              <details key={title} open={index === 0}>
+                <summary>
+                  <Icon size={20} />
+                  <span>{title}</span>
+                  <Plus size={18} className="accordion-plus" />
+                </summary>
+                <p>{text}</p>
+              </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Projects */}
-      <section className="border-b border-slate-200 bg-white py-16">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 flex items-end justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">Featured Projects</h2>
-              <p className="mt-1 text-slate-500">Selected case studies from production systems</p>
-            </div>
-            <Link
-              href="/projects"
-              className="hidden items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 sm:flex"
-            >
-              All projects <ArrowRight className="h-4 w-4" />
-            </Link>
+      <section className="contact-band">
+        <div className="site-container contact-band-inner">
+          <div>
+            <p className="eyebrow">Good work starts with a conversation</p>
+            <h2>
+              What are you
+              <br />
+              building next?
+            </h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {featuredProjects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/projects#${project.slug}`}
-                className="group flex flex-col rounded-xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-md"
-              >
-                <div className="mb-3">
-                  <Badge variant="blue">{project.category?.name ?? "Project"}</Badge>
-                </div>
-                <h3 className="mb-2 font-semibold text-slate-900 group-hover:text-blue-700">
-                  {project.title}
-                </h3>
-                <p className="mb-4 flex-1 text-sm leading-relaxed text-slate-500">
-                  {project.summary}
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {project.stack.slice(0, 4).map((tech) => (
-                    <Badge key={tech} variant="gray">
-                      {tech}
-                    </Badge>
-                  ))}
-                  {project.stack.length > 4 && (
-                    <Badge variant="gray">+{project.stack.length - 4}</Badge>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="mt-6 text-center sm:hidden">
-            <Link
-              href="/projects"
-              className="text-sm font-medium text-blue-600 hover:text-blue-700"
-            >
-              View all projects <ArrowRight className="inline h-4 w-4" />
-            </Link>
-          </div>
+          <Link href="/contact" className="action-button mint-button">
+            Let&apos;s talk <ArrowUpRight size={20} />
+          </Link>
         </div>
       </section>
-
-      {/* Latest Blogs */}
-      <section className="border-b border-slate-200 bg-slate-50 py-16">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="mb-10 flex items-end justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">Latest Articles</h2>
-              <p className="mt-1 text-slate-500">Technical writing on backend, cloud, and AI</p>
-            </div>
-            <Link
-              href="/blogs"
-              className="hidden items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 sm:flex"
-            >
-              All articles <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {latestPosts.map((post) => (
-              <Link
-                key={post.id}
-                href={`/blogs/${post.slug}`}
-                className="group flex flex-col rounded-xl border border-slate-200 bg-white p-6 transition-all hover:border-blue-200 hover:shadow-md"
-              >
-                <div className="mb-3">
-                  <Badge variant="blue">{post.category?.name ?? "Article"}</Badge>
-                </div>
-                <h3 className="mb-2 font-semibold text-slate-900 group-hover:text-blue-700 line-clamp-2">
-                  {post.title}
-                </h3>
-                <p className="mb-4 flex-1 text-sm leading-relaxed text-slate-500 line-clamp-3">
-                  {post.excerpt}
-                </p>
-                <div className="flex items-center gap-3 text-xs text-slate-400">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {post.publishedAt ? formatDate(post.publishedAt) : "—"}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5" />
-                    {post.readingTimeMinutes} min read
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="mt-6 text-center sm:hidden">
-            <Link href="/blogs" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-              View all articles <ArrowRight className="inline h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Highlights */}
-      <section className="border-b border-slate-200 bg-white py-16">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <div className="grid gap-12 lg:grid-cols-2">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-                Professional Highlights
-              </h2>
-              <p className="mt-2 text-slate-500">
-                A snapshot of what I bring to engineering teams
-              </p>
-              <ul className="mt-6 space-y-3">
-                {highlights.map((h) => (
-                  <li key={h} className="flex items-start gap-3">
-                    <div className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
-                    </div>
-                    <span className="text-slate-700">{h}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex flex-col justify-center rounded-2xl border border-blue-100 bg-blue-50 p-8">
-              <h3 className="text-xl font-bold text-slate-900">Open to Opportunities</h3>
-              <p className="mt-3 text-slate-600">
-                I&apos;m available for cloud architect, senior backend, or platform engineering
-                roles — remote or relocating to Japan. Let&apos;s talk about how I can help your
-                team design and ship reliable systems.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-                >
-                  <Mail className="h-4 w-4" /> Get In Touch
-                </Link>
-                <a
-                  href="/files/doni-putra-purbawa-cv.pdf"
-                  className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-50"
-                >
-                  <Download className="h-4 w-4" /> Download CV
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+    </>
   );
 }

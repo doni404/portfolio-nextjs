@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Save, Eye, Send, FileText, Trash2 } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import type { BlogPost } from "@/lib/server-api";
 import { adminClient } from "@/lib/admin-api";
 import { Badge } from "@/components/ui/Badge";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { marked } from "marked";
+import { siteConfig } from "@/lib/metadata";
 
 const blogCategories = [
   { label: "Backend Engineering", slug: "backend-engineering" },
@@ -60,7 +62,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
   );
   const [saveError, setSaveError] = useState("");
 
-  const { register, handleSubmit, watch, setValue } = useForm<BlogFormData>({
+  const { register, handleSubmit, control, setValue } = useForm<BlogFormData>({
     defaultValues: {
       title: post?.title ?? "",
       slug: post?.slug ?? "",
@@ -76,8 +78,9 @@ export function BlogEditor({ post }: BlogEditorProps) {
     },
   });
 
-  const titleValue = watch("title");
-  const tagsValue = watch("tags");
+  const formValues = useWatch({ control });
+  const titleValue = formValues.title;
+  const tagsValue = formValues.tags;
 
   function autoSlug(title: string) {
     return title
@@ -118,7 +121,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
       }
 
       // Hard navigation clears the Next.js router cache so the list always shows fresh data
-      window.location.href = "/admin/blogs";
+      window.location.assign("/admin/blogs");
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "Failed to save post.");
     } finally {
@@ -132,7 +135,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
     setDeleting(true);
     try {
       await adminClient.deleteBlog(post.id);
-      window.location.href = "/admin/blogs";
+      window.location.assign("/admin/blogs");
     } catch (err) {
       alert(err instanceof Error ? err.message : "Failed to delete post.");
     } finally {
@@ -141,20 +144,24 @@ export function BlogEditor({ post }: BlogEditorProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} className="admin-editor">
       {/* Toolbar */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="admin-editor-toolbar">
+        <div>
         <Link
           href="/admin/blogs"
-          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800"
+          className="admin-editor-back"
         >
           <ArrowLeft className="h-4 w-4" /> Back to posts
         </Link>
-        <div className="flex items-center gap-2">
+        <h1>{post ? "Edit post" : "New post"}</h1>
+        </div>
+        <div className="admin-editor-actions">
           {post?.status === "published" && (
             <Link
               href={`/blogs/${post.slug}`}
               target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
               <Eye className="h-4 w-4" /> View Live
@@ -190,30 +197,32 @@ export function BlogEditor({ post }: BlogEditorProps) {
       </div>
 
       {saveError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {saveError}
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="admin-editor-grid">
         {/* Main editor area */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="admin-editor-fields">
           {/* Title & Slug */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
-            <input
+          <div className="admin-editor-title">
+            <textarea
               {...register("title", { required: true })}
-              type="text"
+              aria-label="Post title"
+              rows={2}
               placeholder="Post title…"
               onChange={(e) => {
                 setValue("title", e.target.value);
                 if (!post) setValue("slug", autoSlug(e.target.value));
               }}
-              className="w-full border-none text-2xl font-bold text-slate-900 placeholder-slate-300 outline-none focus:ring-0"
+              className="admin-post-title w-full border-none text-2xl font-bold text-slate-900 placeholder-slate-300 outline-none focus:ring-0"
             />
             <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-400">
               <span className="font-medium">Slug:</span>
               <input
                 {...register("slug")}
+                aria-label="Slug"
                 type="text"
                 className="flex-1 rounded border-none bg-slate-50 px-1.5 py-0.5 font-mono text-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-300"
               />
@@ -221,17 +230,28 @@ export function BlogEditor({ post }: BlogEditorProps) {
           </div>
 
           {/* Tab switcher */}
-          <div className="flex gap-1 rounded-lg border border-slate-200 bg-slate-50 p-1 w-fit">
+          <div className="admin-editor-tabs" role="tablist" aria-label="Post editor">
             {(["content", "seo", "preview"] as const).map((tab) => (
               <button
                 key={tab}
                 type="button"
+                role="tab"
+                tabIndex={activeTab === tab ? 0 : -1}
+                aria-selected={activeTab === tab}
+                aria-controls={`editor-${tab}`}
+                id={`tab-${tab}`}
                 onClick={() => setActiveTab(tab)}
-                className={`rounded-md px-4 py-1.5 text-sm font-medium capitalize transition-colors ${
-                  activeTab === tab
-                    ? "bg-white text-slate-900 shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
+                onKeyDown={(event) => {
+                  const tabs = ["content", "seo", "preview"] as const;
+                  const index = tabs.indexOf(tab);
+                  const next = event.key === "ArrowRight" ? (index + 1) % tabs.length
+                    : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length
+                    : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : -1;
+                  if (next < 0) return;
+                  event.preventDefault();
+                  setActiveTab(tabs[next]);
+                  document.getElementById(`tab-${tabs[next]}`)?.focus();
+                }}
               >
                 {tab === "seo" ? "SEO & Meta" : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
@@ -240,13 +260,14 @@ export function BlogEditor({ post }: BlogEditorProps) {
 
           {/* Content tab */}
           {activeTab === "content" && (
-            <div className="space-y-4">
-              <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <div id="editor-content" role="tabpanel" aria-labelledby="tab-content" className="space-y-4">
+              <div className="pb-4">
                 <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
                   Excerpt
                 </label>
                 <textarea
                   {...register("excerpt")}
+                  aria-label="Excerpt"
                   rows={2}
                   placeholder="Short description shown in article cards and search results…"
                   className="w-full resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -261,14 +282,11 @@ export function BlogEditor({ post }: BlogEditorProps) {
                   <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                     Content
                   </label>
-                  <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                    Rich Text Editor
-                  </span>
                 </div>
                 <RichTextEditor
                   content={editorContent}
                   onChange={setEditorContent}
-                  placeholder="Start writing your article… Use / for blocks, or the toolbar above."
+                  placeholder="Start writing your article..."
                   minHeight="480px"
                 />
               </div>
@@ -277,36 +295,39 @@ export function BlogEditor({ post }: BlogEditorProps) {
 
           {/* SEO tab */}
           {activeTab === "seo" && (
-            <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+            <div id="editor-seo" role="tabpanel" aria-labelledby="tab-seo" className="space-y-5">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">SEO Title</label>
                 <input
                   {...register("seoTitle")}
+                  aria-label="SEO Title"
                   type="text"
                   placeholder={titleValue || "SEO-optimized title (max 60 chars)"}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
                 <p className="mt-1 text-xs text-slate-400">
-                  {watch("seoTitle")?.length ?? 0} / 60 characters
+                  {formValues.seoTitle?.length ?? 0} / 60 characters
                 </p>
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">SEO Description</label>
                 <textarea
                   {...register("seoDescription")}
+                  aria-label="SEO Description"
                   rows={3}
                   placeholder="Meta description for search engines (max 160 chars)…"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm resize-none focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
                 <p className="mt-1 text-xs text-slate-400">
-                  {watch("seoDescription")?.length ?? 0} / 160 characters
+                  {formValues.seoDescription?.length ?? 0} / 160 characters
                 </p>
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">Cover Image URL</label>
                 <input
                   {...register("coverImageUrl")}
-                  type="url"
+                  aria-label="Cover Image URL"
+                  type="text"
                   placeholder="https://… or /images/…"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
@@ -318,13 +339,13 @@ export function BlogEditor({ post }: BlogEditorProps) {
                   Search Preview
                 </p>
                 <p className="text-sm font-medium text-blue-700 truncate">
-                  {watch("seoTitle") || watch("title") || "Post title"}
+                  {formValues.seoTitle || titleValue || "Post title"}
                 </p>
                 <p className="text-xs text-emerald-700">
-                  https://doniputrapurbawa.com/blogs/{watch("slug") || "post-slug"}
+                  {siteConfig.url}/blogs/{formValues.slug || "post-slug"}
                 </p>
                 <p className="mt-1 text-xs text-slate-600 line-clamp-2">
-                  {watch("seoDescription") || watch("excerpt") || "Meta description will appear here…"}
+                  {formValues.seoDescription || formValues.excerpt || "Meta description will appear here…"}
                 </p>
               </div>
             </div>
@@ -332,25 +353,25 @@ export function BlogEditor({ post }: BlogEditorProps) {
 
           {/* Preview tab */}
           {activeTab === "preview" && (
-            <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <div id="editor-preview" role="tabpanel" aria-labelledby="tab-preview" className="overflow-hidden">
               <div className="border-b border-slate-100 bg-slate-50 px-5 py-3 flex items-center gap-2">
                 <FileText className="h-4 w-4 text-slate-400" />
                 <span className="text-sm font-medium text-slate-600">Article Preview</span>
               </div>
-              <div className="p-6 lg:p-8">
-                <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+              <div className="py-6">
+                <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
                   {titleValue || "Article Title"}
-                </h1>
-                {watch("excerpt") && (
-                  <p className="mt-3 text-lg text-slate-500">{watch("excerpt")}</p>
+                </h2>
+                {formValues.excerpt && (
+                  <p className="mt-3 text-lg text-slate-500">{formValues.excerpt}</p>
                 )}
-                <div className="mt-4 flex items-center gap-3 text-sm text-slate-400">
+                <div className="admin-editor-preview-meta mt-4 flex items-center gap-3 text-sm text-slate-500">
                   <div className="flex items-center gap-2">
-                    <img src="/profile.png" alt="Doni Putra" className="h-7 w-7 rounded-full object-cover" />
+                    <Image src="/profile.png" alt="Doni Putra" width={28} height={28} className="h-7 w-7 rounded-full object-cover" />
                     <span>Doni Putra Purbawa</span>
                   </div>
                   <span>·</span>
-                  <span>{watch("readingTimeMinutes")} min read</span>
+                  <span>{formValues.readingTimeMinutes} min read</span>
                 </div>
                 <div className="mt-6 border-t border-slate-100 pt-6">
                   {editorContent ? (
@@ -368,15 +389,16 @@ export function BlogEditor({ post }: BlogEditorProps) {
         </div>
 
         {/* Sidebar */}
-        <div className="space-y-4">
+        <div className="admin-editor-sidebar">
           {/* Status & publish */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <section className="admin-form-section">
             <h3 className="mb-4 text-sm font-semibold text-slate-700">Publish Settings</h3>
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-slate-500">Status</label>
                 <select
                   {...register("status")}
+                  aria-label="Status"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none"
                 >
                   <option value="draft">Draft</option>
@@ -401,22 +423,24 @@ export function BlogEditor({ post }: BlogEditorProps) {
                 </label>
                 <input
                   {...register("readingTimeMinutes", { valueAsNumber: true })}
+                  aria-label="Reading time in minutes"
                   type="number"
                   min={1}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
                 />
               </div>
             </div>
-          </div>
+          </section>
 
           {/* Category & Tags */}
-          <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <section className="admin-form-section">
             <h3 className="mb-4 text-sm font-semibold text-slate-700">Category & Tags</h3>
             <div className="space-y-4">
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-slate-500">Category</label>
                 <select
                   {...register("categorySlug")}
+                  aria-label="Category"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-blue-400 focus:outline-none"
                 >
                   {blogCategories.map((cat) => (
@@ -430,6 +454,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
                 </label>
                 <input
                   {...register("tags")}
+                  aria-label="Tags"
                   type="text"
                   placeholder="Node.js, AWS, PostgreSQL"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
@@ -447,11 +472,11 @@ export function BlogEditor({ post }: BlogEditorProps) {
                 </div>
               )}
             </div>
-          </div>
+          </section>
 
           {/* Danger zone */}
           {post && (
-            <div className="rounded-xl border border-red-100 bg-red-50 p-5">
+            <div className="admin-editor-danger">
               <h3 className="mb-3 text-sm font-semibold text-red-700">Danger Zone</h3>
               <button
                 type="button"

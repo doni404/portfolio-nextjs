@@ -32,7 +32,13 @@ const projectBodySchema = z.object({
     })
     .optional(),
   links: z
-    .array(z.object({ label: z.string(), url: z.string().url() }))
+    .array(z.object({
+      label: z.string(),
+      url: z.string().max(1000).refine(value =>
+        /^https?:\/\//.test(value) || /^\/uploads\/[a-zA-Z0-9/_.,%()-]+$/.test(value),
+        { message: "Link must be an HTTP(S) URL or an /uploads/ path" }
+      ),
+    }))
     .default([]),
 });
 

@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteConfig.url),
   title: {
     default: siteConfig.title,
-    template: `%s | ${siteConfig.name}`,
+    template: `%s | ${siteConfig.shortName}`,
   },
   keywords: [
     "Cloud Architect",
@@ -35,8 +35,9 @@ export const metadata: Metadata = {
     "AI Backend Engineer",
     "LLM Integration",
   ],
-  authors: [{ name: siteConfig.name }],
+  authors: [{ name: siteConfig.name, url: `${siteConfig.url}/about` }],
   creator: siteConfig.creator,
+  verification: { google: process.env.GOOGLE_SITE_VERIFICATION || undefined },
 };
 
 export default function RootLayout({

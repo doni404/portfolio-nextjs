@@ -14,7 +14,7 @@ export const metadata: Metadata = buildMetadata({
 
 export default function Contact() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="contact-page min-h-screen bg-slate-50">
       {/* Header */}
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6">
@@ -32,7 +32,7 @@ export default function Contact() {
           <div className="lg:col-span-2 space-y-6">
             <div>
               <h2 className="mb-4 font-semibold text-slate-900">Contact Details</h2>
-              <div className="space-y-4">
+              <div className="contact-details space-y-4">
                 <a
                   href="mailto:doniputrapurbawa@gmail.com"
                   className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-blue-200 hover:bg-blue-50 group"
@@ -48,7 +48,7 @@ export default function Contact() {
                   </div>
                 </a>
                 <a
-                  href="https://linkedin.com/in/doniputrapurbawa"
+                  href="https://www.linkedin.com/in/doniputra/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 transition-colors hover:border-blue-200 hover:bg-blue-50 group"
@@ -61,7 +61,7 @@ export default function Contact() {
                   <div>
                     <p className="text-xs text-slate-400">LinkedIn</p>
                     <p className="text-sm font-medium text-slate-900 group-hover:text-blue-700">
-                      doniputrapurbawa
+                      doniputra
                     </p>
                   </div>
                 </a>
@@ -78,7 +78,7 @@ export default function Contact() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-blue-100 bg-blue-50 p-5">
+            <div className="contact-opportunities rounded-xl border border-blue-100 bg-blue-50 p-5">
               <h3 className="font-semibold text-slate-900">What I&apos;m open to</h3>
               <ul className="mt-3 space-y-2">
                 {[
@@ -101,7 +101,7 @@ export default function Contact() {
 
           {/* Contact form */}
           <div className="lg:col-span-3">
-            <div className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8">
+            <div className="contact-form-panel rounded-xl border border-slate-200 bg-white p-6 sm:p-8">
               <h2 className="mb-6 flex items-center gap-2 font-semibold text-slate-900">
                 <Send className="h-4 w-4 text-blue-600" /> Send a Message
               </h2>

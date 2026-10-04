@@ -64,6 +64,7 @@ function ToolbarButton({ onClick, active, disabled, title, children }: ToolbarBu
       onClick={onClick}
       disabled={disabled}
       title={title}
+      aria-label={title}
       className={cn(
         "flex h-7 w-7 items-center justify-center rounded-md text-sm transition-colors",
         "disabled:pointer-events-none disabled:opacity-30",
@@ -392,6 +393,8 @@ export function RichTextEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false, // replaced by CodeBlockLowlight
+        link: false,
+        underline: false,
         heading: {
           levels: [1, 2, 3, 4],
         },

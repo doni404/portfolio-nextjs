@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import {
   FileText, FolderKanban, MessageSquare, Mail,
-  TrendingUp, Clock, CheckCircle, AlertCircle, Plus,
+  Clock, CheckCircle, AlertCircle, Plus, ArrowRight,
 } from "lucide-react";
 import { adminApi } from "@/lib/server-api";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -25,33 +25,28 @@ export default async function AdminDashboard() {
     { label: "Pending Comments",  value: stats.pendingComments,       icon: MessageSquare, color: "text-violet-600 bg-violet-50", href: "/admin/comments?status=pending" },
     { label: "New Messages",      value: stats.newContactSubmissions, icon: Mail,          color: "text-emerald-600 bg-emerald-50", href: "/admin/contact-submissions?status=new" },
     { label: "Featured Projects", value: stats.featuredProjects,      icon: FolderKanban,  color: "text-red-600 bg-red-50",       href: "/admin/projects" },
-    { label: "Total Views",       value: "—",                         icon: TrendingUp,    color: "text-slate-600 bg-slate-100",  href: "#" },
   ];
 
   return (
-    <div className="p-6 lg:p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">Welcome back, Doni. Here's what's happening.</p>
-        </div>
+    <div className="admin-page">
+      <AdminPageHeader title="Dashboard" description="Your publishing overview" actions={
         <Link
           href="/admin/blogs/new"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+          className="admin-primary-button"
         >
           <Plus className="h-4 w-4" /> New Post
         </Link>
-      </div>
+      } />
 
       {/* Stat cards */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="admin-stats mb-8 grid">
         {statCards.map(({ label, value, icon: Icon, color, href }) => (
           <Link
             key={label}
             href={href}
-            className="group rounded-xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md"
+            className="group"
           >
-            <div className={`mb-3 inline-flex rounded-lg p-2 ${color}`}>
+            <div className={`admin-stat-icon ${color}`}>
               <Icon className="h-5 w-5" />
             </div>
             <p className="text-2xl font-bold text-slate-900">{value}</p>
@@ -60,20 +55,17 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="admin-dashboard-feed">
         {/* Pending comments */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-sm">
+        <section>
+            <h2 className="admin-section-title">
               Pending Comments
               {stats.pendingComments > 0 && (
                 <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
                   {stats.pendingComments} pending
                 </span>
               )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h2>
             {recentComments.length === 0 ? (
               <div className="flex flex-col items-center py-6 text-center">
                 <CheckCircle className="mb-2 h-8 w-8 text-emerald-400" />
@@ -108,26 +100,22 @@ export default async function AdminDashboard() {
             )}
             <Link
               href="/admin/comments?status=pending"
-              className="mt-3 block text-center text-xs font-medium text-blue-600 hover:text-blue-700"
+              className="admin-text-link"
             >
-              Manage all comments →
+              Manage comments <ArrowRight size={14} />
             </Link>
-          </CardContent>
-        </Card>
+        </section>
 
         {/* New contact submissions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-sm">
+        <section>
+            <h2 className="admin-section-title">
               New Messages
               {stats.newContactSubmissions > 0 && (
                 <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                   {stats.newContactSubmissions} new
                 </span>
               )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h2>
             {recentSubmissions.length === 0 ? (
               <div className="flex flex-col items-center py-6 text-center">
                 <AlertCircle className="mb-2 h-8 w-8 text-slate-300" />
@@ -137,11 +125,7 @@ export default async function AdminDashboard() {
               <div className="divide-y divide-slate-100">
                 {recentSubmissions.map((sub) => (
                   <div key={sub.id} className="flex items-center gap-3 py-3">
-                    <img
-                      src="/profile.png"
-                      alt=""
-                      className="h-7 w-7 flex-shrink-0 rounded-full object-cover opacity-50"
-                    />
+                    <div aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs text-slate-600">{sub.name.charAt(0)}</div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-900">{sub.name}</p>
                       <p className="truncate text-xs text-slate-400">
@@ -158,12 +142,11 @@ export default async function AdminDashboard() {
             )}
             <Link
               href="/admin/contact-submissions"
-              className="mt-3 block text-center text-xs font-medium text-blue-600 hover:text-blue-700"
+              className="admin-text-link"
             >
-              View all messages →
+              View messages <ArrowRight size={14} />
             </Link>
-          </CardContent>
-        </Card>
+        </section>
       </div>
     </div>
   );
