@@ -32,7 +32,7 @@ test("transient read failures are retried, but deployment requests are not", asy
       if (options.method === "GET" && path.startsWith("/api/v1/applications/")) {
         if (++reads === 1) return new Response(null, { status: 503 });
         const service = path.endsWith("api-id") ? "api" : "web";
-        return json({ git_repository: null, docker_registry_image_name: `ghcr.io/owner/portfolio-${service}` });
+        return json({ build_pack: "dockerimage", git_repository: "coollabsio/coolify", docker_registry_image_name: `ghcr.io/owner/portfolio-${service}` });
       }
       if (options.method === "PATCH") return json({});
       deployments++;
@@ -56,7 +56,7 @@ test("both image applications are validated before deploying API, then web", asy
           assert.deepEqual(JSON.parse(options.body), { docker_registry_image_tag: `sha-${env.GITHUB_SHA}` });
           return json({ uuid: `${service}-id` });
         }
-        return json({ git_repository: null, docker_registry_image_name: `ghcr.io/owner/portfolio-${service}`, docker_registry_image_tag: "previous" });
+        return json({ build_pack: "dockerimage", git_repository: "coollabsio/coolify", docker_registry_image_name: `ghcr.io/owner/portfolio-${service}`, docker_registry_image_tag: "previous" });
       }
       if (path === "/api/v1/deploy") {
         const uuid = new URL(url).searchParams.get("uuid");
@@ -75,7 +75,7 @@ test("a source-build target is rejected before any configuration is changed", as
   await assert.rejects(deployApplications(config, {
     fetch: async (_url, options) => {
       assert.equal(options.method, "GET");
-      return json({ git_repository: "owner/portfolio", docker_registry_image_name: "ghcr.io/owner/portfolio-api" });
+      return json({ build_pack: "nixpacks", git_repository: "owner/portfolio", docker_registry_image_name: "ghcr.io/owner/portfolio-api" });
     },
   }), /Refusing a source build/);
 });
@@ -88,7 +88,7 @@ test("failed API deployment never starts the web deployment", async () => {
       const path = new URL(url).pathname;
       if (path.startsWith("/api/v1/applications/")) {
         const service = path.endsWith("api-id") ? "api" : "web";
-        return json({ git_repository: null, docker_registry_image_name: `ghcr.io/owner/portfolio-${service}` });
+        return json({ build_pack: "dockerimage", docker_registry_image_name: `ghcr.io/owner/portfolio-${service}` });
       }
       if (path === "/api/v1/deploy") {
         const uuid = new URL(url).searchParams.get("uuid");
@@ -108,7 +108,7 @@ test("an old healthy release is not accepted as the new release", async () => {
       const parsed = new URL(url);
       if (parsed.pathname.startsWith("/api/v1/applications/")) {
         const service = parsed.pathname.endsWith("api-id") ? "api" : "web";
-        return json({ git_repository: null, docker_registry_image_name: `ghcr.io/owner/portfolio-${service}` });
+        return json({ build_pack: "dockerimage", docker_registry_image_name: `ghcr.io/owner/portfolio-${service}` });
       }
       if (parsed.pathname === "/api/v1/deploy")
         return json({ deployments: [{ resource_uuid: "api-id", deployment_uuid: "release" }] });

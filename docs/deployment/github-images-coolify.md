@@ -87,7 +87,9 @@ Package content images are not a replacement for persistent uploads.
 ## Enable Automatic Deployment
 
 1. Put the replacement UUIDs in `COOLIFY_API_APP_UUID` and
-   `COOLIFY_WEB_APP_UUID`. The script refuses targets connected to a Git source.
+   `COOLIFY_WEB_APP_UUID`. The script checks the `dockerimage` build type and
+   exact image name, refusing any source-build target. Coolify may retain a
+   placeholder Git repository field even on Docker Image resources.
 2. Verify public health endpoints identify the new full commit revision.
 3. Set `COOLIFY_DEPLOY_ENABLED=true`.
 4. Run the workflow manually with deployment enabled to verify the full chain.

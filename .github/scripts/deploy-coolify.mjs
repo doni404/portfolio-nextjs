@@ -61,7 +61,7 @@ export async function deployApplications(config, options = {}) {
   for (const application of config.applications) {
     const current = await api(`/applications/${application.uuid}`);
     const image = `${config.imageRoot}-${application.service}`;
-    if (current.git_repository || current.docker_registry_image_name !== image)
+    if (current.build_pack !== "dockerimage" || current.docker_registry_image_name !== image)
       throw new Error(`${application.service}: configure a Docker Image application for ${image} first. Refusing a source build.`);
     const health = new URL(application.health);
     if (health.protocol !== "https:" || health.username || health.password)
