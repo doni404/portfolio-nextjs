@@ -1,5 +1,17 @@
 # Deploy Prebuilt GitHub Images to Coolify
 
+## Configured Production Resources
+
+| Resource | Coolify UUID | Domain |
+| --- | --- | --- |
+| `portfolio-api-ghcr` | `xgw5s05zkx9rblikmtvpqqgf` | `https://api.doniputra.com` |
+| `portfolio-web-ghcr` | `s3phdjl0fu5appytxzqsi5zo` | `https://doniputra.com` |
+
+The original source-built API (`j62mt819r6nw6p75d21mch4w`) and web
+(`sto80tganpy1ec8i1utl46t0`) have auto deploy disabled and no configured public
+domain. Their stopped containers are retained for the initial rollback. Use the
+two `-ghcr` resources for normal deployment and runtime settings.
+
 ## Safety Rules
 
 - Do not run `db:reset`, `db:seed`, or restore a local database over production.
@@ -138,3 +150,22 @@ requests.
 
 Keep production backups off-instance before removing old image/application
 resources. Registry images are release artifacts, not database or media backups.
+
+## Credential Rotation
+
+The initial credentials have 90-day lifetimes. Rotate before January 3, 2027;
+an expired credential prevents future deployments or private image pulls, but
+does not stop an already-running container.
+
+- Coolify: create a replacement Read/Write/Deploy token without Root or
+  Sensitive-data-read access, then replace the repository's encrypted
+  `COOLIFY_TOKEN` Actions secret. Keep tokens out of repository variables and
+  source files.
+- GHCR: replace the read-only `read:packages` credential in the deployment
+  server's root Docker login using `--password-stdin`. Keep
+  `/root/.docker/config.json` owned by root with mode `600`.
+- Run **Build Images and Deploy** manually from `main` with deployment enabled
+  and verify both public health revisions before revoking the old credentials.
+
+GitHub's short-lived `GITHUB_TOKEN` publishes images; it does not need a stored
+personal token with write or repository permissions.
