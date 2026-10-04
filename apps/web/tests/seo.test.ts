@@ -33,9 +33,12 @@ test("metadata uses one brand suffix, a clean canonical and large social preview
   const meta = buildMetadata({ title: "AI Engineering", path: "/blogs/ai#top", type: "article" });
   assert.deepEqual(meta.title, { absolute: "AI Engineering | Doni Putra" });
   assert.equal(meta.alternates?.canonical, `${siteConfig.url}/blogs/ai`);
-  assert.equal(meta.twitter?.card, "summary_large_image");
+  assert.ok(meta.twitter && "card" in meta.twitter);
+  assert.equal(meta.twitter.card, "summary_large_image");
   assert.equal(meta.openGraph?.url, meta.alternates?.canonical);
-  assert.equal(meta.robots?.googleBot?.["max-image-preview"], "large");
+  assert.ok(meta.robots && typeof meta.robots === "object");
+  assert.ok(meta.robots.googleBot && typeof meta.robots.googleBot === "object");
+  assert.equal(meta.robots.googleBot["max-image-preview"], "large");
   assert.ok(meta.alternates?.types?.["application/rss+xml"]);
   const generated = meta.openGraph?.images as { url: string; width?: number; height?: number }[];
   assert.equal(generated[0].width, 1200);
@@ -51,8 +54,9 @@ test("pagination is self-canonical; search and category views are noindex, follo
   assert.equal(blogIndexMetadata({ page: "2" }).alternates?.canonical, `${siteConfig.url}/blogs?page=2`);
   assert.equal(blogIndexMetadata({ page: "1", q: " " }).alternates?.canonical, `${siteConfig.url}/blogs`);
   const filtered = blogIndexMetadata({ q: ["cloud", "ai"], category: "Cloud & DevOps", page: "2" });
-  assert.equal(filtered.robots?.index, false);
-  assert.equal(filtered.robots?.follow, true);
+  assert.ok(filtered.robots && typeof filtered.robots === "object");
+  assert.equal(filtered.robots.index, false);
+  assert.equal(filtered.robots.follow, true);
   assert.match(String(filtered.alternates?.canonical), /q=cloud/);
   for (const page of ["-1", "Infinity", "1.5", "abc", "9007199254740992"])
     assert.equal(blogPage(page), 1);
@@ -82,7 +86,8 @@ test("structured data uses real article dates, author identity and safe JSON", (
   assert.equal(schema.dateModified, "2026-10-04T02:00:00.000Z");
   assert.equal(schema.author.name, siteConfig.name);
   assert.equal(articleSchema({ ...post, publishedAt: "invalid" }).datePublished, undefined);
-  assert.equal(articleSchema({ ...post, author: { id: "other", name: "Another Author", slug: "another" } }).author.url, undefined);
+  const otherAuthor = articleSchema({ ...post, author: { id: "other", name: "Another Author", slug: "another" } }).author;
+  assert.equal("url" in otherAuthor, false);
   assert.equal(projectSchema(project)["@type"], "CreativeWork");
   assert.equal("aggregateRating" in projectSchema(project), false);
   assert.equal("datePublished" in projectSchema(project), false);
