@@ -13,13 +13,14 @@ import { marked } from "marked";
 import { siteConfig } from "@/lib/metadata";
 
 const blogCategories = [
-  { label: "AI News & Research", slug: "ai-news" },
+  { label: "AI & Technology", slug: "ai-news" },
   { label: "Backend Engineering", slug: "backend-engineering" },
   { label: "Cloud & DevOps", slug: "cloud-devops" },
   { label: "Payment Systems", slug: "payment-systems" },
   { label: "AI & LLM", slug: "ai-llm" },
   { label: "Machine Learning", slug: "machine-learning" },
   { label: "Career & Japan", slug: "career-japan" },
+  { label: "Japan Life", slug: "japan-life" },
   { label: "Tutorials", slug: "tutorials" },
 ];
 

@@ -1,0 +1,151 @@
+{
+  "version": "japan-life-2026-v1",
+  "verifiedAt": "2026-10-05",
+  "posts": [
+    {
+      "slug": "suica-japan-train-travel-less-stress-2026",
+      "title": "Suica in Japan: Tap, Travel, and Avoid the Ticket Traps",
+      "excerpt": "A practical guide to IC cards, mobile payments, extra tickets, and the small station routine that makes train travel in Japan less stressful.",
+      "file": "transit.md",
+      "coverAsset": "transit-v1.png",
+      "format": "explainer",
+      "sources": [
+        { "title": "JR East: Welcome Suica", "url": "https://www.jreast.co.jp/en/multi/welcomesuica/welcomesuica.html" },
+        { "title": "JR East: Welcome Suica Mobile", "url": "https://www.jreast.co.jp/en/multi/welcomesuicamobile/" }
+      ]
+    },
+    {
+      "slug": "japan-konbini-print-documents-without-printer-2026",
+      "title": "No Printer? How to Print Documents at a Konbini in Japan",
+      "excerpt": "Turn a last-minute printing panic into a simple errand: choose the right service, prepare your PDF, check the deadline, and keep private documents private.",
+      "file": "konbini-printing.md",
+      "coverAsset": "konbini-printing-v1.png",
+      "format": "practical-guide",
+      "sources": [
+        { "title": "Seven-Eleven Japan: Printing services", "url": "https://www.sej.co.jp/services/multicopy/print.html" },
+        { "title": "Kantan netprint: File specifications and restrictions", "url": "https://www.printing.ne.jp/support/m_kantan/ad_attention.html" }
+      ]
+    },
+    {
+      "slug": "japan-parcel-redelivery-luggage-forwarding-guide-2026",
+      "title": "Missed Delivery or Heavy Suitcase? Japan's Parcel Life Hacks",
+      "excerpt": "Make parcel redelivery and luggage forwarding work around your day, with the right carrier, confirmed recipient, realistic deadline, and essentials kept with you.",
+      "file": "parcels.md",
+      "coverAsset": "parcels-v1.png",
+      "format": "practical-guide",
+      "sources": [
+        { "title": "Yamato Transport: Missed delivery", "url": "https://www.kuronekoyamato.co.jp/ytc/en/redelivery/issue.html" },
+        { "title": "Japan Post: Online redelivery", "url": "https://www.post.japanpost.jp/receive/redelivery_form/" },
+        { "title": "Yamato Transport: TA-Q-BIN", "url": "https://www.kuronekoyamato.co.jp/ytc/en/send/services/takkyubin/" },
+        { "title": "Yamato Transport: Airport TA-Q-BIN", "url": "https://www.kuronekoyamato.co.jp/ytc/en/send/services/airport/" }
+      ]
+    },
+    {
+      "slug": "japan-garbage-sorting-first-apartment-system-2026",
+      "title": "Garbage Sorting in Japan: A Simple System for Your First Apartment",
+      "excerpt": "Stop guessing which bag an item belongs in. Build a small, address-specific sorting routine with official guides, collection reminders, and a plan for awkward items.",
+      "file": "household-sorting.md",
+      "coverAsset": "household-sorting-v1.png",
+      "format": "practical-guide",
+      "sources": [
+        { "title": "Yokohama: English sorting guide", "url": "https://www.city.yokohama.lg.jp/lang/residents/en/garbage/sortinganddisposal.html" },
+        { "title": "Yokohama: Mictionary item search", "url": "https://cgi.city.yokohama.lg.jp/shigen/bunbetsu/?lang=en" },
+        { "title": "Shinjuku: Item-sorting dictionary", "url": "https://www.city.shinjuku.lg.jp/seikatsu/seiso01_001025.html" },
+        { "title": "Shinjuku: Batteries and recyclable collection", "url": "https://www.city.shinjuku.lg.jp/seikatsu/file09_01_00009.html" },
+        { "title": "Shinjuku: Bulky-waste procedure", "url": "https://www.city.shinjuku.lg.jp/seikatsu/file09_01_00016.html" }
+      ]
+    },
+    {
+      "slug": "japan-phone-setup-weather-alerts-local-maps-2026",
+      "title": "Your Japan Phone Setup: Weather Alerts, Local Maps, and a Plan B",
+      "excerpt": "A calmer daily-life setup: official weather information, configured alerts, local guidance, a private offline note, and the right contacts without app overload.",
+      "file": "phone-setup.md",
+      "coverAsset": "phone-setup-v1.png",
+      "format": "practical-guide",
+      "sources": [
+        { "title": "JMA: Multilingual weather and disaster information", "url": "https://www.jma.go.jp/jma/kokusai/multi.html" },
+        { "title": "JNTO: Safety tips app", "url": "https://www.jnto.go.jp/safety-tips/eng/app.html" },
+        { "title": "Yokohama: Preparing for disasters", "url": "https://www.city.yokohama.lg.jp/lang/residents/en/emergencies/saigaihesonaeru.html" },
+        { "title": "JNTO: Visitor hotline and emergency contacts", "url": "https://www.japan.travel/en/plan/hotline/" },
+        { "title": "Cabinet Office: Helpful apps and websites", "url": "https://www.bousai.go.jp/kokusai/web/index_en.html" }
+      ]
+    },
+    {
+      "slug": "japan-station-lockers-hands-free-day-guide-2026",
+      "title": "Japan Station Lockers: Travel Hands-Free Without Losing Your Bag",
+      "excerpt": "Choose the right locker for your route, keep the access details, and plan pickup without turning a relaxed afternoon into a luggage-retrieval mission.",
+      "file": "station-lockers.md",
+      "coverAsset": "station-lockers-v1.png",
+      "format": "practical-guide",
+      "inlineAssets": [
+        { "key": "location", "file": "locker-location-v1.png" },
+        { "key": "routine", "file": "locker-routine-v1.png" }
+      ],
+      "sources": [
+        { "title": "JR East: Station locker locations", "url": "https://jreastfaq.jreast.co.jp/faq/show/1088?category_id=21&site_domain=default" },
+        { "title": "JR East: Locker location and size information", "url": "https://www.jreast.co.jp/e/stations/pdf/info_coinlocker.pdf" },
+        { "title": "JR East: Welcome Suica locker use", "url": "https://www.jreast.co.jp/en/multi/welcomesuica/welcomesuica.html" },
+        { "title": "JR East Smart Logistics: Multi-Ecube", "url": "https://www.jre-sl.co.jp/en/ecube/" }
+      ]
+    },
+    {
+      "slug": "japan-rainy-day-coin-laundry-guide-2026",
+      "title": "Rainy-Day Laundry in Japan: A Simple Coin-Laundry Plan",
+      "excerpt": "Read the care label, choose the correct machine, and build a low-stress rainy-week routine without guessing at drying settings or universal store prices.",
+      "file": "rainy-day-laundry.md",
+      "coverAsset": "rainy-day-laundry-v1.png",
+      "format": "practical-guide",
+      "sources": [
+        { "title": "Consumer Affairs Agency: Laundry symbols", "url": "https://www.caa.go.jp/policies/policy/representation/household_goods/laundry_symbols.html" },
+        { "title": "Consumer Affairs Agency: Care-label explanation", "url": "https://www.caa.go.jp/policies/policy/representation/household_goods/guide/wash_02.html" },
+        { "title": "WASHHOUSE: Store search", "url": "https://shop.wash-house.jp/" },
+        { "title": "WASHHOUSE: Services and equipment guidance", "url": "https://www.wash-house.jp/services/" }
+      ]
+    },
+    {
+      "slug": "japan-supermarket-shopping-labels-food-waste-2026",
+      "title": "Japan Supermarket Shopping: Read the Label, Waste Less",
+      "excerpt": "Understand use-by and best-before labels, build a basket around real meals, and make discount stickers work for your household instead of filling the fridge with forgotten food.",
+      "file": "supermarket-shopping.md",
+      "coverAsset": "supermarket-shopping-v1.png",
+      "format": "practical-guide",
+      "inlineAssets": [
+        { "key": "labels", "file": "food-labels-v1.png" },
+        { "key": "routine", "file": "grocery-routine-v1.png" }
+      ],
+      "sources": [
+        { "title": "Consumer Affairs Agency: Date-label definitions", "url": "https://www.caa.go.jp/policies/policy/food_labeling/food_sanitation/expiration_date/assets/food_labeling_cms204_250331_01.pdf" },
+        { "title": "Consumer Affairs Agency: Date-label information", "url": "https://www.caa.go.jp/policies/policy/food_labeling/food_sanitation/expiration_date/" },
+        { "title": "Consumer Affairs Agency: Reducing food loss at home", "url": "https://www.no-foodloss.caa.go.jp/eating-home.html" },
+        { "title": "Consumer Affairs Agency: Food-labeling overview", "url": "https://www.caa.go.jp/en/policy/food_labeling/" }
+      ]
+    },
+    {
+      "slug": "japan-public-libraries-reading-research-guide-2026",
+      "title": "Japan's Public Libraries: A Better Plan Than Another Cafe",
+      "excerpt": "Find a useful reading or research space, understand reference versus lending libraries, and plan a rewarding first visit with the right catalogue and registration checks.",
+      "file": "public-libraries.md",
+      "coverAsset": "public-libraries-v1.png",
+      "format": "practical-guide",
+      "sources": [
+        { "title": "Tokyo Metropolitan Central Library: Visitor information", "url": "https://www.library.metro.tokyo.lg.jp/english/central_library/" },
+        { "title": "Shinjuku City Library: First-time registration", "url": "https://www.library.shinjuku.tokyo.jp/guide/first/index.html" },
+        { "title": "Tokyo Metropolitan Central Library: English guide", "url": "https://www.library.metro.tokyo.lg.jp/english/uploads/R7guide_EN_chuo.pdf" },
+        { "title": "National Diet Library: Tokyo user guide", "url": "https://www.ndl.go.jp/en/tokyo/user_guide_english.pdf" }
+      ]
+    },
+    {
+      "slug": "japan-cashless-cash-backup-atm-guide-2026",
+      "title": "Cashless Japan, With a Cash Backup: Avoid Payment Surprises",
+      "excerpt": "A quick practical payment routine: keep a fallback, find an official ATM, understand confirmation screens, and avoid assuming every foreign card or fee works the same way.",
+      "file": "cash-backup.md",
+      "coverAsset": "cash-backup-v1.png",
+      "format": "explainer",
+      "sources": [
+        { "title": "Seven Bank: International-card ATM information", "url": "https://www.sevenbank.co.jp/intlcard/index2.html" },
+        { "title": "Seven Bank: Supported cards and service hours", "url": "https://www.sevenbank.co.jp/intlcard/card2.html" },
+        { "title": "Seven Bank: ATM walkthrough and currency options", "url": "https://www.sevenbank.co.jp/intlcard/service2.html" }
+      ]
+    }
+  ]
+}

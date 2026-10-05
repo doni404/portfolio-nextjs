@@ -192,7 +192,7 @@ export default async function Home() {
           </div>
           <div>
             <p>
-              New articles on AI, cloud, and the engineering behind it all.
+              Fresh perspectives on AI, technology, and everyday life in Japan.
               Follow the journal in your favorite feed reader.
             </p>
             <a href="/rss.xml" className="action-button forest-button">

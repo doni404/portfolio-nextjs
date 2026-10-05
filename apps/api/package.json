@@ -6,6 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "content:journal": "node scripts/import-journal-archive.mjs",
+    "content:japan-life": "node scripts/import-japan-life.mjs",
     "content:journal-covers": "node scripts/generate-journal-covers.mjs",
     "content:journal-covers:install": "node scripts/install-journal-covers.mjs",
     "editorial:run": "node scripts/editorial-worker.mjs",

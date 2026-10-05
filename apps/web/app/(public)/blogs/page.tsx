@@ -20,6 +20,7 @@ const defaultCategories = [
   "Machine Learning",
   "Career & Japan",
   "Tutorials",
+  "Japan Life",
 ];
 
 export default async function Blogs({
@@ -86,9 +87,9 @@ export default async function Blogs({
               Stay curious<span>.</span>
             </h1>
             <p>
-              Ideas, lessons, and perspectives on AI, cloud,
+              Ideas and practical perspectives on AI, technology,
               <br />
-              and the engineering behind it all.
+              engineering, and everyday life in Japan.
             </p>
           </div>
           <div className="journal-search">

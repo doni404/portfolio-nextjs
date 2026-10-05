@@ -296,6 +296,21 @@
 .reader-endnote .text-link {
   margin-top: 16px;
 }
+.reader-editorial-note {
+  margin-top: 12px;
+}
+.reader-editorial-note summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.reader-editorial-note summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.reader-editorial-note p {
+  margin-top: 8px;
+  max-width: 65ch;
+}
 .reader-related {
   max-width: 1120px;
   padding-block: 35px 70px;

@@ -84,7 +84,7 @@ export default async function BlogDetail({ params }: PageProps) {
         </p>
         <h1>{post.title}</h1>
         <p className="reader-deck">{post.excerpt}</p>
-        {post.editorialMeta?.retrospective && <p className="reader-disclosure">Retrospective: this story covers an announcement from {post.storyDate?.slice(0, 4)}. Published {formatDate(post.publishedAt!)}; not breaking news.</p>}
+        {post.editorialMeta?.retrospective && <p className="reader-disclosure">From the archive: {post.storyDate?.slice(0, 4)} announcement, revisited.</p>}
         <div className="reader-byline">
           <Link href="/about" className="reader-author">
             <Image
@@ -118,7 +118,7 @@ export default async function BlogDetail({ params }: PageProps) {
               preload
               sizes="(max-width: 767px) 100vw, 1100px"
             />
-            <figcaption>{post.editorialMeta?.coverProvenance ?? "Editorial illustration"}</figcaption>
+            <figcaption>Editorial artwork</figcaption>
           </figure>
         )}
       </header>
@@ -148,10 +148,17 @@ export default async function BlogDetail({ params }: PageProps) {
               <Link href="/about">{post.author?.name ?? siteConfig.name}</Link>.
             </p>
             <p>
-              Updated {formatDate(post.updatedAt)}. Engineering notes, not
-              one-size-fits-all prescriptions.
+              Updated {formatDate(post.updatedAt)}.
             </p>
-            {post.editorialMeta?.disclosure && <p>{post.editorialMeta.disclosure}</p>}
+            {(post.editorialMeta?.disclosure || post.editorialMeta?.coverProvenance) && (
+              <details className="reader-editorial-note">
+                <summary>About this article</summary>
+                {post.editorialMeta?.disclosure && <p>{post.category?.slug === "japan-life"
+                  ? "A source-linked practical guide prepared with AI assistance. Examples and artwork are illustrative; service details are linked in the article."
+                  : post.editorialMeta.disclosure}</p>}
+                {post.editorialMeta?.coverProvenance && <p>{post.editorialMeta.coverProvenance}</p>}
+              </details>
+            )}
             <a href="/rss.xml" className="text-link">
               <Rss size={15} /> Follow the journal
             </a>

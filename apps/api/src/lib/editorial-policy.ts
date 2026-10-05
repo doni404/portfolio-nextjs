@@ -33,7 +33,7 @@ export const draftSchema = z.object({
   title: z.string().min(10).max(180), slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(200),
   excerpt: z.string().min(40).max(320), content: z.string().min(1200).max(18000),
   storyDate: storyDateSchema,
-  beat: z.enum(["industry", "policy", "work", "products", "research", "engineering", "models", "custom"]),
+  beat: z.enum(["industry", "policy", "work", "products", "research", "engineering", "models", "japan", "custom"]),
   newsworthiness: z.string().min(30).max(600),
   format: z.enum(["explainer", "briefing", "paper-breakdown", "practical-guide", "comparison"]),
   sources: z.array(sourceSchema).min(2).max(8).refine((sources) => new Set(sources.map((source) => source.url)).size === sources.length, "Sources must be distinct"),

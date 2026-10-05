@@ -19,6 +19,8 @@ let logs = [];
 let post;
 let createdPost;
 let quotaFilter;
+let categoryRequest;
+let publicQuery;
 const uploadDir = await mkdtemp(path.join(tmpdir(), "editorial-upload-test-"));
 process.env.UPLOAD_DIR = uploadDir;
 const db = {
@@ -34,9 +36,10 @@ const db = {
     update: async ({ where, data }) => { const log = logs.find((log) => log.id === where.id); Object.assign(log, data); return log; },
   },
   author: { findFirstOrThrow: async () => ({ id: "author" }) },
-  category: { upsert: async () => ({ id: "category" }) },
+  category: { upsert: async (query) => { categoryRequest = query; return { id: "category" }; } },
   blogPost: {
-    findMany: async () => [],
+    findMany: async (query) => { publicQuery = query; return []; },
+    count: async () => 0,
     create: async ({ data }) => { createdPost = data; post = { id: blogId, ...data }; return post; },
     findFirst: async () => post,
     update: async ({ data }) => (post = { ...post, ...data }),
@@ -50,6 +53,7 @@ process.env.JWT_SECRET = "test-only-admin-signing-secret";
 const workerRouter = require("../dist/routes/editorial-worker.js").default;
 const blogRouter = require("../dist/routes/admin/blogs.js").default;
 const settingsRouter = require("../dist/routes/admin/editorial.js").default;
+const publicBlogRouter = require("../dist/routes/blogs.js").default;
 
 test("HTTP publishing, worker authentication, reservations, and cost retention", async (t) => {
   const app = express();
@@ -57,6 +61,7 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
   app.use("/worker", workerRouter);
   app.use("/blogs", blogRouter);
   app.use("/settings", settingsRouter);
+  app.use("/public-blogs", publicBlogRouter);
   app.use((error, _req, res, _next) => res.status(error.statusCode ?? 400).json({ message: error.message }));
   const server = app.listen(0, "127.0.0.1");
   await once(server, "listening");
@@ -132,6 +137,7 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
       const result = await request(`/worker/${jobId}/complete`, { token: leaseToken, draft, coverUrl: null, evidenceUrls: sources.map((source) => source.url) });
       assert.equal(result.status, 200, await result.text());
       assert.equal(createdPost.status, "draft");
+      assert.equal(categoryRequest.where.slug, "ai-news");
       assert.equal(job.status, "paused");
       assert.equal(job.blogPostId, blogId);
     });
@@ -145,6 +151,26 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
       assert.ok(Number.isFinite(Date.parse(post.editorialMeta.reviewedAt)));
       assert.equal(post.editorialMeta.reviewedBy, undefined);
       assert.equal(post.reviewConfirmed, undefined);
+    });
+    await t.test("Japan drafts use their own category and actual body reading time", async () => {
+      job = { ...job, status: "running", blogPostId: null };
+      const date = new Date().toISOString().slice(0, 10);
+      const sources = [{ title: "Municipal announcement", url: "https://example.com/announcement", date }, { title: "Official service guide", url: "https://example.com/guide", date }];
+      const draft = { title: "A documented Japan daily life change", beat: "japan", newsworthiness: "A verified local service change affects Japan residents.", slug: "japan-life-test", excerpt: "A sourced practical guide to a documented local service change in Japan.", content: "word ".repeat(1541), storyDate: date, format: "practical-guide", sources, coverPrompt: "A clear conceptual editorial scene of an everyday service in Japan.", flow: [] };
+      const result = await request(`/worker/${jobId}/complete`, { token: leaseToken, draft, coverUrl: null, evidenceUrls: sources.map((source) => source.url) });
+      assert.equal(result.status, 200, await result.text());
+      assert.equal(categoryRequest.where.slug, "japan-life");
+      assert.equal(createdPost.readingTimeMinutes, 8);
+      assert.equal(createdPost.editorialMeta.wordCount, 1541);
+      assert.equal(createdPost.status, "draft");
+    });
+    await t.test("site search filters published content and sorts newest publication first", async () => {
+      const result = await fetch(`${base}/public-blogs?q=Japan`);
+      assert.equal(result.status, 200);
+      assert.equal(publicQuery.where.status, "published");
+      assert.equal(publicQuery.where.deletedAt, null);
+      assert.deepEqual(publicQuery.orderBy[0], { publishedAt: "desc" });
+      assert.equal(publicQuery.where.OR[0].title.contains, "Japan");
     });
   } finally { await new Promise((resolve) => server.close(resolve)); await rm(uploadDir, { recursive: true, force: true }); }
 });

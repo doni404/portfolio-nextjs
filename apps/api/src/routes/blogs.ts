@@ -56,7 +56,9 @@ router.get("/", async (req, res, next) => {
         where,
         skip,
         take: query.pageSize,
-        orderBy: [{ storyDate: { sort: "desc", nulls: "first" } }, { publishedAt: "desc" }, { id: "desc" }],
+        orderBy: query.q
+          ? [{ publishedAt: "desc" }, { storyDate: { sort: "desc", nulls: "last" } }, { id: "desc" }]
+          : [{ storyDate: { sort: "desc", nulls: "first" } }, { publishedAt: "desc" }, { id: "desc" }],
         select: {
           id: true,
           title: true,

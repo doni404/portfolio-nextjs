@@ -8,6 +8,7 @@ import { UPLOAD_ROOT } from "../lib/uploads";
 import { ok } from "../lib/response";
 import { badRequest } from "../lib/errors";
 import { generatedImageType } from "../lib/generated-image";
+import { articleWordCount, readingTimeMinutes } from "../lib/reading-time";
 import { requireWorker, claimJob, lease, committedCost, notifyReview, assertFreshStory, settings } from "../lib/editorial";
 import { budgetAllows, costEstimate, draftSchema, IMAGE_MODEL, PRICING, stageSchema, STAGES, TEXT_MODEL } from "../lib/editorial-policy";
 
@@ -114,10 +115,11 @@ router.post("/:id/complete", async (req, res, next) => {
       if (logs.some((log) => log.stage === "revision") && ["revision", "revision_review"].some((stage) => !logs.some((log) => log.stage === stage && log.status === "completed"))) throw badRequest("Revision stages are incomplete");
       if (body.coverUrl && !logs.some((log) => log.stage === "cover" && log.status === "completed")) throw badRequest("Cover generation is incomplete");
       const author = await tx.author.findFirstOrThrow({ where: { slug: "doni-putra-purbawa" } });
-      const category = await tx.category.upsert({ where: { slug: "ai-news" }, update: {}, create: { slug: "ai-news", name: "AI & Technology", type: "blog" } });
+      const categorySlug = body.draft.beat === "japan" ? "japan-life" : "ai-news";
+      const category = await tx.category.upsert({ where: { slug: categorySlug }, update: {}, create: { slug: categorySlug, name: body.draft.beat === "japan" ? "Japan Life" : "AI & Technology", type: "blog" } });
       const sources = body.draft.sources.map((source) => `- [${source.title}](${source.url}) (${source.date})`).join("\n");
       const coverArtDirection = body.draft.coverArtDirection ? { coverArtDirection: body.draft.coverArtDirection } : {};
-      const post = await tx.blogPost.create({ data: { title: body.draft.title, slug: body.draft.slug, excerpt: body.draft.excerpt, content: `${body.draft.content}\n\n## Sources\n\n${sources}`, authorId: author.id, categoryId: category.id, status: "draft", storyDate: new Date(body.draft.storyDate), coverImageUrl: body.coverUrl, seoTitle: body.draft.title, seoDescription: body.draft.excerpt, readingTimeMinutes: Math.ceil(body.draft.content.split(/\s+/).length / 220), editorialMeta: { aiAssisted: true, beat: body.draft.beat, newsworthiness: body.draft.newsworthiness, format: body.draft.format, sources: body.draft.sources, flow: body.draft.flow, ...coverArtDirection, disclosure: "AI-assisted draft, reviewed by the editor before publication.", coverProvenance: body.coverUrl ? "AI-generated editorial illustration" : null } } });
+      const post = await tx.blogPost.create({ data: { title: body.draft.title, slug: body.draft.slug, excerpt: body.draft.excerpt, content: `${body.draft.content}\n\n## Sources\n\n${sources}`, authorId: author.id, categoryId: category.id, status: "draft", storyDate: new Date(body.draft.storyDate), coverImageUrl: body.coverUrl, seoTitle: body.draft.title, seoDescription: body.draft.excerpt, readingTimeMinutes: readingTimeMinutes(body.draft.content), editorialMeta: { aiAssisted: true, wordCount: articleWordCount(body.draft.content), beat: body.draft.beat, newsworthiness: body.draft.newsworthiness, format: body.draft.format, sources: body.draft.sources, flow: body.draft.flow, ...coverArtDirection, disclosure: "AI-assisted draft, reviewed by the editor before publication.", coverProvenance: body.coverUrl ? "AI-generated editorial illustration" : null } } });
       await tx.editorialJob.update({ where: { id: job.id }, data: { blogPostId: post.id, status: config.enabled ? "review" : "paused", finishedAt: new Date() } });
       return post.id;
     });

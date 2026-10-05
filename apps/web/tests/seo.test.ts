@@ -62,6 +62,9 @@ test("metadata uses one brand suffix, a clean canonical and large social preview
 });
 
 test("pagination is self-canonical; search and category views are noindex, follow", () => {
+  const journal = blogIndexMetadata({});
+  assert.deepEqual(journal.title, { absolute: "AI, Technology & Japan Life Journal | Doni Putra" });
+  assert.match(journal.description ?? "", /Japan daily-life guides/);
   const archive = blogIndexMetadata({ year: "2024" });
   assert.equal(archive.alternates?.canonical, `${siteConfig.url}/blogs?year=2024`);
   assert.ok(archive.robots && typeof archive.robots === "object" && archive.robots.index === false);

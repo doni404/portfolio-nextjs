@@ -37,9 +37,9 @@ export function blogIndexMetadata(input: BlogIndexParams) {
   if (params.year) query.set("year", params.year);
   if (page > 1) query.set("page", String(page));
   return buildMetadata({
-    title: `AI, Cloud & Backend Engineering Journal${page > 1 ? ` - Page ${page}` : ""}`,
+    title: `AI, Technology & Japan Life Journal${page > 1 ? ` - Page ${page}` : ""}`,
     description:
-      "Practical articles on AI, AWS cloud architecture, backend engineering, fintech, and machine learning by Doni Putra Purbawa.",
+      "Explore AI and technology news, cloud and backend engineering, and practical Japan daily-life guides by Doni Putra Purbawa.",
     path: `/blogs${query.size ? `?${query}` : ""}`,
     imageTitle: "The Journal",
     noIndex: Boolean(params.q || params.category || params.year),

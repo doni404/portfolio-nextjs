@@ -6,7 +6,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { loadArchive, canRetireSeed } from "../scripts/import-journal-archive.mjs";
-import { runWorker, parseSignals, evidenceUrls, providerUsage, validateResearch, selectBeat, providerDiagnostics, editorialCoverPrompt } from "../scripts/editorial-worker.mjs";
+import { runWorker, parseSignals, evidenceUrls, providerUsage, validateResearch, selectBeat, selectArticleProfile, providerDiagnostics, editorialCoverPrompt } from "../scripts/editorial-worker.mjs";
 import { assertLocalTest } from "../scripts/editorial-local-test.mjs";
 import { coverPrompts, archiveCoverPrompt } from "../scripts/generate-journal-covers.mjs";
 import { canInstallCover } from "../scripts/install-journal-covers.mjs";
@@ -158,6 +158,32 @@ test("topic rotation favors under-covered beats and caps model launches", () => 
   assert.equal(new Set(generated.map((post) => post.editorialMeta.beat)).size, 7);
 });
 
+test("Japan is a separate selectable beat, not silently added to an AI-only selection", () => {
+  const job = { day: "2026-10-05", slot: 1 };
+  assert.equal(selectBeat(["Japan life & practical hacks"], [], job).id, "japan");
+  assert.equal(selectBeat(["Daily life in Japan"], [], job).id, "japan");
+  assert.equal(selectBeat(["AI", "Japan life & practical hacks"], ["industry", "policy", "work", "products", "research", "engineering", "models"].map((beat) => ({ editorialMeta: { beat } })), job).id, "japan");
+  assert.notEqual(selectBeat(["AI"], [], job).id, "japan");
+  assert.equal(draftSchema.safeParse({ ...draft, beat: "japan" }).success, true);
+});
+
+test("article profiles vary depth and avoid turning leadership news into tutorials", () => {
+  const history = [];
+  const profiles = [];
+  for (let slot = 1; slot <= 12; slot++) {
+    const profile = selectArticleProfile({ beat: "japan" }, history, { day: "2026-10-05", slot });
+    profiles.push(profile);
+    history.unshift({ editorialMeta: { format: profile.format } });
+    assert.notEqual(profile.format, "paper-breakdown");
+  }
+  assert.ok(profiles.some((profile) => profile.minWords >= 1540));
+  assert.ok(profiles.some((profile) => profile.maxWords <= 650));
+  assert.equal(new Set(profiles.map((profile) => profile.format)).size, 4);
+  for (let slot = 1; slot < 8; slot++) {
+    assert.ok(!["paper-breakdown", "practical-guide"].includes(selectArticleProfile({ beat: "industry" }, [], { day: "2026-10-05", slot }).format));
+  }
+});
+
 test("archive has exactly 5/5/3 sourced posts and no fabricated publication date", async () => {
   const archive = await loadArchive();
   const counts = archive.posts.reduce((all, post) => { const year = post.date.slice(0, 4); all[year] = (all[year] ?? 0) + 1; return all; }, {});
@@ -294,8 +320,13 @@ test("happy path reserves every paid stage, logs costs, and creates only a revie
   assert.equal(paidCalls, 4);
   const textCalls = calls.filter(({ target }) => target === "https://api.openai.com/v1/responses");
   assert.ok(textCalls.every(({ body }) => body.model === TEXT_MODEL && body.reasoning.effort === "low"));
+  assert.ok(textCalls.every(({ body }) => /Do not repeat generic AI-assisted/.test(body.instructions)));
+  assert.ok(textCalls.every(({ body }) => /Keep caveats specific/.test(body.instructions)));
   assert.equal(calls.find(({ target }) => target.endsWith("images/generations")).body.quality, "medium");
   assert.match(textCalls[0].body.input, /Previously attempted announcement/);
+  assert.match(textCalls[0].body.input, /today or the last 24 hours/);
+  assert.doesNotMatch(textCalls[1].body.input, /500-750/);
+  assert.equal(textCalls[1].body.max_output_tokens, 7500);
   assert.match(textCalls[2].body.input, /do not flag that required match as copying/);
   assert.deepEqual(calls.filter(({ target }) => target.endsWith("/reserve")).map(({ body }) => body.stage), ["research", "writing", "review", "cover"]);
   assert.equal(calls.filter(({ target }) => target.endsWith("/usage")).length, 4);

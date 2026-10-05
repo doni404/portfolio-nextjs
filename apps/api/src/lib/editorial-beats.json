@@ -5,5 +5,6 @@
   { "id": "products", "label": "Consumer AI & products", "angle": "Useful apps, devices, search, accessibility, and product changes that people can actually use." },
   { "id": "research", "label": "Science & AI research", "angle": "Interesting papers and scientific applications beyond LLM launches. Explain limitations and label preprints." },
   { "id": "engineering", "label": "Cloud, security & developer tools", "angle": "Infrastructure, software incidents, cybersecurity, open source, and practical developer tools." },
-  { "id": "models", "label": "AI model releases", "angle": "Major model releases only when they have a meaningful, verified consequence for users." }
+  { "id": "models", "label": "AI model releases", "angle": "Major model releases only when they have a meaningful, verified consequence for users." },
+  { "id": "japan", "label": "Japan life & practical hacks", "angle": "Japan daily life, transport, useful services, housing routines, culture, and practical life hacks for residents and visitors. Prefer a verified recent service change or local announcement with a useful guide. Use Japanese primary sources and explain who and which location the advice applies to. Do not turn this into an AI or coding story." }
 ]
