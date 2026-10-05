@@ -13,6 +13,7 @@ import {
   Server,
 } from "lucide-react";
 import { publicApi } from "@/lib/server-api";
+import { getHomepageItems } from "@/lib/homepage-content";
 import { buildMetadata, siteConfig } from "@/lib/metadata";
 import { ArticleMeta } from "@/components/public/ArticleMeta";
 import { ProjectImage } from "@/components/public/ProjectImage";
@@ -51,12 +52,10 @@ const expertise = [
 ];
 
 export default async function Home() {
-  const [projectsRes, blogsRes] = await Promise.all([
-    publicApi.getProjects({ pageSize: "3" }),
-    publicApi.getBlogs({ pageSize: "4" }),
+  const [projects, posts] = await Promise.all([
+    getHomepageItems(publicApi.getProjects, 3),
+    getHomepageItems(publicApi.getBlogs, 4),
   ]);
-  const projects = projectsRes?.data ?? [];
-  const posts = blogsRes?.data ?? [];
   const [lead, ...otherPosts] = posts;
 
   return (
