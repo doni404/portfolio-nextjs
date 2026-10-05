@@ -13,6 +13,7 @@ import {
   ImageIcon,
   Settings,
   LogOut,
+  ChartNoAxesCombined, Workflow, Receipt,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,9 @@ import { cn } from "@/lib/utils";
 const navItems: { href: string; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { href: "/admin",                    label: "Dashboard",  icon: LayoutDashboard },
   { href: "/admin/blogs",              label: "Journal", icon: FileText },
+  { href: "/admin/automation", label: "Automation", icon: Workflow },
+  { href: "/admin/analytics", label: "Analytics", icon: ChartNoAxesCombined },
+  { href: "/admin/ai-usage", label: "AI Usage", icon: Receipt },
   { href: "/admin/projects",           label: "Projects",   icon: FolderKanban },
   { href: "/admin/experiences",        label: "Experience", icon: Briefcase },
   { href: "/admin/comments",           label: "Comments",   icon: MessageSquare },

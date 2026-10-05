@@ -1,0 +1,66 @@
+[
+  {
+    "slug": "ai-jobs-research-exposure-not-replacement-2026",
+    "asset": "ai-jobs-light-editorial-v2.png",
+    "mode": "api",
+    "pattern": "smooth-light",
+    "reason": "An evidence-led career explainer benefits from calm daylight, not a frightening job-loss scene.",
+    "prompt": "Create an original premium 16:9 editorial technology-journal cover. Smooth-light pattern: luminous cool white studio background, graphite type, restrained teal and coral accents, soft daylight with grounded shadows. Topic: Anthropic labor-market research distinguishes task exposure from actual job replacement; do not claim mass unemployment. Left half: exact crisp typography, small eyebrow 'AI & WORK', then very large two-line headline 'EXPOSED.' and 'NOT REPLACED.' with the second line in teal. Right half: an anonymous realistic young professional in a white shirt at a silver laptop, thoughtful rather than fearful, with a translucent stack of task cards beside them and one small coral question-mark sculpture. Cards are blank, not statistics or fabricated research charts. Person is not a real researcher and not being fired. Editorial product-photography realism, clean cutout edges, spacious layout, readable at thumbnail size. Keep subject and all text inside 7% safe margins. No fake quotations, numerical claims, robots, brains, glowing orbs, watermarks, brand endorsement, extra text, or dark backgrounds. This is conceptual generated artwork, not documentary evidence. Render only the three specified text elements exactly once."
+  },
+  {
+    "slug": "anthropic-defense-dispute-ai-boundaries-2026",
+    "asset": "anthropic-defense-dark-editorial-v2.png",
+    "mode": "api",
+    "pattern": "bold-dark",
+    "reason": "A disputed governance boundary calls for strong contrast and an explicitly illustrated leadership portrait, without invented battle scenes.",
+    "prompt": "Create an original sophisticated 16:9 editorial cover about Anthropic's February 2026 defense-use dispute. Bold-dark pattern: matte near-black background, sharp white type, one coral-red accent, fine editorial paper texture, restrained depth. Left half: exact small eyebrow 'ANTHROPIC', then large stacked headline 'WHO DRAWS' and 'THE LINE?' with LINE in coral. Right half: a recognizable, carefully drawn editorial portrait of Dario Amodei, curly dark hair, short beard, neutral thoughtful expression, plain dark jacket, rendered as an elegant hand-painted magazine illustration, visibly not a photograph. He stands alone with no military uniform, no weapons, no flags, no official seal, no fake meeting or fabricated action. A single crisp coral vertical boundary line separates a simple metallic AI compute tile from a generic closed policy document in the lower foreground. The objects are symbolic, not evidence of a contract or final legal ruling. Typography dominates at thumbnail size but does not overlap the portrait. 7% safe margins. No quote, allegation of wrongdoing, verdict, battle imagery, extra labels, watermarks, copied magazine layout, sci-fi neon, bokeh orbs, or horror mood. This independent conceptual portrait does not imply endorsement. Render only the three specified text elements once."
+  },
+  {
+    "slug": "windows-10-end-support-upgrade-plan-2025",
+    "asset": "windows-10-light-editorial-v2.png",
+    "mode": "codex",
+    "pattern": "smooth-light",
+    "reason": "A practical upgrade plan should feel reassuring, organized and approachable.",
+    "prompt": "Generate an original premium 16:9 technology-journal thumbnail. Bright smooth-light editorial studio: cool white and pale blue background, natural soft daylight, graphite typography, vivid Windows-blue accent. Left 45%: small exact eyebrow 'WINDOWS 10', huge bold stacked text 'STILL WORKING.' then 'STILL SUPPORTED?' in blue. Right: a realistic open silver laptop on a simple white surface, with an accurate four-pane blue Windows logo on its otherwise blank screen, beside a neat closed external backup drive and a freestanding blue forward arrow made of satin acrylic. Hardware remains fully visible; this is a conceptual supported-upgrade planning scene, not an actual Microsoft product announcement. Clean crisp magazine composition, generous whitespace, no rounded UI panels around the whole image. 7% safe margins for all lettering and objects. No invented dates, charts, error screenshots, guaranteed compatibility, fake warning, panic, other readable text, people, robots, neon, decorative orbs, watermarks, or endorsement. Only the three specified text elements, exactly once. Readable at small thumbnail size."
+  },
+  {
+    "slug": "google-ai-mode-search-readers-publishers-2025",
+    "asset": "google-ai-mode-light-editorial-v2.png",
+    "mode": "codex",
+    "pattern": "smooth-light",
+    "reason": "Search is an everyday product story; a bright playful-but-restrained cover makes the publisher question clear.",
+    "prompt": "Create an original high-quality 16:9 editorial technology cover, smooth-light style. White daylight studio with a very pale cool gray floor, dark graphite typography and focused Google primary-color accents. Left half: small exact label 'GOOGLE AI MODE', large sharp two-line headline 'ANSWERS FIRST.' and 'CLICKS LATER?' with the second line in blue. Right half: an accurate multicolor Google G logo as a large freestanding satin-glass sculpture, a clean magnifying glass in front of it, and three plain small paper webpage sheets stepping away from it with a single thin connecting line. Webpage sheets use only abstract lines, no invented Google interface, traffic graph, or figures. Concrete material realism, soft grounded shadows, crisp typography, spacious readable editorial layout, 7% safe margins. The scene asks about readers and publishers, not a proven traffic collapse. No people, extra text, watermarks, neon, glowing orbs, stock office background, fake official screenshot, or claim of endorsement. Render only the specified label and two headline lines once."
+  },
+  {
+    "slug": "github-copilot-coding-agent-review-workflow-2025",
+    "asset": "copilot-agent-dark-editorial-v2.png",
+    "mode": "codex",
+    "pattern": "bold-dark",
+    "reason": "Developer workflows suit a precise high-contrast composition with a visible human-review checkpoint.",
+    "prompt": "Create an original premium 16:9 editorial thumbnail for a GitHub Copilot coding-agent article. Bold-dark: matte charcoal studio, crisp white type, electric mint accent, restrained metallic depth, not a glowing sci-fi scene. Left: exact small eyebrow 'GITHUB COPILOT', huge bold headline in two lines 'AGENT WRITES.' and 'YOU REVIEW.' with the second line in mint. Right: a recognizable GitHub Copilot goggle-faced icon as a polished small three-dimensional dark-and-white emblem, beside a clean branching pull-request sculpture with three nodes and a prominent solid mint human-review checkmark gate. Add a small realistic keyboard edge at the bottom for developer context, without clutter. These are conceptual workflow objects, not an actual product interface or measured result. Strong modern magazine art direction, sharp letterforms, 7% safe margins, all symbols visible, no oversized meaningless circuitry. No robot body, false claims of fully autonomous merging, fake code screenshots, quote, extra labels, watermarks, purple gradients, bokeh orbs, or endorsement. Render only the three specified text elements once."
+  },
+  {
+    "slug": "deepseek-r1-reasoning-models-explained-2025",
+    "asset": "deepseek-r1-dark-editorial-v2.png",
+    "mode": "codex",
+    "pattern": "bold-dark",
+    "reason": "A major model release can be visually bold while the headline preserves the article's evaluation caveat.",
+    "prompt": "Generate an original premium 16:9 editorial AI-journal cover. Bold-dark near-black backdrop, crisp white type, saturated cyan-blue accent, subtly lit physical objects, no neon haze. Left 48%: small exact eyebrow 'DEEPSEEK-R1', massive two-line headline 'REASONING.' then 'NOT MAGIC.' with MAGIC in cyan. Right: an accurate recognizable blue DeepSeek whale symbol rendered as a freestanding satin-blue sculpture above three connected brushed-metal stepping blocks of increasing height, suggesting deliberate reasoning steps. One understated open document with abstract lines sits in the foreground, not a benchmark table. Do not invent numbers, model superiority, free unlimited access, a fabricated device, or an official advertisement. High-quality editorial material realism, sculptural form, thumbnail legibility, sharp clean composition, 7% safe margins. No brain, generic robot, decorative glowing orbs, fake screenshots, people, extra text, watermark, or endorsement. Render only the eyebrow and two headline lines once."
+  },
+  {
+    "slug": "anthropic-economic-index-ai-work-tasks-2025",
+    "asset": "economic-index-light-editorial-v2.png",
+    "mode": "codex",
+    "pattern": "smooth-light",
+    "reason": "Task-level workplace evidence is better represented with an accessible daylight desk than dramatic replacement imagery.",
+    "prompt": "Create an original premium 16:9 editorial technology-journal cover in smooth-light style. Crisp cool white studio background, soft daylight, graphite text with a restrained terracotta-coral accent and tiny mint detail. Left 46%: small exact eyebrow 'ANTHROPIC ECONOMIC INDEX', enormous two-line headline 'TASKS CHANGE.' and 'JOBS ARE MORE.' with the second line in coral. Right: realistic top-down three-quarter view of a clean pale desk containing a silver laptop, a closed notebook, three tidy blank task cards, and a simple coral asterisk representing Claude, all grounded and fully visible. One task card is moved forward with a subtle pointer, suggesting analysis of tasks rather than a whole job disappearing. The laptop screen is blank pale gray, no fabricated dashboards, statistics or productivity results. Calm professional editorial realism, excellent thumbnail readability, 7% safe margins. No copied Anthropic webpage, official endorsement, people being fired, robots, brains, floating orbs, dark background, extra readable text, dates, watermarks, or stock-photo clutter. Render exactly the eyebrow and two headline lines once."
+  },
+  {
+    "slug": "eu-ai-act-risk-based-rules-explained-2024",
+    "asset": "eu-ai-act-light-editorial-v2.png",
+    "mode": "codex",
+    "pattern": "smooth-light",
+    "reason": "Regulation is easier to approach through clean document imagery and a readable product-risk question.",
+    "prompt": "Create an original professional 16:9 technology-journal editorial cover. Smooth-light cool white daylight studio, dark graphite typography, restrained royal-blue and golden-yellow accents. Left: small exact eyebrow 'EU AI ACT', large bold two-line headline 'SAME MODEL.' and 'DIFFERENT RISK.' in blue. Right: a realistic stack of plain white policy papers, a small blue cube bearing an accurate ring of twelve yellow EU stars without any official seal, and two clear glass blocks of different heights separated by a simple blue balance beam. Blocks are an abstract use-case comparison, not legal classifications or compliance certification. Soft natural shadows, clean tactile paper and glass, sharp rendering, all objects fully visible. 7% safe margins and strong thumbnail legibility. Do not fabricate a legal timetable, official document title, endorsement, verdict, percentages or badges. No people, robot judges, extra readable text, watermark, dark sci-fi setting, beige palette, bokeh blobs or neon. Render only the specified eyebrow and two headline lines once."
+  }
+]

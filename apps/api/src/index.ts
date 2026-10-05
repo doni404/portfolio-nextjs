@@ -28,6 +28,9 @@ import adminCommentsRouter from "./routes/admin/comments";
 import adminContactRouter from "./routes/admin/contact-submissions";
 import adminAssetsRouter from "./routes/admin/assets";
 import adminUploadsRouter from "./routes/admin/uploads";
+import adminEditorialRouter from "./routes/admin/editorial";
+import adminAnalyticsRouter from "./routes/admin/analytics";
+import editorialWorkerRouter from "./routes/editorial-worker";
 
 const app = express();
 const PORT = process.env.PORT ?? 4000;
@@ -119,6 +122,9 @@ app.use("/api/admin/comments", adminCommentsRouter);
 app.use("/api/admin/contact-submissions", adminContactRouter);
 app.use("/api/admin/assets", adminAssetsRouter);
 app.use("/api/admin/uploads", adminUploadsRouter);
+app.use("/api/admin/editorial", adminEditorialRouter);
+app.use("/api/admin/analytics", adminAnalyticsRouter);
+app.use("/api/editorial-worker", standardLimiter, editorialWorkerRouter);
 
 // ─── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

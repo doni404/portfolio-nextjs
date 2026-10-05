@@ -8,15 +8,18 @@ export type BlogIndexParams = {
   category?: string | string[];
   q?: string | string[];
   page?: string | string[];
+  year?: string | string[];
 };
 
 export function normalizeBlogParams(params: BlogIndexParams) {
   const first = (value?: string | string[]) =>
     (Array.isArray(value) ? value[0] : value)?.trim() || undefined;
+  const year = first(params.year);
   return {
     category: first(params.category),
     q: first(params.q),
     page: first(params.page),
+    year: /^\d{4}$/.test(year ?? "") && Number(year) >= 2024 && Number(year) <= 2100 ? year : undefined,
   };
 }
 
@@ -31,6 +34,7 @@ export function blogIndexMetadata(input: BlogIndexParams) {
   const query = new URLSearchParams();
   if (params.category) query.set("category", params.category);
   if (params.q) query.set("q", params.q);
+  if (params.year) query.set("year", params.year);
   if (page > 1) query.set("page", String(page));
   return buildMetadata({
     title: `AI, Cloud & Backend Engineering Journal${page > 1 ? ` - Page ${page}` : ""}`,
@@ -38,7 +42,7 @@ export function blogIndexMetadata(input: BlogIndexParams) {
       "Practical articles on AI, AWS cloud architecture, backend engineering, fintech, and machine learning by Doni Putra Purbawa.",
     path: `/blogs${query.size ? `?${query}` : ""}`,
     imageTitle: "The Journal",
-    noIndex: Boolean(params.q || params.category),
+    noIndex: Boolean(params.q || params.category || params.year),
   });
 }
 

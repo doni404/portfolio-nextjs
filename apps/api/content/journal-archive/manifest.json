@@ -1,0 +1,421 @@
+{
+  "version": "journal-archive-mixed-20261005",
+  "replaceSlugs": [
+    "structure-backend-services-microservices-grpc",
+    "designing-reliable-payment-webhooks-production-systems",
+    "practical-aws-architecture-small-engineering-teams",
+    "lessons-deep-learning-anomaly-detection-sensor-data",
+    "building-ai-chatbots-llm-apis-backend-systems",
+    "advanced-postgresql-query-optimization"
+  ],
+  "posts": [
+    {
+      "slug": "alphafold-3-ai-molecular-interactions-2024",
+      "title": "AlphaFold 3 Explained: AI Meets the Molecules of Life",
+      "date": "2024-05-08",
+      "file": "alphafold-3.md",
+      "asset": "sensor-research",
+      "format": "paper-breakdown",
+      "excerpt": "AlphaFold 3 expanded molecular structure prediction beyond proteins. Here is what that means for research, and why predictions are not laboratory proof.",
+      "source": "https://blog.google/innovation-and-ai/products/google-deepmind-isomorphic-alphafold-3-ai-model/",
+      "beat": "research",
+      "coverAsset": "alphafold-3-thumbnail-v2.png",
+      "previousCoverAssets": [
+        "alphafold-3-ai-molecular-interactions-2024-782a530ca07b.webp"
+      ],
+      "coverGeneration": {
+        "source": "codex-built-in",
+        "manuallySelected": true,
+        "promptFile": "alphafold-3-cover-thumbnail-v2.md",
+        "generatedAt": "2026-10-05T03:04:00.000Z"
+      }
+    },
+    {
+      "slug": "gpt-4o-multimodal-ai-explained-2024",
+      "title": "GPT-4o: The Moment AI Started Feeling More Multimodal",
+      "date": "2024-05-13",
+      "file": "gpt-4o.md",
+      "asset": "learning-ai",
+      "format": "briefing",
+      "excerpt": "A look back at GPT-4o's 2024 launch: text, vision, and audio moved closer together, while real-world products still needed privacy and permission boundaries.",
+      "source": "https://openai.com/index/hello-gpt-4o/",
+      "beat": "models",
+      "coverAsset": "gpt-4o-thumbnail-v2.png",
+      "previousCoverAssets": [
+        "gpt-4o-multimodal-ai-explained-2024-ffa39f623cee.webp"
+      ],
+      "coverGeneration": {
+        "source": "codex-built-in",
+        "manuallySelected": true,
+        "promptFile": "gpt-4o-cover-thumbnail-v2.md",
+        "generatedAt": "2026-10-05T03:13:04.524Z"
+      }
+    },
+    {
+      "slug": "apple-intelligence-privacy-personal-ai-2024",
+      "title": "Apple Intelligence: Personal AI Meets the Privacy Question",
+      "date": "2024-06-10",
+      "file": "apple-intelligence.md",
+      "asset": "learning-ai",
+      "beat": "products",
+      "format": "explainer",
+      "excerpt": "Apple's 2024 announcement brought personal AI into everyday devices. The bigger question is what happens to your information when an assistant needs more context.",
+      "source": "https://www.apple.com/newsroom/2024/06/introducing-apple-intelligence-for-iphone-ipad-and-mac/",
+      "coverAsset": "apple-intelligence-light-sunburst-high-v1.png",
+      "previousCoverAssets": [
+        "apple-intelligence-privacy-personal-ai-2024-60b5a4ea0df7.webp"
+      ],
+      "coverGeneration": {
+        "source": "openai-api-bundled-cli",
+        "manuallySelected": true,
+        "jobId": "13dcb5fe-f364-4478-a38e-6accf991029b",
+        "pattern": "smooth-light",
+        "promptFile": "apple-intelligence-cover-light-sunburst-high-v1.prompt.txt",
+        "promptHash": "89aaff57a2badd9b",
+        "model": "gpt-image-2.5-sunburst",
+        "quality": "high",
+        "size": "auto",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "generatedAt": "2026-10-05T04:27:06Z"
+      }
+    },
+    {
+      "slug": "crowdstrike-outage-small-team-reliability-2024",
+      "title": "The CrowdStrike Outage: Why a Small Update Can Become a Big Incident",
+      "date": "2024-07-19",
+      "file": "crowdstrike-outage.md",
+      "asset": "backend",
+      "beat": "engineering",
+      "format": "practical-guide",
+      "excerpt": "The July 2024 Windows disruption is a reminder that configuration changes deserve serious release controls. A practical reliability checklist for smaller teams.",
+      "source": "https://www.crowdstrike.com/en-us/blog/falcon-content-update-preliminary-post-incident-report/",
+      "coverAsset": "crowdstrike-outage-thumbnail-v2.png",
+      "previousCoverAssets": [
+        "crowdstrike-outage-small-team-reliability-2024-b5d9ed7195c4.webp"
+      ],
+      "coverGeneration": {
+        "source": "codex-built-in",
+        "manuallySelected": true,
+        "promptFile": "crowdstrike-outage-cover-thumbnail-v2.md",
+        "generatedAt": "2026-10-05T03:14:49.345Z"
+      }
+    },
+    {
+      "slug": "eu-ai-act-risk-based-rules-explained-2024",
+      "title": "The EU AI Act Explained: The Use Case Matters as Much as the Model",
+      "date": "2024-08-01",
+      "file": "eu-ai-act.md",
+      "asset": "cloud",
+      "beat": "policy",
+      "format": "explainer",
+      "excerpt": "A retrospective on the EU AI Act entering into force in 2024, and why a product's purpose, consequences, and human oversight belong in the AI conversation.",
+      "source": "https://commission.europa.eu/news-and-media/news/ai-act-enters-force-2024-08-01_en",
+      "coverAsset": "eu-ai-act-light-editorial-v2.png",
+      "coverGeneration": {
+        "source": "codex-imagegen",
+        "manuallySelected": true,
+        "pattern": "smooth-light",
+        "reason": "Regulation is easier to approach through clean document imagery and a readable product-risk question.",
+        "promptFile": "cover-refresh-october-2026.json",
+        "promptHash": "bdf2f27f25fb5860",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "assetSha256": "544f3424bede68ff44b28744fb49ced7b5af0544917fc177a81eb92f4e943ed5",
+        "generatedAt": "2026-10-05T04:58:23.769Z"
+      },
+      "previousCoverAssets": [
+        "eu-ai-act-risk-based-rules-explained-2024-b4b75ad8cb32.webp"
+      ]
+    },
+    {
+      "slug": "deepseek-r1-reasoning-models-explained-2025",
+      "title": "DeepSeek-R1: What the Reasoning-Model Conversation Got Right",
+      "date": "2025-01-20",
+      "file": "deepseek-r1.md",
+      "asset": "backend",
+      "format": "explainer",
+      "excerpt": "DeepSeek-R1 put open reasoning models in the spotlight. Separate the release's real technical contribution from viral shortcuts about cost, intelligence, and deployment.",
+      "source": "https://deepseek.com/en/news/deepseek-r1/",
+      "beat": "models",
+      "coverAsset": "deepseek-r1-dark-editorial-v2.png",
+      "coverGeneration": {
+        "source": "codex-imagegen",
+        "manuallySelected": true,
+        "pattern": "bold-dark",
+        "reason": "A major model release can be visually bold while the headline preserves the article's evaluation caveat.",
+        "promptFile": "cover-refresh-october-2026.json",
+        "promptHash": "2e74c4e6a13d9c47",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "assetSha256": "c19fd233fb3fec2dd990c061322cefc6303c9399e3c1f485e0fc863ab2a078f3",
+        "generatedAt": "2026-10-05T04:58:23.764Z"
+      },
+      "previousCoverAssets": [
+        "deepseek-r1-reasoning-models-explained-2025-92b8ae395a7b.webp"
+      ]
+    },
+    {
+      "slug": "anthropic-economic-index-ai-work-tasks-2025",
+      "title": "AI at Work: What the Anthropic Economic Index Can Actually Tell Us",
+      "date": "2025-02-10",
+      "file": "economic-index.md",
+      "asset": "learning-ai",
+      "beat": "work",
+      "format": "paper-breakdown",
+      "excerpt": "AI usage data is more interesting than another prediction that every job will disappear. A clear guide to tasks, automation, and the limits of one platform's evidence.",
+      "source": "https://www.anthropic.com/news/the-anthropic-economic-index",
+      "coverAsset": "economic-index-light-editorial-v2.png",
+      "coverGeneration": {
+        "source": "codex-imagegen",
+        "manuallySelected": true,
+        "pattern": "smooth-light",
+        "reason": "Task-level workplace evidence is better represented with an accessible daylight desk than dramatic replacement imagery.",
+        "promptFile": "cover-refresh-october-2026.json",
+        "promptHash": "8aa483825ea96055",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "assetSha256": "ab298907107e71628b40223e6257038f3f6932218c78d8d9ab2857cec4b89b85",
+        "generatedAt": "2026-10-05T04:58:23.767Z"
+      },
+      "previousCoverAssets": [
+        "anthropic-economic-index-ai-work-tasks-2025-f2e26a88e4f7.webp"
+      ]
+    },
+    {
+      "slug": "github-copilot-coding-agent-review-workflow-2025",
+      "title": "GitHub Copilot Coding Agent: Your Issue Becomes a Pull Request, Not a Free Pass",
+      "date": "2025-05-19",
+      "file": "copilot-agent.md",
+      "asset": "backend",
+      "beat": "engineering",
+      "format": "practical-guide",
+      "excerpt": "GitHub's 2025 coding-agent launch moved AI work into the pull-request process. Here is how to think about delegation without handing over accountability.",
+      "source": "https://github.blog/news-insights/product-news/github-copilot-meet-the-new-coding-agent/",
+      "coverAsset": "copilot-agent-dark-editorial-v2.png",
+      "coverGeneration": {
+        "source": "codex-imagegen",
+        "manuallySelected": true,
+        "pattern": "bold-dark",
+        "reason": "Developer workflows suit a precise high-contrast composition with a visible human-review checkpoint.",
+        "promptFile": "cover-refresh-october-2026.json",
+        "promptHash": "9b1cf5b2927cde9e",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "assetSha256": "c1e7b6ebfc3eeb08ef8543d35b6b6cb14608147c5e3acc2752cafa254fd6387e",
+        "generatedAt": "2026-10-05T04:58:23.761Z"
+      },
+      "previousCoverAssets": [
+        "github-copilot-coding-agent-review-workflow-2025-c840df4d088a.webp"
+      ]
+    },
+    {
+      "slug": "google-ai-mode-search-readers-publishers-2025",
+      "title": "Google AI Mode: Search Is Becoming a Conversation. What Happens to Websites?",
+      "date": "2025-05-20",
+      "file": "google-ai-mode.md",
+      "asset": "learning-ai",
+      "beat": "products",
+      "format": "briefing",
+      "excerpt": "Google's 2025 AI Mode rollout changed the search experience. For readers and publishers, trustworthy source links and genuinely useful original work matter more than hype.",
+      "source": "https://blog.google/products-and-platforms/products/search/google-search-ai-mode-update/",
+      "coverAsset": "google-ai-mode-light-editorial-v2.png",
+      "coverGeneration": {
+        "source": "codex-imagegen",
+        "manuallySelected": true,
+        "pattern": "smooth-light",
+        "reason": "Search is an everyday product story; a bright playful-but-restrained cover makes the publisher question clear.",
+        "promptFile": "cover-refresh-october-2026.json",
+        "promptHash": "10b980ce06a4a156",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "assetSha256": "93c85e19f8746d2e6a60c11d504c77dd30b91b28acfd7f61773b8dae865a19b1",
+        "generatedAt": "2026-10-05T04:58:23.760Z"
+      },
+      "previousCoverAssets": [
+        "google-ai-mode-search-readers-publishers-2025-0bf14862bdb0.webp"
+      ]
+    },
+    {
+      "slug": "windows-10-end-support-upgrade-plan-2025",
+      "title": "Windows 10 End of Support: A Working Laptop Is Not the Whole Story",
+      "date": "2025-10-14",
+      "file": "windows-10.md",
+      "asset": "backend",
+      "beat": "engineering",
+      "format": "practical-guide",
+      "excerpt": "Windows 10 Home and Pro reached their ordinary support endpoint in October 2025. A calm checklist for planning a supported setup without panic-buying hardware.",
+      "source": "https://learn.microsoft.com/en-us/lifecycle/products/windows-10-home-and-pro",
+      "coverAsset": "windows-10-light-editorial-v2.png",
+      "coverGeneration": {
+        "source": "codex-imagegen",
+        "manuallySelected": true,
+        "pattern": "smooth-light",
+        "reason": "A practical upgrade plan should feel reassuring, organized and approachable.",
+        "promptFile": "cover-refresh-october-2026.json",
+        "promptHash": "3188bb3b2fa42613",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "assetSha256": "765f265a6126bda66f0f98dc77488f4a0902e827afea274aa8d9f58c6de2f0dd",
+        "generatedAt": "2026-10-05T04:58:23.758Z"
+      },
+      "previousCoverAssets": [
+        "windows-10-end-support-upgrade-plan-2025-204e9d8f700d.webp"
+      ]
+    },
+    {
+      "slug": "anthropic-defense-dispute-ai-boundaries-2026",
+      "title": "Anthropic's Defense Dispute: Who Decides Where AI Should Draw the Line?",
+      "date": "2026-02-27",
+      "file": "anthropic-defense.md",
+      "asset": "cloud",
+      "beat": "industry",
+      "format": "briefing",
+      "excerpt": "A February 2026 dispute put AI usage boundaries in the spotlight. Separate a company's public position from the broader questions of accountability and procurement.",
+      "source": "https://www.anthropic.com/news/statement-comments-secretary-war",
+      "coverAsset": "anthropic-defense-dark-editorial-v2.png",
+      "coverGeneration": {
+        "source": "openai-api-bundled-cli",
+        "manuallySelected": true,
+        "jobId": "3e842c81-7d6b-4701-aed7-637e5942581d",
+        "pattern": "bold-dark",
+        "reason": "A disputed governance boundary calls for strong contrast and an explicitly illustrated leadership portrait, without invented battle scenes.",
+        "promptFile": "cover-refresh-october-2026.json",
+        "promptHash": "6280884e7ec41ce7",
+        "model": "gpt-image-2.5-sunburst",
+        "quality": "high",
+        "size": "auto",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "assetSha256": "cddfcf4311b94998bf61d69033104d42ab17e5e5a4d96f9eb6222dba3662aca7",
+        "generatedAt": "2026-10-05T04:58:23.753Z"
+      },
+      "previousCoverAssets": [
+        "anthropic-defense-dispute-ai-boundaries-2026-c919e55732e3.webp"
+      ]
+    },
+    {
+      "slug": "ai-jobs-research-exposure-not-replacement-2026",
+      "title": "Is AI Taking Jobs? Why Exposure Is Not the Same as Replacement",
+      "date": "2026-03-05",
+      "file": "ai-jobs.md",
+      "asset": "learning-ai",
+      "beat": "work",
+      "format": "paper-breakdown",
+      "excerpt": "Anthropic's 2026 labor-market study separates possible AI tasks from observed use. What the evidence says, what it does not prove, and how to read the headlines.",
+      "source": "https://www.anthropic.com/research/labor-market-impacts",
+      "coverAsset": "ai-jobs-light-editorial-v2.png",
+      "coverGeneration": {
+        "source": "openai-api-bundled-cli",
+        "manuallySelected": true,
+        "jobId": "1b01e39e-3d84-42f6-bf67-16e8048dd630",
+        "pattern": "smooth-light",
+        "reason": "An evidence-led career explainer benefits from calm daylight, not a frightening job-loss scene.",
+        "promptFile": "cover-refresh-october-2026.json",
+        "promptHash": "f618d3c45b7533c8",
+        "model": "gpt-image-2.5-sunburst",
+        "quality": "high",
+        "size": "auto",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "assetSha256": "49a6aa5f0127b5c3b737812a8badf20b97e353c31e74e28d3b9d4f7eb4724ff0",
+        "generatedAt": "2026-10-05T04:58:23.745Z"
+      },
+      "previousCoverAssets": [
+        "ai-jobs-research-exposure-not-replacement-2026-648b23cba0cf.webp"
+      ]
+    },
+    {
+      "slug": "dario-amodei-ai-slowdown-pace-frontier-2026",
+      "title": "Dario Amodei's AI Slowdown Proposal: What Pacing the Frontier Means",
+      "date": "2026-09-12",
+      "file": "ai-pacing.md",
+      "asset": "cloud",
+      "beat": "industry",
+      "format": "explainer",
+      "excerpt": "Why Anthropic's CEO called for slower frontier-AI development in September 2026, and why supporting the idea is different from signing a binding pause agreement.",
+      "source": "https://darioamodei.com/post/we-must-pace-the-frontier",
+      "featured": true,
+      "coverAsset": "ai-pacing-sunburst-high-v1.png",
+      "previousCoverAssets": [
+        "dario-amodei-ai-slowdown-pace-frontier-2026-1198c0af400f.webp"
+      ],
+      "coverGeneration": {
+        "source": "openai-api-bundled-cli",
+        "manuallySelected": true,
+        "jobId": "b285100c-d678-46e4-b28f-eff36ffdd560",
+        "promptFile": "ai-pacing-cover-sunburst-high-v1.prompt.txt",
+        "promptHash": "d5a273ac51f695f1",
+        "model": "gpt-image-2.5-sunburst",
+        "quality": "high",
+        "size": "auto",
+        "outputFormat": "png",
+        "width": 1672,
+        "height": 941,
+        "generatedAt": "2026-10-05T03:24:37Z"
+      }
+    }
+  ],
+  "retireSeedVersion": "journal-archive-20261005",
+  "retirePosts": [
+    {
+      "slug": "gemini-15-long-context-explained-2024",
+      "title": "Gemini 1.5: A Bigger Context Window Is Not a Bigger Memory",
+      "file": "gemini-15.md"
+    },
+    {
+      "slug": "claude-35-sonnet-artifacts-developer-workflow-2024",
+      "title": "Claude 3.5 Sonnet: From Chat Answers to Working Artifacts",
+      "file": "claude-35.md"
+    },
+    {
+      "slug": "llama-31-open-weight-models-2024",
+      "title": "Llama 3.1: Open Weights, Real Choices, Real Responsibilities",
+      "file": "llama-31.md"
+    },
+    {
+      "slug": "gemini-25-thinking-models-product-design-2025",
+      "title": "Gemini 2.5: When More Thinking Is Actually Worth It",
+      "file": "gemini-25.md"
+    },
+    {
+      "slug": "qwen3-thinking-non-thinking-models-2025",
+      "title": "Qwen3: One Model Family, Different Ways to Think",
+      "file": "qwen3.md"
+    },
+    {
+      "slug": "claude-4-ai-agents-engineering-2025",
+      "title": "Claude 4 and AI Agents: Capability Is Only Half the System",
+      "file": "claude-4.md"
+    },
+    {
+      "slug": "gpt-5-launch-model-routing-2025",
+      "title": "GPT-5: Why Model Routing Became a Product Question",
+      "file": "gpt-5.md"
+    },
+    {
+      "slug": "claude-opus-46-long-context-code-review-2026",
+      "title": "Claude Opus 4.6: Bigger Code Context, Same Need for Evidence",
+      "file": "opus-46.md"
+    },
+    {
+      "slug": "gemini-31-pro-complex-workflows-2026",
+      "title": "Gemini 3.1 Pro: Better Reasoning Still Needs a Clear Brief",
+      "file": "gemini-31.md"
+    },
+    {
+      "slug": "gpt-54-computer-use-professional-workflows-2026",
+      "title": "GPT-5.4: AI Workflows Moved Beyond the Chat Box",
+      "file": "gpt-54.md"
+    }
+  ]
+}

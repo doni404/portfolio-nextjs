@@ -103,6 +103,8 @@ model BlogPost {
   seoTitle           String?       @map("seo_title") @db.VarChar(220)
   seoDescription     String?       @map("seo_description") @db.VarChar(320)
   publishedAt        DateTime?     @map("published_at") @db.Timestamptz
+  storyDate          DateTime?     @map("story_date") @db.Date
+  editorialMeta      Json          @default("{}") @map("editorial_meta")
   updatedAt          DateTime      @updatedAt @map("updated_at") @db.Timestamptz
   createdAt          DateTime      @default(now()) @map("created_at") @db.Timestamptz
   deletedAt          DateTime?     @map("deleted_at") @db.Timestamptz
@@ -111,11 +113,83 @@ model BlogPost {
   category Category? @relation(fields: [categoryId], references: [id])
   tags     BlogPostTag[]
   comments Comment[]
+  likes    BlogLike[]
+  editorialJob EditorialJob?
 
   @@index([status, publishedAt(sort: Desc)], name: "idx_blog_posts_status_published_at")
   @@index([categoryId], name: "idx_blog_posts_category_id")
   @@index([slug], name: "idx_blog_posts_slug")
   @@map("blog_posts")
+}
+
+model BlogLike {
+  blogPostId String   @map("blog_post_id") @db.Uuid
+  visitorHash String  @map("visitor_hash") @db.VarChar(64)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  blogPost BlogPost   @relation(fields: [blogPostId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([blogPostId, visitorHash])
+  @@map("blog_likes")
+}
+
+model EditorialSettings {
+  id               String   @id @default("default") @db.VarChar(40)
+  enabled          Boolean  @default(false)
+  dailyLimit       Int      @default(2) @map("daily_limit")
+  monthlyBudgetUsd Decimal  @default(5) @map("monthly_budget_usd") @db.Decimal(10, 6)
+  topics           String[] @default(["AI products", "AI research", "Cloud and developer tools"])
+  recipientEmail   String?  @map("recipient_email") @db.VarChar(255)
+  generateImages   Boolean  @default(true) @map("generate_images")
+  runAt            String   @default("09:00") @map("run_at") @db.VarChar(5)
+  workerLastSeenAt DateTime? @map("worker_last_seen_at") @db.Timestamptz
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("editorial_settings")
+}
+
+model EditorialJob {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  day          String   @db.VarChar(10)
+  slot         Int
+  status       String   @default("running") @db.VarChar(30)
+  leaseToken   String   @map("lease_token") @db.VarChar(64)
+  leaseUntil   DateTime @map("lease_until") @db.Timestamptz
+  title        String?  @db.VarChar(220)
+  topicKey     String?  @unique @map("topic_key") @db.VarChar(300)
+  blogPostId   String?  @unique @map("blog_post_id") @db.Uuid
+  errorCode    String?  @map("error_code") @db.VarChar(80)
+  emailStatus  String   @default("not_sent") @map("email_status") @db.VarChar(30)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  finishedAt   DateTime? @map("finished_at") @db.Timestamptz
+  usage        AIUsageLog[]
+  blogPost     BlogPost? @relation(fields: [blogPostId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([day, slot])
+  @@map("editorial_jobs")
+}
+
+model AIUsageLog {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  jobId            String   @map("job_id") @db.Uuid
+  stage            String   @db.VarChar(30)
+  model            String   @db.VarChar(80)
+  status           String   @default("reserved") @db.VarChar(30)
+  reservedUsd      Decimal  @map("reserved_usd") @db.Decimal(10, 6)
+  estimatedUsd     Decimal? @map("estimated_usd") @db.Decimal(10, 6)
+  inputTokens      Int      @default(0) @map("input_tokens")
+  cachedTokens     Int      @default(0) @map("cached_tokens")
+  outputTokens     Int      @default(0) @map("output_tokens")
+  searchCalls      Int      @default(0) @map("search_calls")
+  requestId        String?  @map("request_id") @db.VarChar(160)
+  durationMs       Int?     @map("duration_ms")
+  pricing          Json
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+  completedAt      DateTime? @map("completed_at") @db.Timestamptz
+  job              EditorialJob @relation(fields: [jobId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([jobId, stage])
+  @@index([createdAt])
+  @@map("ai_usage_logs")
 }
 
 model BlogPostTag {

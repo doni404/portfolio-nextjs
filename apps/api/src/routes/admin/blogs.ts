@@ -2,7 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { ok, paginated, created, noContent } from "../../lib/response";
-import { notFound } from "../../lib/errors";
+import { notFound, badRequest } from "../../lib/errors";
+import { blogCoverSchema, storyDateSchema, requiresEditorialReview } from "../../lib/editorial-policy";
 import { requireAuth } from "../../middleware/auth";
 
 const router = Router();
@@ -16,7 +17,9 @@ const blogBodySchema = z.object({
   content: z.string().min(1),
   categorySlug: z.string().optional(),
   tags: z.array(z.string()).default([]),
-  coverImageUrl: z.string().url().optional().or(z.literal("")),
+  coverImageUrl: blogCoverSchema.optional(),
+  storyDate: storyDateSchema.nullable().optional(),
+  reviewConfirmed: z.boolean().optional(),
   status: z.enum(["draft", "published", "archived"]).default("draft"),
   featured: z.boolean().default(false),
   readingTimeMinutes: z.number().int().min(1).max(120).default(5),
@@ -136,6 +139,7 @@ router.post("/", async (req, res, next) => {
         excerpt: body.excerpt,
         content: body.content,
         coverImageUrl: body.coverImageUrl || null,
+        storyDate: body.storyDate ? new Date(`${body.storyDate}T00:00:00Z`) : null,
         status: body.status,
         featured: body.featured,
         readingTimeMinutes: body.readingTimeMinutes,
@@ -163,6 +167,8 @@ router.patch("/:id", async (req, res, next) => {
     if (!existing) throw notFound("Blog post");
 
     const body = blogBodySchema.partial().parse(req.body);
+    const needsReview = requiresEditorialReview(existing.editorialMeta, existing.status, body.status);
+    if (needsReview && !body.reviewConfirmed) throw badRequest("Confirm your review of this AI-assisted draft before publishing");
 
     let categoryId = existing.categoryId;
     if (body.categorySlug !== undefined) {
@@ -186,6 +192,10 @@ router.patch("/:id", async (req, res, next) => {
     };
     delete updateData.categorySlug;
     delete updateData.tags;
+    delete updateData.reviewConfirmed;
+    if (body.storyDate !== undefined) updateData.storyDate = body.storyDate ? new Date(`${body.storyDate}T00:00:00Z`) : null;
+    if (body.coverImageUrl !== undefined) updateData.coverImageUrl = body.coverImageUrl || null;
+    if (needsReview) updateData.editorialMeta = { ...(existing.editorialMeta as Record<string, unknown>), reviewedAt: new Date().toISOString() };
 
     if (body.tags !== undefined) {
       await prisma.blogPostTag.deleteMany({ where: { blogPostId: req.params.id } });

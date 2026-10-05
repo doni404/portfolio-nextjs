@@ -1,0 +1,15 @@
+{
+  "textModel": "gpt-6-luna",
+  "imageModel": "gpt-image-2.5-flare",
+  "reasoningEffort": "low",
+  "pricing": {
+    "input": 0.1,
+    "cached": 0.01,
+    "output": 0.5,
+    "search": 0.01,
+    "imageText": 5,
+    "imageInput": 8,
+    "imageOutput": 30,
+    "checkedAt": "2026-10-05"
+  }
+}

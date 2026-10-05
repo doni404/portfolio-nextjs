@@ -1,0 +1,9 @@
+[
+  { "id": "industry", "label": "AI industry & leadership", "angle": "Company decisions, leadership debates, partnerships, competition, funding, and meaningful changes in the AI industry." },
+  { "id": "policy", "label": "AI policy & safety", "angle": "Regulation, safety commitments, privacy, copyright, and governance. Distinguish proposals from rules already in force." },
+  { "id": "work", "label": "Work, society & education", "angle": "How technology changes jobs, learning, creativity, and daily life. Separate research findings from speculation." },
+  { "id": "products", "label": "Consumer AI & products", "angle": "Useful apps, devices, search, accessibility, and product changes that people can actually use." },
+  { "id": "research", "label": "Science & AI research", "angle": "Interesting papers and scientific applications beyond LLM launches. Explain limitations and label preprints." },
+  { "id": "engineering", "label": "Cloud, security & developer tools", "angle": "Infrastructure, software incidents, cybersecurity, open source, and practical developer tools." },
+  { "id": "models", "label": "AI model releases", "angle": "Major model releases only when they have a meaningful, verified consequence for users." }
+]

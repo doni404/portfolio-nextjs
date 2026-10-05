@@ -4,6 +4,8 @@ storage
 .git
 .env
 .env.*
+.secrets
+**/.secrets
 *.log
 *.tsbuildinfo
 *.pem

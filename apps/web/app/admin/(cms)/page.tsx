@@ -8,6 +8,7 @@ import { adminApi } from "@/lib/server-api";
 import { formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/Badge";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { TrafficAnalytics } from "@/components/admin/TrafficAnalytics";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -55,6 +56,7 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
+      <TrafficAnalytics compact />
       <div className="admin-dashboard-feed">
         {/* Pending comments */}
         <section>

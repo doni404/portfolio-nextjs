@@ -3,6 +3,7 @@
  * Sends the JWT cookie automatically via credentials: 'include'.
  */
 
+import type { AnalyticsReport, EditorialOverview, UsageReport } from "./editorial-types";
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 async function req<T = unknown>(
@@ -45,6 +46,12 @@ function qs(params?: Record<string, string | undefined>) {
 }
 
 export const adminClient = {
+  getEditorial: () => req<{ data: EditorialOverview }>("/api/admin/editorial"),
+  saveEditorial: (data: Record<string, unknown>) => req("/api/admin/editorial", { method: "PATCH", body: JSON.stringify(data) }),
+  getAIUsage: (month: string) => req<{ data: UsageReport }>(`/api/admin/editorial/usage?month=${encodeURIComponent(month)}`),
+  getAnalytics: (days: number) => req<{ data: AnalyticsReport }>(`/api/admin/analytics?days=${days}`),
+  stopExpiredJob: (id: string) => req(`/api/admin/editorial/jobs/${id}/reconcile`, { method: "POST" }),
+  resendReviewEmail: (id: string) => req(`/api/admin/editorial/jobs/${id}/email`, { method: "POST" }),
   // ── Auth ──────────────────────────────────────────────────────────────────
   login: (email: string, password: string) =>
     req("/api/admin/auth/login", {

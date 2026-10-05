@@ -3,8 +3,11 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { paginated, ok } from "../lib/response";
 import { notFound, badRequest } from "../lib/errors";
+import { createHmac } from "node:crypto";
+import rateLimit from "express-rate-limit";
 
 const router = Router();
+const likeLimiter = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false });
 
 // GET /api/blogs
 router.get("/", async (req, res, next) => {
@@ -16,6 +19,7 @@ router.get("/", async (req, res, next) => {
       tag: z.string().optional(),
       featured: z.enum(["true", "false"]).optional(),
       q: z.string().optional(),
+      year: z.coerce.number().int().min(2024).max(2100).optional(),
     });
 
     const query = schema.parse(req.query);
@@ -42,13 +46,17 @@ router.get("/", async (req, res, next) => {
         { content: { contains: query.q, mode: "insensitive" } },
       ];
     }
+    if (query.year) {
+      const range = { gte: new Date(`${query.year}-01-01`), lt: new Date(`${query.year + 1}-01-01`) };
+      where.AND = [{ OR: [{ storyDate: range }, { storyDate: null, publishedAt: range }] }];
+    }
 
     const [posts, total] = await Promise.all([
       prisma.blogPost.findMany({
         where,
         skip,
         take: query.pageSize,
-        orderBy: { publishedAt: "desc" },
+        orderBy: [{ storyDate: { sort: "desc", nulls: "first" } }, { publishedAt: "desc" }, { id: "desc" }],
         select: {
           id: true,
           title: true,
@@ -58,6 +66,8 @@ router.get("/", async (req, res, next) => {
           featured: true,
           readingTimeMinutes: true,
           publishedAt: true,
+          storyDate: true,
+          editorialMeta: true,
           updatedAt: true,
           status: true,
           category: { select: { id: true, name: true, slug: true } },
@@ -78,6 +88,27 @@ router.get("/", async (req, res, next) => {
   } catch (err) {
     next(err);
   }
+});
+
+router.get("/:slug/likes", async (req, res, next) => {
+  try {
+    const post = await prisma.blogPost.findFirst({ where: { slug: req.params.slug, status: "published", deletedAt: null }, select: { id: true } });
+    if (!post) throw notFound("Blog post");
+    return ok(res, { count: await prisma.blogLike.count({ where: { blogPostId: post.id } }) });
+  } catch (e) { next(e); }
+});
+router.post("/:slug/likes", likeLimiter, async (req, res, next) => {
+  try {
+    const { visitorId, liked } = z.object({ visitorId: z.string().uuid(), liked: z.boolean() }).parse(req.body);
+    if (!process.env.JWT_SECRET) throw new Error("Like hashing secret not configured");
+    const post = await prisma.blogPost.findFirst({ where: { slug: req.params.slug, status: "published", deletedAt: null }, select: { id: true } });
+    if (!post) throw notFound("Blog post");
+    const visitorHash = createHmac("sha256", process.env.JWT_SECRET).update(visitorId).digest("hex");
+    const where = { blogPostId: post.id, visitorHash };
+    if (liked) await prisma.blogLike.upsert({ where: { blogPostId_visitorHash: where }, update: {}, create: where });
+    else await prisma.blogLike.deleteMany({ where });
+    return ok(res, { count: await prisma.blogLike.count({ where: { blogPostId: post.id } }), liked });
+  } catch (e) { next(e); }
 });
 
 // GET /api/blogs/:slug

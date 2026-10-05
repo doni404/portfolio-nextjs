@@ -5,9 +5,10 @@ import type { BlogPost } from "@/lib/server-api";
 export function ArticleMeta({ post }: { post: BlogPost }) {
   return (
     <div className="article-meta">
-      {post.publishedAt && (
-        <time dateTime={post.publishedAt}>{formatDate(post.publishedAt)}</time>
+      {(post.storyDate ?? post.publishedAt) && (
+        <time dateTime={post.storyDate ?? post.publishedAt}>{formatDate(post.storyDate ?? post.publishedAt!)}</time>
       )}
+      {post.editorialMeta?.retrospective && <span>Retrospective</span>}
       <span>
         <Clock size={14} /> {post.readingTimeMinutes} min read
       </span>

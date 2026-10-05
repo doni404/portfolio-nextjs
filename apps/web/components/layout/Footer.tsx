@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Mail, Rss } from "lucide-react";
 import { BrandMark } from "@/components/brand/BrandMark";
+import { siteConfig } from "@/lib/metadata";
 
 export function Footer() {
   return (
@@ -17,7 +18,7 @@ export function Footer() {
             Practical engineering.
           </p>
           <p className="footer-bio">
-            Cloud Architect &amp; Senior Backend Engineer.
+            {siteConfig.authorTagline}.
             <br />
             AWS, Fintech, Cloud &amp; AI. Based in Indonesia.
           </p>

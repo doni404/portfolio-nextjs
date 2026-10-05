@@ -13,6 +13,7 @@ import { marked } from "marked";
 import { siteConfig } from "@/lib/metadata";
 
 const blogCategories = [
+  { label: "AI News & Research", slug: "ai-news" },
   { label: "Backend Engineering", slug: "backend-engineering" },
   { label: "Cloud & DevOps", slug: "cloud-devops" },
   { label: "Payment Systems", slug: "payment-systems" },
@@ -33,6 +34,7 @@ interface BlogFormData {
   categorySlug: string;
   tags: string;
   coverImageUrl: string;
+  storyDate: string;
   seoTitle: string;
   seoDescription: string;
   readingTimeMinutes: number;
@@ -61,6 +63,8 @@ export function BlogEditor({ post }: BlogEditorProps) {
     prepareInitialContent(post?.content)
   );
   const [saveError, setSaveError] = useState("");
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
+  const needsReview = Boolean(post?.editorialMeta?.aiAssisted && post.status !== "published");
 
   const { register, handleSubmit, control, setValue } = useForm<BlogFormData>({
     defaultValues: {
@@ -70,6 +74,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
       categorySlug: post?.category?.slug ?? blogCategories[0].slug,
       tags: post?.tags?.map((t) => t.name).join(", ") ?? "",
       coverImageUrl: post?.coverImageUrl ?? "",
+      storyDate: post?.storyDate?.slice(0, 10) ?? "",
       seoTitle: post?.seoTitle ?? "",
       seoDescription: post?.seoDescription ?? "",
       readingTimeMinutes: post?.readingTimeMinutes ?? 5,
@@ -91,6 +96,10 @@ export function BlogEditor({ post }: BlogEditorProps) {
   }
 
   const onSubmit = async (data: BlogFormData) => {
+    if (needsReview && data.status === "published" && !reviewConfirmed) {
+      setSaveError("Review the sources and content, then confirm your review before publishing.");
+      return;
+    }
     setSaving(true);
     setSaveError("");
     try {
@@ -108,7 +117,9 @@ export function BlogEditor({ post }: BlogEditorProps) {
         featured: data.featured,
         categorySlug: data.categorySlug,
         tags: tagNames,
-        coverImageUrl: data.coverImageUrl || undefined,
+        coverImageUrl: data.coverImageUrl || "",
+        storyDate: data.storyDate || null,
+        reviewConfirmed,
         seoTitle: data.seoTitle || undefined,
         seoDescription: data.seoDescription || undefined,
         readingTimeMinutes: data.readingTimeMinutes,
@@ -201,6 +212,10 @@ export function BlogEditor({ post }: BlogEditorProps) {
           {saveError}
         </div>
       )}
+      {needsReview && <div className="admin-notice">
+        <p>This AI-assisted draft is not live. Verify its sources, dates, claims, and cover; add your own perspective.</p>
+        <label className="admin-switch-label"><input type="checkbox" checked={reviewConfirmed} onChange={(event) => setReviewConfirmed(event.target.checked)} />I have reviewed this draft for publication.</label>
+      </div>}
 
       <div className="admin-editor-grid">
         {/* Main editor area */}
@@ -328,7 +343,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
                   {...register("coverImageUrl")}
                   aria-label="Cover Image URL"
                   type="text"
-                  placeholder="https://… or /images/…"
+                  placeholder="https://… or /uploads/blogs/…"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
                 />
               </div>
@@ -416,6 +431,10 @@ export function BlogEditor({ post }: BlogEditorProps) {
                 <label htmlFor="featured" className="text-sm text-slate-700">
                   Featured article
                 </label>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-medium text-slate-500">Story date</label>
+                <input {...register("storyDate")} aria-label="Story date" type="date" className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-slate-500">

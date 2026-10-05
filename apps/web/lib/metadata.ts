@@ -11,9 +11,10 @@ export function siteOrigin(value?: string) {
 export const siteConfig = {
   name: "Doni Putra Purbawa",
   shortName: "Doni Putra",
-  title: "Doni Putra Purbawa | Cloud Architect & Backend Engineer",
+  authorTagline: "AI Enthusiast | Cloud Architect & Senior Backend Engineer",
+  title: "Doni Putra Purbawa | AI, Cloud & Backend Engineering",
   description:
-    "AI insights and technical case studies by Doni Putra Purbawa, a Cloud Architect and Senior Backend Engineer working with AWS, fintech, and AI systems.",
+    "AI insights and practical case studies by Doni Putra Purbawa, an AI enthusiast, Cloud Architect, and Senior Backend Engineer working with AWS and fintech.",
   url: siteOrigin(process.env.NEXT_PUBLIC_SITE_URL),
   creator: "Doni Putra Purbawa",
   email: "doniputrapurbawa@gmail.com",

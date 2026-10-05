@@ -15,6 +15,8 @@ import { CommentSection } from "@/components/blog/CommentSection";
 import { ShareButton } from "@/components/blog/ShareButton";
 import { ReadingTools } from "@/components/blog/ReadingTools";
 import { BlogViewAnalytics } from "@/components/analytics/BlogViewAnalytics";
+import { LikeButton } from "@/components/blog/LikeButton";
+import { ArticleFlow } from "@/components/blog/ArticleFlow";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -82,6 +84,7 @@ export default async function BlogDetail({ params }: PageProps) {
         </p>
         <h1>{post.title}</h1>
         <p className="reader-deck">{post.excerpt}</p>
+        {post.editorialMeta?.retrospective && <p className="reader-disclosure">Retrospective: this story covers an announcement from {post.storyDate?.slice(0, 4)}. Published {formatDate(post.publishedAt!)}; not breaking news.</p>}
         <div className="reader-byline">
           <Link href="/about" className="reader-author">
             <Image
@@ -92,7 +95,7 @@ export default async function BlogDetail({ params }: PageProps) {
             />
             <span>
               {post.author?.name ?? siteConfig.name}
-              <small>Cloud architect &amp; backend engineer</small>
+              <small>{siteConfig.authorTagline}</small>
             </span>
           </Link>
           <div className="reader-meta-actions">
@@ -115,7 +118,7 @@ export default async function BlogDetail({ params }: PageProps) {
               preload
               sizes="(max-width: 767px) 100vw, 1100px"
             />
-            <figcaption>Editorial illustration</figcaption>
+            <figcaption>{post.editorialMeta?.coverProvenance ?? "Editorial illustration"}</figcaption>
           </figure>
         )}
       </header>
@@ -127,6 +130,8 @@ export default async function BlogDetail({ params }: PageProps) {
             className="prose reading-prose"
             dangerouslySetInnerHTML={{ __html: content.html }}
           />
+          {Array.isArray(post.editorialMeta?.flow) && <ArticleFlow steps={post.editorialMeta.flow.filter((step) => typeof step?.title === "string" && typeof step?.description === "string").slice(0, 6)} />}
+          <LikeButton slug={post.slug} />
           <div className="reader-tags">
             {post.tags.map((tag) => (
               <Link
@@ -146,6 +151,7 @@ export default async function BlogDetail({ params }: PageProps) {
               Updated {formatDate(post.updatedAt)}. Engineering notes, not
               one-size-fits-all prescriptions.
             </p>
+            {post.editorialMeta?.disclosure && <p>{post.editorialMeta.disclosure}</p>}
             <a href="/rss.xml" className="text-link">
               <Rss size={15} /> Follow the journal
             </a>

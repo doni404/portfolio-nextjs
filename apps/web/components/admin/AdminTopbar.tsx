@@ -4,6 +4,9 @@ import { usePathname } from "next/navigation";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 const sections: Record<string, string> = {
   blogs: "Journal",
+  automation: "Automation",
+  analytics: "Analytics",
+  "ai-usage": "AI Usage",
   projects: "Projects",
   experiences: "Experience",
   comments: "Comments",

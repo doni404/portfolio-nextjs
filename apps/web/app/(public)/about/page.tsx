@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { Download, MapPin, BookOpen, Award, GraduationCap } from "lucide-react";
-import { absoluteUrl, buildMetadata } from "@/lib/metadata";
+import { absoluteUrl, buildMetadata, siteConfig } from "@/lib/metadata";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -9,11 +9,10 @@ import { personSchema } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata({
   title: "About",
-  description:
-    "Learn about Doni Putra Purbawa — Cloud Architect & Senior Backend Engineer focused on AWS, fintech, cloud platforms, and AI systems.",
+  description: siteConfig.description,
   path: "/about",
   imageTitle: "About Doni Putra Purbawa",
-  imageDescription: "Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI",
+  imageDescription: siteConfig.authorTagline,
 });
 
 const skills = [
@@ -146,13 +145,18 @@ export default function About() {
                 Doni Putra Purbawa
               </h1>
               <p className="mt-1 text-lg font-medium text-blue-600">
-                Cloud Architect & Senior Backend Engineer | AWS, Fintech, Cloud & AI
+                {siteConfig.authorTagline}
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
                 <span className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" /> Indonesia · Open to Japan relocation
                 </span>
               </div>
+              <p className="mt-4 max-w-2xl leading-relaxed text-slate-600">
+                I&apos;m an AI enthusiast exploring the research, products, and industry shifts
+                shaping how we live and work. In my journal, I share accessible explanations
+                and practical perspectives grounded in my engineering experience.
+              </p>
               <p className="mt-4 max-w-2xl leading-relaxed text-slate-600">
                 I&apos;m a hands-on Cloud Architect and backend engineering manager with 6+ years
                 building production systems for a Japanese SaaS company. My expertise spans AWS

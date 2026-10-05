@@ -29,6 +29,17 @@ test("canonical origin is normalized without paths, queries or credentials", () 
   assert.throws(() => siteOrigin("https://user:secret@doniputra.com"));
 });
 
+test("public author positioning includes AI without losing the engineering roles", () => {
+  assert.equal(siteConfig.authorTagline, "AI Enthusiast | Cloud Architect & Senior Backend Engineer");
+  assert.match(siteConfig.description, /AI enthusiast/);
+  assert.match(siteConfig.description, /Cloud Architect/);
+  assert.match(siteConfig.description, /Senior Backend Engineer/);
+  const metadata = buildMetadata();
+  assert.deepEqual(metadata.title, { absolute: "Doni Putra Purbawa | AI, Cloud & Backend Engineering" });
+  assert.equal(metadata.description, siteConfig.description);
+  assert.equal(metadata.openGraph?.description, siteConfig.description);
+});
+
 test("metadata uses one brand suffix, a clean canonical and large social previews", () => {
   const meta = buildMetadata({ title: "AI Engineering", path: "/blogs/ai#top", type: "article" });
   assert.deepEqual(meta.title, { absolute: "AI Engineering | Doni Putra" });
@@ -51,6 +62,9 @@ test("metadata uses one brand suffix, a clean canonical and large social preview
 });
 
 test("pagination is self-canonical; search and category views are noindex, follow", () => {
+  const archive = blogIndexMetadata({ year: "2024" });
+  assert.equal(archive.alternates?.canonical, `${siteConfig.url}/blogs?year=2024`);
+  assert.ok(archive.robots && typeof archive.robots === "object" && archive.robots.index === false);
   assert.equal(blogIndexMetadata({ page: "2" }).alternates?.canonical, `${siteConfig.url}/blogs?page=2`);
   assert.equal(blogIndexMetadata({ page: "1", q: " " }).alternates?.canonical, `${siteConfig.url}/blogs`);
   const filtered = blogIndexMetadata({ q: ["cloud", "ai"], category: "Cloud & DevOps", page: "2" });
@@ -86,6 +100,7 @@ test("structured data uses real article dates, author identity and safe JSON", (
   assert.equal(schema.dateModified, "2026-10-04T02:00:00.000Z");
   assert.equal(schema.author.name, siteConfig.name);
   assert.equal(articleSchema({ ...post, publishedAt: "invalid" }).datePublished, undefined);
+  assert.equal(articleSchema({ ...post, storyDate: "2024-05-13", editorialMeta: { retrospective: true } }).datePublished, "2026-01-01T12:00:00.000Z");
   const otherAuthor = articleSchema({ ...post, author: { id: "other", name: "Another Author", slug: "another" } }).author;
   assert.equal("url" in otherAuthor, false);
   assert.equal(projectSchema(project)["@type"], "CreativeWork");

@@ -13,7 +13,7 @@ import {
   Server,
 } from "lucide-react";
 import { publicApi } from "@/lib/server-api";
-import { buildMetadata } from "@/lib/metadata";
+import { buildMetadata, siteConfig } from "@/lib/metadata";
 import { ArticleMeta } from "@/components/public/ArticleMeta";
 import { ProjectImage } from "@/components/public/ProjectImage";
 import { ArchitectureScene } from "@/components/public/ArchitectureScene";
@@ -76,8 +76,8 @@ export default async function Home() {
               Building what comes <em>next.</em>
             </p>
             <p className="hero-description">
-              A cloud architect&apos;s perspective on AI, the systems behind it,
-              and the ideas shaping how we work.
+              Exploring AI news, research, and the ideas shaping how we work,
+              with a hands-on perspective from cloud and backend engineering.
             </p>
             <div className="hero-actions">
               <Link href="/blogs" className="action-button mint-button">
@@ -97,7 +97,7 @@ export default async function Home() {
               />
               <span>
                 Doni Putra Purbawa
-                <small>Cloud Architect &amp; Senior Backend Engineer</small>
+                <small>{siteConfig.authorTagline}</small>
               </span>
             </Link>
           </div>

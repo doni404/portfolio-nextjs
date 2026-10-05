@@ -195,6 +195,8 @@ export type BlogPost = {
   content: string;
   coverImageUrl?: string;
   publishedAt?: string;
+  storyDate?: string;
+  editorialMeta?: { retrospective?: boolean; aiAssisted?: boolean; disclosure?: string; coverProvenance?: string; flow?: { title: string; description: string }[] };
   updatedAt: string;
   createdAt: string;
   status: "draft" | "published" | "archived";

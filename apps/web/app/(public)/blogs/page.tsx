@@ -29,11 +29,13 @@ export default async function Blogs({
 }) {
   const params = normalizeBlogParams(await searchParams);
   const page = blogPage(params.page);
+  const currentYear = new Date().getUTCFullYear();
+  const years = Array.from({ length: Math.max(1, currentYear - 2024 + 1) }, (_, index) => String(currentYear - index));
   const allRes = await publicApi.getBlogs({ pageSize: "50" });
   const allPosts = allRes?.data ?? [];
   const categories = [
     ...new Set([
-      ...defaultCategories,
+      ...(allPosts.length ? [] : defaultCategories),
       ...allPosts.flatMap((post) =>
         post.category ? [post.category.name] : [],
       ),
@@ -55,10 +57,11 @@ export default async function Blogs({
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
   if (params.q) apiParams.q = params.q;
+  if (params.year) apiParams.year = params.year;
   const filteredRes = await publicApi.getBlogs(apiParams);
   const posts = filteredRes?.data ?? [];
   const featured =
-    !params.category && !params.q && page === 1
+    !params.category && !params.q && !params.year && page === 1
       ? posts.find((post) => post.featured)
       : undefined;
   const totalPages = filteredRes?.pagination.totalPages ?? 1;
@@ -68,6 +71,7 @@ export default async function Blogs({
     const query = new URLSearchParams();
     if (category) query.set("category", category);
     if (params.q) query.set("q", params.q);
+    if (params.year) query.set("year", params.year);
     if (targetPage > 1) query.set("page", String(targetPage));
     return `/blogs${query.size ? `?${query}` : ""}`;
   }
@@ -112,6 +116,10 @@ export default async function Blogs({
               {category}
             </Link>
           ))}
+        </nav>
+        <nav className="journal-years" aria-label="Story year">
+          <Link href={(() => { const q = new URLSearchParams(); if (params.category) q.set("category", params.category); if (params.q) q.set("q", params.q); return `/blogs${q.size ? `?${q}` : ""}`; })()} aria-current={!params.year ? "page" : undefined}>All years</Link>
+          {years.map((year) => { const q = new URLSearchParams(); q.set("year", year); if (params.category) q.set("category", params.category); if (params.q) q.set("q", params.q); return <Link key={year} href={`/blogs?${q}`} aria-current={params.year === year ? "page" : undefined}>{year}</Link>; })}
         </nav>
         {featured && (
           <Link href={`/blogs/${featured.slug}`} className="featured-story">
