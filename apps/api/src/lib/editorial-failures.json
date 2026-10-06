@@ -7,5 +7,6 @@
   "SOURCE_NOT_RETRIEVED": "A cited source was not returned by web research.",
   "PRIMARY_SOURCE_MISSING": "The primary source could not be verified.",
   "WRONG_EDITORIAL_BEAT": "Research did not match the selected topic.",
-  "INDEPENDENT_SOURCE_MISSING": "This story needs an independent second source."
+  "INDEPENDENT_SOURCE_MISSING": "This story needs an independent second source.",
+  "USAGE_REPORT_REJECTED": "The API could not record usage. Generation stopped; the cost remains reserved."
 }

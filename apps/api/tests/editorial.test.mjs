@@ -6,7 +6,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { loadArchive, canRetireSeed } from "../scripts/import-journal-archive.mjs";
-import { runWorker, parseSignals, evidenceUrls, evidenceKey, providerUsage, validateResearch, sourceResolutionSchema, resolveResearchSources, selectBeat, selectArticleProfile, providerDiagnostics, editorialCoverPrompt } from "../scripts/editorial-worker.mjs";
+import { runWorker, parseSignals, evidenceUrls, evidenceKey, providerUsage, validateResearch, sourceResolutionSchema, resolveResearchSources, selectBeat, selectArticleProfile, providerDiagnostics, workerApiDiagnostics, editorialCoverPrompt } from "../scripts/editorial-worker.mjs";
 import { assertLocalTest } from "../scripts/editorial-local-test.mjs";
 import { coverPrompts, archiveCoverPrompt } from "../scripts/generate-journal-covers.mjs";
 import { canInstallCover } from "../scripts/install-journal-covers.mjs";
@@ -50,6 +50,9 @@ test("live smoke tests refuse production and diagnostics never expose provider m
   assert.throws(() => assertLocalTest({ DATABASE_URL: "postgresql://localhost/portfolio" }));
   assert.deepEqual(providerDiagnostics(401, { error: { type: "invalid_request_error", code: "invalid_api_key", param: null, message: "synthetic-secret-must-not-print" } }), { status: 401, type: "invalid_request_error", code: "invalid_api_key", parameter: null });
   assert.equal(providerDiagnostics(400, { error: { code: "unsafe secret text" } }).code, null);
+  const diagnostics = workerApiDiagnostics(400, { error: { code: "VALIDATION_ERROR", message: "synthetic-secret", details: { usage: ["synthetic-secret"], arbitrarySecret: "synthetic-secret" } } });
+  assert.deepEqual(diagnostics, { status: 400, code: "VALIDATION_ERROR", fields: ["usage"] });
+  assert.doesNotMatch(JSON.stringify(diagnostics), /synthetic-secret|arbitrarySecret/);
 });
 
 test("budget reservations and token costs use the configured standard rates", () => {
@@ -311,7 +314,7 @@ test("GA4 supports ignored credential files and never leaks malformed JSON", asy
   }
 });
 
-async function mockRun({ providerStatus = 200, withUsage = true, denyReservation = false, images = false, revise = false, revisionFails = false, misspelledSource = false, resolutionFails = false } = {}) {
+async function mockRun({ providerStatus = 200, withUsage = true, denyReservation = false, denyUsage = false, searchCalls = 1, images = false, revise = false, revisionFails = false, misspelledSource = false, resolutionFails = false } = {}) {
   const calls = []; let paidCalls = 0; let claimed = false;
   const previousExit = process.exitCode;
   try {
@@ -326,7 +329,9 @@ async function mockRun({ providerStatus = 200, withUsage = true, denyReservation
         const approved = name === "review" ? !revise : !revisionFails;
         const research = misspelledSource ? { ...topic, primaryUrl: "https://example.com/misspelled-announcement", sources: [{ ...sources[0], url: "https://example.com/misspelled-announcement" }, sources[1]] } : topic;
         const resolution = { matches: sources.map(({ url }, sourceIndex) => ({ sourceIndex, url: resolutionFails ? null : url })) };
-        return response(modelResponse(name === "research" ? research : name === "source_resolution" ? resolution : ["draft", "revision"].includes(name) ? draft : { approved, issues: approved ? [] : ["Rewrite an overfamiliar phrase."] }, { research: name === "research", withUsage }));
+        const result = modelResponse(name === "research" ? research : name === "source_resolution" ? resolution : ["draft", "revision"].includes(name) ? draft : { approved, issues: approved ? [] : ["Rewrite an overfamiliar phrase."] }, { research: name === "research", withUsage });
+        if (name === "research") result.output.unshift(...Array.from({ length: searchCalls - 1 }, () => ({ type: "web_search_call", action: { sources: [] } })));
+        return response(result);
       }
       if (target.endsWith("/claim")) {
         if (claimed) return response({ data: { job: null, reason: "Quota reached" } });
@@ -334,6 +339,7 @@ async function mockRun({ providerStatus = 200, withUsage = true, denyReservation
         return response({ data: { job: { id: "test-job", leaseToken: "lease", day: "2026-10-05", slot: 1 }, config: { topics: ["Cloud, security & developer tools"], generateImages: images }, recent: [], attemptedTopics: [{ title: "Previously attempted announcement", topicKey: "https://old.example/story" }] } });
       }
       if (denyReservation && target.endsWith("/reserve")) return response({}, 400);
+      if (denyUsage && target.endsWith("/usage")) return response({ error: { code: "VALIDATION_ERROR", details: { usage: ["synthetic-secret"] } } }, 400);
       if (target.endsWith("/cover")) return response({ data: { url: "/uploads/blogs/generated/test-job/cover.webp" } });
       return response({ data: {} });
     } });
@@ -360,6 +366,17 @@ test("happy path reserves every paid stage, logs costs, and creates only a revie
   assert.equal(complete.body.draft.title, draft.title);
   assert.equal(complete.body.draft.status, undefined);
   assert.equal(calls.some(({ target }) => /publish|admin\/blogs/.test(target)), false);
+});
+
+test("reported research usage is not clipped; rejected reports stop without paid retries", async () => {
+  const completed = await mockRun({ searchCalls: 4, images: true });
+  assert.equal(completed.calls.find(({ target }) => target.endsWith("/usage")).body.usage.search, 4);
+  assert.equal(completed.calls.filter(({ target }) => target.endsWith("/complete")).length, 1);
+  const rejected = await mockRun({ denyUsage: true, images: true });
+  assert.equal(rejected.paidCalls, 1);
+  assert.equal(rejected.calls.filter(({ target }) => target.endsWith("/claim")).length, 1);
+  assert.equal(rejected.calls.some(({ target }) => target.endsWith("/complete")), false);
+  assert.equal(rejected.calls.find(({ target }) => target.endsWith("/fail")).body.reason, "USAGE_REPORT_REJECTED");
 });
 
 test("source resolution is constrained to retrieved URLs and preserves facts and exact citations", () => {

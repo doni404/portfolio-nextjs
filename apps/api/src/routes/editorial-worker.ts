@@ -62,7 +62,8 @@ router.post("/:id/reserve", async (req, res, next) => {
 });
 router.post("/:id/usage", async (req, res, next) => {
   try {
-    const body = authSchema.extend({ stage: stageSchema, requestId: z.string().max(160).nullable(), durationMs: z.number().int().min(0).max(3600000), status: z.enum(["completed", "unknown", "rejected"]), usage: z.object({ input: z.number().int().nonnegative(), cached: z.number().int().nonnegative(), output: z.number().int().nonnegative(), search: z.number().int().min(0).max(3), imageInput: z.number().int().nonnegative(), imageText: z.number().int().nonnegative() }) }).parse(req.body);
+    // Accept actual reported usage, independently of the requested tool-call limit.
+    const body = authSchema.extend({ stage: stageSchema, requestId: z.string().max(160).nullable(), durationMs: z.number().int().min(0).max(3600000), status: z.enum(["completed", "unknown", "rejected"]), usage: z.object({ input: z.number().int().nonnegative(), cached: z.number().int().nonnegative(), output: z.number().int().nonnegative(), search: z.number().int().min(0).max(100), imageInput: z.number().int().nonnegative(), imageText: z.number().int().nonnegative() }) }).parse(req.body);
     if (body.usage.cached > body.usage.input) throw badRequest("Invalid cached token count");
     const result = await prisma.$transaction(async (tx) => {
       await lease(tx, req.params.id, body.token, true);

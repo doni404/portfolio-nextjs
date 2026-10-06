@@ -73,6 +73,12 @@ export function providerDiagnostics(status, body) {
   const safe = (value) => typeof value === "string" && /^[a-zA-Z0-9_.-]{1,80}$/.test(value) ? value : null;
   return { status, type: safe(body?.error?.type), code: safe(body?.error?.code), parameter: safe(body?.error?.param) };
 }
+export function workerApiDiagnostics(status, body) {
+  const code = body?.error?.code;
+  return { status, code: typeof code === "string" && /^[A-Z_]{1,80}$/.test(code) ? code : null,
+    fields: Object.keys(body?.error?.details ?? {}).filter((field) => ["usage", "stage", "requestId", "durationMs", "token"].includes(field)),
+  };
+}
 export function evidenceUrls(response) {
   const urls = [];
   for (const item of response.output ?? []) {
@@ -175,7 +181,12 @@ export async function runWorker({ fetchImpl = fetch, discover = signals, apiUrl 
   if (base.protocol !== "https:" && !(base.protocol === "http:" && ["localhost", "127.0.0.1"].includes(base.hostname))) throw new Error("Worker API must use HTTPS");
   async function api(path, body, form) {
     const response = await fetchImpl(new URL(`/api/editorial-worker${path}`, base), { method: "POST", headers: { Authorization: `Bearer ${workerToken}`, ...(form ? {} : { "Content-Type": "application/json" }) }, body: form ?? JSON.stringify(body ?? {}), signal: AbortSignal.timeout(30_000) });
-    if (!response.ok) throw new Error(path.endsWith("/reserve") ? "BUDGET_OR_DISABLED" : path.endsWith("/topic") ? "DUPLICATE_TOPIC" : "GENERATION_FAILED");
+    if (!response.ok) {
+      console.error("Worker API rejected the request:", JSON.stringify(workerApiDiagnostics(response.status, await response.json().catch(() => null))));
+      const error = new Error(path.endsWith("/reserve") ? "BUDGET_OR_DISABLED" : path.endsWith("/topic") ? "DUPLICATE_TOPIC" : "GENERATION_FAILED");
+      if (path.endsWith("/usage")) error.reason = "USAGE_REPORT_REJECTED";
+      throw error;
+    }
     return (await response.json()).data;
   }
   await api("/heartbeat", { ready: true });

@@ -112,6 +112,21 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
         assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "writing" })).status, 200);
       } finally { logs = previousLogs; }
     });
+    await t.test("actual search usage above the requested limit is recorded without clipping", async () => {
+      const previousLogs = logs;
+      try {
+        logs = [];
+        assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "research" })).status, 200);
+        const report = { token: leaseToken, stage: "research", requestId: "four-searches", durationMs: 20000, status: "completed", usage: { input: 1000, output: 500, cached: 200, search: 4, imageInput: 0, imageText: 0 } };
+        assert.equal((await request(`/worker/${jobId}/usage`, { ...report, usage: { ...report.usage, search: 101 } })).status, 400);
+        assert.equal(logs[0].status, "reserved");
+        assert.equal((await request(`/worker/${jobId}/usage`, report)).status, 200);
+        assert.equal(logs[0].status, "completed");
+        assert.equal(logs[0].searchCalls, 4);
+        assert.equal(logs[0].estimatedUsd, 0.040332);
+        assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "writing" })).status, 200);
+      } finally { logs = previousLogs; }
+    });
     await t.test("initial cover maintenance does not consume scheduled news quota", async () => {
       config.dailyLimit = 2;
       const heartbeat = await request("/worker/heartbeat", {ready:true});
