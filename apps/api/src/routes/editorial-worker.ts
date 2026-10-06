@@ -41,9 +41,13 @@ router.post("/:id/reserve", async (req, res, next) => {
       // A stage is never executed twice; retries cannot accidentally incur another charge.
       if (await tx.aIUsageLog.findUnique({ where: { jobId_stage: { jobId: req.params.id, stage } } })) throw badRequest("Stage already reserved; reconcile the existing request");
       if (stage !== "research") {
-        const previous = stage === "writing" ? "research" : stage === "review" ? "writing" : stage === "revision_review" ? "revision" : "review";
+        const previous = ["writing", "source_resolution"].includes(stage) ? "research" : stage === "review" ? "writing" : stage === "revision_review" ? "revision" : "review";
         const log = await tx.aIUsageLog.findUnique({ where: { jobId_stage: { jobId: req.params.id, stage: previous } } });
         if (log?.status !== "completed") throw badRequest("Previous stage is incomplete");
+        if (stage === "writing") {
+          const resolution = await tx.aIUsageLog.findUnique({ where: { jobId_stage: { jobId: req.params.id, stage: "source_resolution" } } });
+          if (resolution && resolution.status !== "completed") throw badRequest("Source resolution is incomplete");
+        }
         if (stage === "cover") {
           const revision = await tx.aIUsageLog.findUnique({ where: { jobId_stage: { jobId: req.params.id, stage: "revision" } } });
           const reviewed = await tx.aIUsageLog.findUnique({ where: { jobId_stage: { jobId: req.params.id, stage: "revision_review" } } });
@@ -113,6 +117,7 @@ router.post("/:id/complete", async (req, res, next) => {
       const config = await tx.editorialSettings.findUniqueOrThrow({ where: { id: "default" } });
       const logs = await tx.aIUsageLog.findMany({ where: { jobId: job.id } });
       if (["research", "writing", "review"].some((stage) => !logs.some((log) => log.stage === stage && log.status === "completed"))) throw badRequest("Generation stages are incomplete");
+      if (logs.some((log) => log.stage === "source_resolution" && log.status !== "completed")) throw badRequest("Source resolution is incomplete");
       if (logs.some((log) => log.stage === "revision") && ["revision", "revision_review"].some((stage) => !logs.some((log) => log.stage === stage && log.status === "completed"))) throw badRequest("Revision stages are incomplete");
       if (body.coverUrl && !logs.some((log) => log.stage === "cover" && log.status === "completed")) throw badRequest("Cover generation is incomplete");
       const author = await tx.author.findFirstOrThrow({ where: { slug: "doni-putra-purbawa" } });

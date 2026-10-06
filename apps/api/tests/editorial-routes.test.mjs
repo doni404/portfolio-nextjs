@@ -97,6 +97,21 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
       assert.equal(logs[0].estimatedUsd, null);
       assert.equal(logs[0].reservedUsd, 0.25);
     });
+    await t.test("source resolution requires completed research and blocks writing if uncertain", async () => {
+      const previousLogs = logs;
+      try {
+        assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "source_resolution" })).status, 400);
+        logs = [{ stage: "research", status: "completed", estimatedUsd: 0.01 }];
+        assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "source_resolution" })).status, 200);
+        assert.equal(logs[1].reservedUsd, 0.10);
+        assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "source_resolution" })).status, 400);
+        assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "writing" })).status, 400);
+        logs[1].status = "unknown";
+        assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "writing" })).status, 400);
+        logs[1].status = "completed"; logs[1].estimatedUsd = 0.001;
+        assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "writing" })).status, 200);
+      } finally { logs = previousLogs; }
+    });
     await t.test("initial cover maintenance does not consume scheduled news quota", async () => {
       config.dailyLimit = 2;
       const heartbeat = await request("/worker/heartbeat", {ready:true});

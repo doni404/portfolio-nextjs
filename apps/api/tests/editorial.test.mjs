@@ -6,7 +6,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { loadArchive, canRetireSeed } from "../scripts/import-journal-archive.mjs";
-import { runWorker, parseSignals, evidenceUrls, evidenceKey, providerUsage, validateResearch, selectBeat, selectArticleProfile, providerDiagnostics, editorialCoverPrompt } from "../scripts/editorial-worker.mjs";
+import { runWorker, parseSignals, evidenceUrls, evidenceKey, providerUsage, validateResearch, sourceResolutionSchema, resolveResearchSources, selectBeat, selectArticleProfile, providerDiagnostics, editorialCoverPrompt } from "../scripts/editorial-worker.mjs";
 import { assertLocalTest } from "../scripts/editorial-local-test.mjs";
 import { coverPrompts, archiveCoverPrompt } from "../scripts/generate-journal-covers.mjs";
 import { canInstallCover } from "../scripts/install-journal-covers.mjs";
@@ -311,7 +311,7 @@ test("GA4 supports ignored credential files and never leaks malformed JSON", asy
   }
 });
 
-async function mockRun({ providerStatus = 200, withUsage = true, denyReservation = false, images = false, revise = false, revisionFails = false } = {}) {
+async function mockRun({ providerStatus = 200, withUsage = true, denyReservation = false, images = false, revise = false, revisionFails = false, misspelledSource = false, resolutionFails = false } = {}) {
   const calls = []; let paidCalls = 0; let claimed = false;
   const previousExit = process.exitCode;
   try {
@@ -324,7 +324,9 @@ async function mockRun({ providerStatus = 200, withUsage = true, denyReservation
         if (target.endsWith("images/generations")) return response({ usage: { input_tokens: 20, output_tokens: 100, input_tokens_details: { text_tokens: 20, image_tokens: 0 } }, data: [{ b64_json: Buffer.from("RIFF-test-WEBP").toString("base64") }] });
         const name = body.text.format.name;
         const approved = name === "review" ? !revise : !revisionFails;
-        return response(modelResponse(name === "research" ? topic : ["draft", "revision"].includes(name) ? draft : { approved, issues: approved ? [] : ["Rewrite an overfamiliar phrase."] }, { research: name === "research", withUsage }));
+        const research = misspelledSource ? { ...topic, primaryUrl: "https://example.com/misspelled-announcement", sources: [{ ...sources[0], url: "https://example.com/misspelled-announcement" }, sources[1]] } : topic;
+        const resolution = { matches: sources.map(({ url }, sourceIndex) => ({ sourceIndex, url: resolutionFails ? null : url })) };
+        return response(modelResponse(name === "research" ? research : name === "source_resolution" ? resolution : ["draft", "revision"].includes(name) ? draft : { approved, issues: approved ? [] : ["Rewrite an overfamiliar phrase."] }, { research: name === "research", withUsage }));
       }
       if (target.endsWith("/claim")) {
         if (claimed) return response({ data: { job: null, reason: "Quota reached" } });
@@ -358,6 +360,43 @@ test("happy path reserves every paid stage, logs costs, and creates only a revie
   assert.equal(complete.body.draft.title, draft.title);
   assert.equal(complete.body.draft.status, undefined);
   assert.equal(calls.some(({ target }) => /publish|admin\/blogs/.test(target)), false);
+});
+
+test("source resolution is constrained to retrieved URLs and preserves facts and exact citations", () => {
+  const bad = "https://example.com/misspelled-announcement";
+  const value = { ...topic, primaryUrl: bad, facts: [`Documented at ${bad}`], sources: [{ ...sources[0], url: bad }, sources[1]] };
+  const evidence = sources.map(({ url }) => url);
+  const schema = sourceResolutionSchema(value, evidence);
+  assert.deepEqual(schema.properties.matches.items.properties.url.enum, [...evidence, null]);
+  const matches = evidence.map((url, sourceIndex) => ({ sourceIndex, url }));
+  const resolved = resolveResearchSources(value, { matches }, evidence);
+  assert.equal(resolved.primaryUrl, sources[0].url);
+  assert.deepEqual(resolved.facts, [`Documented at ${sources[0].url}`]);
+  assert.equal(resolved.storyDate, value.storyDate);
+  assert.equal(resolved.newsworthiness, value.newsworthiness);
+  assert.equal(value.primaryUrl, bad);
+  for (const invalid of [
+    { matches: matches.slice(0, 1) },
+    { matches: [matches[0], matches[0]] },
+    { matches: [{ sourceIndex: 0, url: null }, matches[1]] },
+    { matches: [{ sourceIndex: 0, url: "https://unretrieved.example/story" }, matches[1]] },
+    { matches: [matches[0], { sourceIndex: 1, url: sources[0].url }] },
+  ]) assert.throws(() => resolveResearchSources(value, invalid, evidence), { reason: "SOURCE_NOT_RETRIEVED" });
+});
+
+test("a source mismatch receives one logged resolution, while unsupported evidence stops the batch", async () => {
+  const fixed = await mockRun({ misspelledSource: true, images: true });
+  assert.equal(fixed.paidCalls, 5);
+  assert.deepEqual(fixed.calls.filter(({ target }) => target.endsWith("/reserve")).map(({ body }) => body.stage), ["research", "source_resolution", "writing", "review", "cover"]);
+  assert.equal(fixed.calls.filter(({ target }) => target.endsWith("/complete")).length, 1);
+  const resolution = fixed.calls.find(({ body }) => body?.text?.format?.name === "source_resolution").body;
+  assert.equal(resolution.tools, undefined);
+  assert.match(resolution.input, /Never substitute a merely related article/);
+  const rejected = await mockRun({ misspelledSource: true, resolutionFails: true, images: true });
+  assert.equal(rejected.paidCalls, 2);
+  assert.equal(rejected.calls.some(({ target }) => target.endsWith("/complete")), false);
+  assert.equal(rejected.calls.filter(({ target }) => target.endsWith("/claim")).length, 1);
+  assert.equal(rejected.calls.find(({ target }) => target.endsWith("/fail")).body.reason, "SOURCE_NOT_RETRIEVED");
 });
 
 test("wording issues receive at most one separately logged revision and another review", async () => {

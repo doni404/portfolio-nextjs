@@ -5,8 +5,8 @@ export const TEXT_MODEL = models.textModel;
 export const IMAGE_MODEL = models.imageModel;
 // Standard API rates verified 2026-10-05. Estimates are not provider invoices.
 export const PRICING = models.pricing;
-export const STAGES = { research: 0.25, writing: 0.15, review: 0.15, revision: 0.15, revision_review: 0.15, cover: 0.20 } as const;
-export const stageSchema = z.enum(["research", "writing", "review", "revision", "revision_review", "cover"]);
+export const STAGES = { research: 0.25, source_resolution: 0.10, writing: 0.15, review: 0.15, revision: 0.15, revision_review: 0.15, cover: 0.20 } as const;
+export const stageSchema = z.enum(["research", "source_resolution", "writing", "review", "revision", "revision_review", "cover"]);
 export const runAtSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 export const coverDirectionSchema = z.object({
   pattern: z.enum(["smooth-light", "bold-dark"]),

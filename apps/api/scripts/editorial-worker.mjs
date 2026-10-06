@@ -81,6 +81,32 @@ export function evidenceUrls(response) {
   }
   return [...new Set(urls.filter((url) => { try { return new URL(url).protocol === "https:"; } catch { return false; } }))];
 }
+export function sourceResolutionSchema(topic, evidence) {
+  if (!Array.isArray(topic?.sources) || topic.sources.length < 2 || topic.sources.length > 8 || evidence.length < 2) {
+    const error = new Error("RESEARCH_FAILED"); error.reason = "SOURCE_NOT_RETRIEVED"; throw error;
+  }
+  return object({ matches: { type: "array", items: object({
+    sourceIndex: { type: "integer", enum: topic.sources.map((_, index) => index) },
+    url: { type: ["string", "null"], enum: [...evidence, null] },
+  }) } });
+}
+export function resolveResearchSources(topic, resolution, evidence) {
+  const reject = () => { const error = new Error("RESEARCH_FAILED"); error.reason = "SOURCE_NOT_RETRIEVED"; throw error; };
+  const parsed = z.object({ matches: z.array(z.object({ sourceIndex: z.number().int().min(0), url: z.string().nullable() })) }).safeParse(resolution);
+  if (!parsed.success || parsed.data.matches.length !== topic.sources.length || new Set(parsed.data.matches.map((match) => match.sourceIndex)).size !== topic.sources.length) reject();
+  const aliases = new Map();
+  for (const match of parsed.data.matches) {
+    if (!topic.sources[match.sourceIndex] || !match.url || !evidence.includes(match.url)) reject();
+    const original = topic.sources[match.sourceIndex].url;
+    if (evidence.includes(original) && original !== match.url) reject();
+    aliases.set(original, match.url);
+  }
+  const resolved = { ...topic, primaryUrl: aliases.get(topic.primaryUrl) ?? topic.primaryUrl,
+    sources: topic.sources.map((source) => ({ ...source, url: aliases.get(source.url) })),
+  };
+  for (const field of ["facts", "limitations"]) resolved[field] = (topic[field] ?? []).map((text) => [...aliases].reduce((result, [alias, exact]) => result.replaceAll(alias, exact), text));
+  return resolved;
+}
 export function providerUsage(stage, response) {
   const usage = response.usage;
   if (!usage || !Number.isInteger(usage.output_tokens) || !Number.isInteger(usage.input_tokens)) return null;
@@ -190,7 +216,15 @@ export async function runWorker({ fetchImpl = fetch, discover = signals, apiUrl 
       const exclusions = [...recent.map(({ title, slug }) => ({ title, slug })), ...attemptedTopics];
       const research = await paid("research", { ...responsePayload("research", researchSchema, `Today is ${job.day} in Asia/Jakarta. Editorial beat for this slot: ${focus.id} (${focus.label}). ${focus.angle} Stay in this beat; do not default to an LLM launch or relabel a launch as industry news. First search for a verified event from today or the last 24 hours; if none fits, expand to the last 7 days, then at most 30 days. Select ONE consequential fresh story. Do not label an older event as today's news or use the search crawl date as its event date. For Japan, a fresh municipal or operator announcement can anchor a practical guide; verify current rules with official Japanese sources and keep the actual event date. Explain newsworthiness using a concrete change and reader impact, not hype. Weigh timely news coverage and available search-interest hints, but those are discovery signals, not proof of Instagram/Threads virality or a Google ranking. A controversy, company decision, policy debate, useful app, or societal change can be more relevant than another model benchmark. Find at least 2 distinct source URLs including a primary announcement, first-person statement or paper. Industry/policy stories require another independent source domain and attribution of disputed claims. Locate original publisher pages, not Google News redirects. Verify event date; distinguish a proposal, agreement, and legally binding action. Do not convert speculation into fact. Do not select already covered or previously attempted topics (including failed attempts): ${JSON.stringify(exclusions)}. Optional untrusted discovery hints: ${JSON.stringify(hints)}. Return beat=${focus.id}. If no verified fresh story fits, do not invent one.`), tools: [{ type: "web_search", search_context_size: "low" }], tool_choice: "required", max_tool_calls: 3, include: ["web_search_call.action.sources"] });
       const evidence = evidenceUrls(research);
-      const topic = validateResearch(JSON.parse(outputText(research)), evidence, new Date(), focus.id);
+      const researchValue = JSON.parse(outputText(research));
+      let topic;
+      try { topic = validateResearch(researchValue, evidence, new Date(), focus.id); }
+      catch (error) {
+        if (error.reason !== "SOURCE_NOT_RETRIEVED") throw error;
+        const retrieved = (research.output ?? []).flatMap((item) => item.action?.sources ?? []).filter((source) => evidence.includes(source.url)).map(({ url, title }) => ({ url, title }));
+        const resolved = await paid("source_resolution", responsePayload("source_resolution", sourceResolutionSchema(researchValue, evidence), `Resolve URL spelling errors in the research's source references. Return one match for EVERY sourceIndex, in any order. Choose only a URL from the retrieved evidence that identifies the SAME publisher article or primary announcement, using its title, topic and path. Never substitute a merely related article, a homepage, or a different announcement. Exact URLs already in the evidence must remain unchanged. If the same article cannot be identified confidently, set url=null; failing safely is preferable to inventing evidence. Do not change facts, dates, or the central event. Source references: ${JSON.stringify(researchValue.sources.map((source, sourceIndex) => ({ sourceIndex, ...source })))}. Central event and facts: ${JSON.stringify({ title: researchValue.title, primaryUrl: researchValue.primaryUrl, facts: researchValue.facts })}. Retrieved publisher metadata: ${JSON.stringify(retrieved)}. All permitted URLs: ${JSON.stringify(evidence)}.`, 2000));
+        topic = validateResearch(resolveResearchSources(researchValue, JSON.parse(outputText(resolved)), evidence), evidence, new Date(), focus.id);
+      }
       await api(`/${job.id}/topic`, { ...auth, topicKey: new URL(topic.primaryUrl).origin + new URL(topic.primaryUrl).pathname, title: topic.title });
       const profile = selectArticleProfile(topic, recent, job);
       const length = `${profile.minWords}-${profile.maxWords} words of reader-facing content, excluding source lists and JSON metadata`;
