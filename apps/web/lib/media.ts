@@ -25,3 +25,15 @@ export function mediaUrl(value?: string | null): string | undefined {
   }
   return uploadPath ? `${publicApi}${uploadPath}` : value;
 }
+
+export function publicImageUrl(value?: string | null): string | undefined {
+  const source = mediaUrl(value?.trim());
+  if (!source) return undefined;
+  if (source.startsWith("/") && !source.startsWith("//")) return source;
+  try {
+    const url = new URL(source);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}

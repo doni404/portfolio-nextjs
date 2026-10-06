@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowLeft, Save, Eye, Send, FileText, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, Send, FileText, Trash2, ExternalLink } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import type { BlogPost } from "@/lib/server-api";
 import { adminClient } from "@/lib/admin-api";
@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/Badge";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { marked } from "marked";
 import { siteConfig } from "@/lib/metadata";
+import { publicImageUrl } from "@/lib/media";
+import { BlogCoverImage } from "@/components/admin/BlogCoverImage";
 
 const blogCategories = [
   { label: "AI & Technology", slug: "ai-news" },
@@ -87,6 +89,7 @@ export function BlogEditor({ post }: BlogEditorProps) {
   const formValues = useWatch({ control });
   const titleValue = formValues.title;
   const tagsValue = formValues.tags;
+  const coverPreviewUrl = publicImageUrl(formValues.coverImageUrl);
 
   function autoSlug(title: string) {
     return title
@@ -338,17 +341,6 @@ export function BlogEditor({ post }: BlogEditorProps) {
                   {formValues.seoDescription?.length ?? 0} / 160 characters
                 </p>
               </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">Cover Image URL</label>
-                <input
-                  {...register("coverImageUrl")}
-                  aria-label="Cover Image URL"
-                  type="text"
-                  placeholder="https://… or /uploads/blogs/…"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                />
-              </div>
-
               {/* SERP Preview */}
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -389,6 +381,9 @@ export function BlogEditor({ post }: BlogEditorProps) {
                   <span>·</span>
                   <span>{formValues.readingTimeMinutes} min read</span>
                 </div>
+                <div className="mt-6">
+                  <BlogCoverImage src={formValues.coverImageUrl} title={titleValue || "this article"} />
+                </div>
                 <div className="mt-6 border-t border-slate-100 pt-6">
                   {editorContent ? (
                     <div
@@ -406,6 +401,26 @@ export function BlogEditor({ post }: BlogEditorProps) {
 
         {/* Sidebar */}
         <div className="admin-editor-sidebar">
+          <section className="admin-form-section">
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-slate-700">Cover image</h3>
+              {coverPreviewUrl && (
+                <a href={coverPreviewUrl} target="_blank" rel="noopener noreferrer"
+                  className="admin-icon-button text-slate-500" title="Open cover image full-size" aria-label="Open cover image full-size">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              )}
+            </div>
+            <BlogCoverImage src={formValues.coverImageUrl} title={titleValue || "this article"} />
+            <label htmlFor="blog-cover-url" className="mb-1.5 mt-3 block text-xs font-medium text-slate-500">Cover Image URL</label>
+            <input
+              {...register("coverImageUrl")}
+              id="blog-cover-url"
+              type="text"
+              placeholder="https://... or /uploads/blogs/..."
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
+            />
+          </section>
           {/* Status & publish */}
           <section className="admin-form-section">
             <h3 className="mb-4 text-sm font-semibold text-slate-700">Publish Settings</h3>

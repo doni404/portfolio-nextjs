@@ -21,6 +21,7 @@ let createdPost;
 let quotaFilter;
 let categoryRequest;
 let publicQuery;
+let listedPosts = [];
 const uploadDir = await mkdtemp(path.join(tmpdir(), "editorial-upload-test-"));
 process.env.UPLOAD_DIR = uploadDir;
 const db = {
@@ -38,8 +39,8 @@ const db = {
   author: { findFirstOrThrow: async () => ({ id: "author" }) },
   category: { upsert: async (query) => { categoryRequest = query; return { id: "category" }; } },
   blogPost: {
-    findMany: async (query) => { publicQuery = query; return []; },
-    count: async () => 0,
+    findMany: async (query) => { publicQuery = query; return listedPosts; },
+    count: async () => listedPosts.length,
     create: async ({ data }) => { createdPost = data; post = { id: blogId, ...data }; return post; },
     findFirst: async () => post,
     update: async ({ data }) => (post = { ...post, ...data }),
@@ -69,6 +70,16 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
   const adminToken = jwt.sign({ adminId: jobId, role: "owner" }, process.env.JWT_SECRET);
   const request = (path, body = {}, token = workerToken) => fetch(`${base}${path}`, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify(body) });
   try {
+    await t.test("admin journal lists include cover URLs for thumbnails", async () => {
+      const coverImageUrl = `/uploads/blogs/generated/${jobId}/cover.webp`;
+      listedPosts = [{ id: blogId, title: "Article with a generated cover", coverImageUrl, tags: [] }];
+      try {
+        const result = await fetch(`${base}/blogs`, { headers: { Authorization: `Bearer ${adminToken}` } });
+        assert.equal(result.status, 200);
+        assert.equal(publicQuery.select.coverImageUrl, true);
+        assert.equal((await result.json()).data[0].coverImageUrl, coverImageUrl);
+      } finally { listedPosts = []; }
+    });
     await t.test("missing credentials and malformed job IDs are rejected", async () => {
       assert.equal((await request(`/worker/${jobId}/reserve`, { token: leaseToken, stage: "research" }, "wrong")).status, 401);
       assert.equal((await request("/worker/not-a-uuid/reserve", { token: leaseToken, stage: "research" })).status, 400);

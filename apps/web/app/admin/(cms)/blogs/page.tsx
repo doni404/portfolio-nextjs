@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { AdminFilters } from "@/components/admin/AdminFilters";
 import { AdminSortSelect } from "@/components/admin/AdminSortSelect";
+import { BlogCoverImage } from "@/components/admin/BlogCoverImage";
 
 export const metadata: Metadata = { title: "Blog Posts" };
 
@@ -100,9 +101,16 @@ export default async function AdminBlogs({ searchParams }: Props) {
               posts.map((post) => (
                 <tr key={post.id} className="group hover:bg-slate-50">
                   <td className="px-4 py-3">
-                    <Link href={`/admin/blogs/${post.id}`} className="font-medium text-slate-900 line-clamp-1 hover:text-blue-700">{post.title}</Link>
-                    <p className="text-xs text-slate-400">/blogs/{post.slug}</p>
-                    <p className="admin-table-mobile-meta">{post.category?.name ?? "Uncategorized"} · {formatDate(post.updatedAt)}</p>
+                    <div className="admin-blog-list-title">
+                      <Link href={`/admin/blogs/${post.id}`} aria-label={`Edit cover for ${post.title}`}>
+                        <BlogCoverImage src={post.coverImageUrl} title={post.title} thumbnail />
+                      </Link>
+                      <div className="min-w-0">
+                        <Link href={`/admin/blogs/${post.id}`} className="font-medium text-slate-900 line-clamp-2 hover:text-blue-700">{post.title}</Link>
+                        <p className="mt-1 text-xs text-slate-400">/blogs/{post.slug}</p>
+                        <p className="admin-table-mobile-meta">{post.category?.name ?? "Uncategorized"} · {formatDate(post.updatedAt)}</p>
+                      </div>
+                    </div>
                   </td>
                   <td className="hidden px-4 py-3 text-slate-600 sm:table-cell">
                     {post.category?.name ?? "—"}

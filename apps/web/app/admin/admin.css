@@ -114,6 +114,12 @@
 .admin-content-table td:nth-child(3), .admin-content-table td:nth-child(4) { white-space: nowrap; font-size: 12px; }
 .admin-content-table td:nth-child(5) > span { margin: 2px 4px 2px 0; }
 .admin-table-mobile-meta { display: none; }
+.admin-blog-list-title { display: flex; align-items: flex-start; gap: 12px; min-width: 0; }
+.admin-blog-list-title > a { flex-shrink: 0; }
+.admin-blog-thumbnail, .admin-blog-cover { position: relative; overflow: hidden; aspect-ratio: 16 / 9; border: 1px solid #dfe6e2; border-radius: 5px; background: #f7f9f8; }
+.admin-blog-thumbnail { width: 80px; }
+.admin-blog-cover { width: 100%; }
+.admin-blog-cover-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 100%; color: #63746a; font-size: 12px; }
 .admin-message-table th:first-child { width: 28%; }
 .admin-message-table th:nth-child(2) { width: 32%; }
 .admin-message-table th:last-child { width: 144px; }
@@ -190,6 +196,7 @@
   .admin-stats > a { padding-inline: 14px; }
   .admin-editor-grid { grid-template-columns: minmax(0, 1fr) 230px; gap: 24px; }
   .admin-editor-sidebar { padding-left: 20px; }
+  .admin-blog-thumbnail { width: 64px; }
 }
 @media (max-width: 1023px) {
   .admin-topbar { display: none; }

@@ -70,6 +70,7 @@ router.get("/", async (req, res, next) => {
           title: true,
           slug: true,
           excerpt: true,
+          coverImageUrl: true,
           status: true,
           featured: true,
           readingTimeMinutes: true,
