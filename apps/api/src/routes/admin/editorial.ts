@@ -3,9 +3,10 @@ import { z } from "zod";
 import { prisma } from "../../lib/prisma";
 import { ok } from "../../lib/response";
 import { requireAuth } from "../../middleware/auth";
-import { requireOwner, settings, readiness, notifyReview } from "../../lib/editorial";
-import { monthRange, runAtSchema } from "../../lib/editorial-policy";
+import { requireOwner, settings, readiness, notifyReview, committedCost } from "../../lib/editorial";
+import { automationState, jakartaDay, monthRange, runAtSchema } from "../../lib/editorial-policy";
 import { badRequest } from "../../lib/errors";
+import failures from "../../lib/editorial-failures.json";
 
 const router = Router();
 router.use(requireAuth, requireOwner);
@@ -13,7 +14,13 @@ router.get("/", async (_req, res, next) => {
   try {
     const config = await settings();
     const jobs = await prisma.editorialJob.findMany({ orderBy: { createdAt: "desc" }, take: 40, select: { id: true, title: true, status: true, day: true, slot: true, blogPostId: true, errorCode: true, emailStatus: true, createdAt: true, leaseUntil: true } });
-    return ok(res, { config, readiness: readiness(config), workerConfigured: (process.env.AUTOMATION_WORKER_TOKEN?.length ?? 0) >= 32, jobs });
+    const now = new Date();
+    const connected = readiness(config, now);
+    const today = { day: jakartaDay(now), attempts: await prisma.editorialJob.count({ where: { day: jakartaDay(now), slot: { gt: 0 } } }), limit: config.dailyLimit };
+    const running = await prisma.editorialJob.findFirst({ where: { status: "running" } });
+    const state = automationState({ enabled: config.enabled, worker: connected.worker, runAt: config.runAt, attempts: today.attempts, dailyLimit: config.dailyLimit, budget: Number(config.monthlyBudgetUsd), committed: await committedCost(prisma, now), runningUntil: running?.leaseUntil }, now);
+    const history = jobs.map((job) => ({ ...job, errorDescription: job.errorCode ? failures[job.errorCode.split(":")[1] as keyof typeof failures] ?? null : null }));
+    return ok(res, { config, readiness: connected, workerConfigured: (process.env.AUTOMATION_WORKER_TOKEN?.length ?? 0) >= 32, jobs: history, today, state });
   } catch (err) { next(err); }
 });
 router.patch("/", async (req, res, next) => {

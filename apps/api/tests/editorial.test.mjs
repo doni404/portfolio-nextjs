@@ -6,14 +6,14 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { loadArchive, canRetireSeed } from "../scripts/import-journal-archive.mjs";
-import { runWorker, parseSignals, evidenceUrls, providerUsage, validateResearch, selectBeat, selectArticleProfile, providerDiagnostics, editorialCoverPrompt } from "../scripts/editorial-worker.mjs";
+import { runWorker, parseSignals, evidenceUrls, evidenceKey, providerUsage, validateResearch, selectBeat, selectArticleProfile, providerDiagnostics, editorialCoverPrompt } from "../scripts/editorial-worker.mjs";
 import { assertLocalTest } from "../scripts/editorial-local-test.mjs";
 import { coverPrompts, archiveCoverPrompt } from "../scripts/generate-journal-covers.mjs";
 import { canInstallCover } from "../scripts/install-journal-covers.mjs";
 import { validateUsageHistory } from "../scripts/transfer-editorial-usage.mjs";
 
 const require = createRequire(import.meta.url);
-const { costEstimate, budgetAllows, monthRange, jakartaDay, scheduleDue, runAtSchema, coverDirectionSchema, draftSchema, storyDateSchema, blogCoverSchema, requiresEditorialReview, TEXT_MODEL, PRICING } = require("../dist/lib/editorial-policy.js");
+const { automationState, costEstimate, budgetAllows, monthRange, jakartaDay, scheduleDue, runAtSchema, coverDirectionSchema, draftSchema, storyDateSchema, blogCoverSchema, requiresEditorialReview, TEXT_MODEL, PRICING } = require("../dist/lib/editorial-policy.js");
 const { readiness } = require("../dist/lib/editorial.js");
 const { generatedImageType } = require("../dist/lib/generated-image.js");
 const { gaRows, analyticsReport, serviceAccount, ga4Configured } = require("../dist/lib/ga4.js");
@@ -85,6 +85,13 @@ test("worker readiness comes from a fresh heartbeat, never a manual flag", () =>
     assert.equal(readiness({ workerLastSeenAt: now }, now).worker, false);
   } finally { if (old === undefined) delete process.env.AUTOMATION_WORKER_TOKEN; else process.env.AUTOMATION_WORKER_TOKEN = old; }
 });
+test("dashboard and worker share schedule, quota, budget and expired-job gates", () => {
+  const now = new Date("2026-10-06T03:00:00Z");
+  const input = { enabled: true, worker: true, runAt: "10:00", attempts: 1, dailyLimit: 2, budget: 5, committed: 2.5 };
+  assert.equal(automationState(input, now).code, "ready");
+  for (const [patch, code] of [[{ enabled: false }, "off"], [{ worker: false }, "disconnected"], [{ runAt: "19:00" }, "waiting"], [{ attempts: 2 }, "quota"], [{ committed: 4.76 }, "budget"], [{ runningUntil: new Date(now.getTime() + 60000) }, "running"], [{ runningUntil: now }, "reconcile"]]) assert.equal(automationState({ ...input, ...patch }, now).code, code);
+  assert.equal(automationState(input, new Date("2026-10-06T02:59:59Z")).code, "waiting");
+});
 test("AI-selected cover directions preserve light/dark, branding and portrait safeguards", () => {
   assert.match(editorialCoverPrompt(draft, topic), /cool white daylight/);
   assert.match(editorialCoverPrompt(draft, topic), /A BETTER WORKFLOW\?/);
@@ -139,6 +146,23 @@ test("RSS/Atom discovery handles multiple links and refuses XML entities", () =>
   assert.equal(parseSignals(feed, "atom")[0].url, "https://example.com/paper");
   assert.throws(() => parseSignals('<!DOCTYPE rss [<!ENTITY x "bad">]><rss/>', "rss"));
   assert.equal(parseSignals('<rss><channel><item><title>Topic</title><ht:approx_traffic>10K+</ht:approx_traffic></item></channel></rss>', "rss")[0].searchInterest, "10K+");
+});
+test("research resolves only verified AP article aliases and harmless tracking parameters", () => {
+  const id = "595796511f110fc006cca0d01329733e";
+  const alias = `https://apnews.com/article/a-human-readable-headline-${id}`;
+  const exact = `https://apnews.com/article/${id}`;
+  const research = { ...topic, primaryUrl: alias, facts: [`Reported at ${alias}`], sources: [{ ...sources[0], url: alias }, sources[1]] };
+  const verified = validateResearch(research, [exact, sources[1].url]);
+  assert.equal(verified.primaryUrl, exact);
+  assert.equal(verified.sources[0].url, exact);
+  assert.equal(verified.facts[0], `Reported at ${exact}`);
+  assert.equal(research.primaryUrl, alias);
+  assert.equal(evidenceKey(`${exact}?utm_source=openai#section`), exact);
+  assert.notEqual(evidenceKey(`${exact}?page=2`), exact);
+  assert.notEqual(evidenceKey(`https://apnews.com.evil.test/article/${id}`), exact);
+  assert.throws(() => validateResearch({ ...research, sources: [{ ...sources[0], url: `${alias}wrong` }, sources[1]] }, [exact, sources[1].url]), { message: "RESEARCH_FAILED", reason: "SOURCE_NOT_RETRIEVED" });
+  assert.throws(() => validateResearch({ ...research, sources: [{ ...sources[0], url: alias }, { ...sources[1], url: exact }] }, [exact]), { reason: "DUPLICATE_SOURCES" });
+  assert.throws(() => validateResearch({}, []), { message: "RESEARCH_FAILED", reason: "INVALID_RESEARCH_FORMAT" });
 });
 
 test("topic rotation favors under-covered beats and caps model launches", () => {

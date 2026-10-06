@@ -3,7 +3,7 @@ import type { Request, Response, NextFunction } from "express";
 import { Prisma } from "@prisma/client";
 import { prisma } from "./prisma";
 import { badRequest, forbidden, unauthorized } from "./errors";
-import { budgetAllows, jakartaDay, monthRange, scheduleDue, STAGES, TEXT_MODEL, IMAGE_MODEL } from "./editorial-policy";
+import { automationState, jakartaDay, monthRange, TEXT_MODEL, IMAGE_MODEL } from "./editorial-policy";
 import beats from "./editorial-beats.json";
 import { ga4Configured } from "./ga4";
 
@@ -37,14 +37,11 @@ export async function claimJob(now = new Date()) {
   return prisma.$transaction(async (tx) => {
     await tx.$queryRaw`SELECT id FROM editorial_settings WHERE id = 'default' FOR UPDATE`;
     const config = await tx.editorialSettings.findUniqueOrThrow({ where: { id: "default" } });
-    if (!config.enabled || !readiness(config, now).worker) return { job: null, reason: "Automation is OFF or worker has not connected" };
-    if (!scheduleDue(config.runAt, now)) return { job: null, reason: `Waiting for ${config.runAt} Asia/Jakarta` };
     const running = await tx.editorialJob.findFirst({ where: { status: "running" } });
-    if (running) return { job: null, reason: "A job is running or needs reconciliation" };
     const day = jakartaDay(now);
     const count = await tx.editorialJob.count({ where: { day, slot: { gt: 0 } } });
-    if (count >= config.dailyLimit) return { job: null, reason: "Daily limit reached" };
-    if (!budgetAllows(Number(config.monthlyBudgetUsd), await committedCost(tx), STAGES.research)) return { job: null, reason: "Monthly budget reached" };
+    const state = automationState({ enabled: config.enabled, worker: readiness(config, now).worker, runAt: config.runAt, attempts: count, dailyLimit: config.dailyLimit, budget: Number(config.monthlyBudgetUsd), committed: await committedCost(tx, now), runningUntil: running?.leaseUntil }, now);
+    if (state.code !== "ready") return { job: null, reason: state.message };
     const job = await tx.editorialJob.create({ data: { day, slot: count + 1, leaseToken: randomBytes(24).toString("hex"), leaseUntil: new Date(Date.now() + 30 * 60_000) } });
     const recent = await tx.blogPost.findMany({ where: { deletedAt: null }, select: { title: true, slug: true, editorialMeta: true }, orderBy: { createdAt: "desc" }, take: 100 });
     const attemptedTopics = await tx.editorialJob.findMany({ where: { topicKey: { not: null }, slot: { gt: 0 } }, select: { title: true, topicKey: true }, orderBy: { createdAt: "desc" }, take: 100 });

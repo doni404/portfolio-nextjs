@@ -11,6 +11,7 @@ import { generatedImageType } from "../lib/generated-image";
 import { articleWordCount, readingTimeMinutes } from "../lib/reading-time";
 import { requireWorker, claimJob, lease, committedCost, notifyReview, assertFreshStory, settings } from "../lib/editorial";
 import { budgetAllows, costEstimate, draftSchema, IMAGE_MODEL, PRICING, stageSchema, STAGES, TEXT_MODEL } from "../lib/editorial-policy";
+import failures from "../lib/editorial-failures.json";
 
 const router = Router();
 router.use(requireWorker);
@@ -129,8 +130,8 @@ router.post("/:id/complete", async (req, res, next) => {
 });
 router.post("/:id/fail", async (req, res, next) => {
   try {
-    const { token, code } = authSchema.extend({ code: z.enum(["BUDGET_OR_DISABLED", "RESEARCH_FAILED", "GENERATION_FAILED", "QUALITY_CHECK_FAILED", "DUPLICATE_TOPIC", "UPLOAD_FAILED", "PROVIDER_ERROR"]) }).parse(req.body);
-    await prisma.$transaction(async (tx) => { const job = await lease(tx, req.params.id, token, true); if (!job.blogPostId) await tx.editorialJob.update({ where: { id: job.id }, data: { status: "failed", errorCode: code, finishedAt: new Date() } }); });
+    const { token, code, reason } = authSchema.extend({ code: z.enum(["BUDGET_OR_DISABLED", "RESEARCH_FAILED", "GENERATION_FAILED", "QUALITY_CHECK_FAILED", "DUPLICATE_TOPIC", "UPLOAD_FAILED", "PROVIDER_ERROR"]), reason: z.string().refine((value) => Object.hasOwn(failures, value)).optional() }).parse(req.body);
+    await prisma.$transaction(async (tx) => { const job = await lease(tx, req.params.id, token, true); if (!job.blogPostId) await tx.editorialJob.update({ where: { id: job.id }, data: { status: "failed", errorCode: reason ? `${code}:${reason}` : code, finishedAt: new Date() } }); });
     return ok(res, { recorded: true });
   } catch (e) { next(e); }
 });

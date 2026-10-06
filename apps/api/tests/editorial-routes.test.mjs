@@ -105,7 +105,7 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
       const result = await request("/worker/claim");
       assert.equal(result.status, 200);
       assert.deepEqual(quotaFilter.slot, { gt: 0 });
-      assert.equal((await result.json()).data.reason, "Daily limit reached");
+      assert.equal((await result.json()).data.reason, "Daily limit reached. The next batch is tomorrow.");
     });
     await t.test("owners can choose the routine and email is optional after a heartbeat", async () => {
       const patch = (runAt) => fetch(`${base}/settings`, { method:"PATCH", headers:{"Content-Type":"application/json",Authorization:`Bearer ${adminToken}`},body:JSON.stringify({enabled:true,dailyLimit:2,monthlyBudgetUsd:5,topics:["AI research"],recipientEmail:"",generateImages:true,runAt}) });
@@ -171,6 +171,21 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
       assert.equal(publicQuery.where.deletedAt, null);
       assert.deepEqual(publicQuery.orderBy[0], { publishedAt: "desc" });
       assert.equal(publicQuery.where.OR[0].title.contains, "Japan");
+    });
+    await t.test("failure diagnostics accept only safe reason codes and preserve usage", async () => {
+      config.enabled = true;
+      job = { ...job, status: "running", blogPostId: null };
+      const result = await request(`/worker/${jobId}/fail`, { token: leaseToken, code: "RESEARCH_FAILED", reason: "SOURCE_NOT_RETRIEVED" });
+      assert.equal(result.status, 200);
+      assert.equal(job.errorCode, "RESEARCH_FAILED:SOURCE_NOT_RETRIEVED");
+      assert.equal(job.status, "failed");
+      assert.equal(logs.length, 3);
+      assert.equal((await request(`/worker/${jobId}/fail`, { token: leaseToken, code: "RESEARCH_FAILED", reason: "unsafe provider message or secret" })).status, 400);
+      const overview = await fetch(`${base}/settings`, { headers: { Authorization: `Bearer ${adminToken}` } });
+      assert.equal(overview.status, 200);
+      const data = (await overview.json()).data;
+      assert.equal(data.today.attempts, 2);
+      assert.equal(data.state.code, "quota");
     });
   } finally { await new Promise((resolve) => server.close(resolve)); await rm(uploadDir, { recursive: true, force: true }); }
 });

@@ -1,0 +1,11 @@
+{
+  "INVALID_RESEARCH_FORMAT": "Research did not include the required facts and sources.",
+  "INVALID_EVENT_DATE": "Research returned an invalid event date.",
+  "FUTURE_EVENT": "The reported event date is in the future.",
+  "NO_FRESH_STORY": "No verified story from the last 30 days was selected.",
+  "DUPLICATE_SOURCES": "Research repeated the same source.",
+  "SOURCE_NOT_RETRIEVED": "A cited source was not returned by web research.",
+  "PRIMARY_SOURCE_MISSING": "The primary source could not be verified.",
+  "WRONG_EDITORIAL_BEAT": "Research did not match the selected topic.",
+  "INDEPENDENT_SOURCE_MISSING": "This story needs an independent second source."
+}

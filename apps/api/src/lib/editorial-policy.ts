@@ -64,3 +64,14 @@ export function costEstimate(stage: string, usage: { input: number; cached: numb
 export function budgetAllows(budget: number, committed: number, reservation: number) {
   return budget > 0 && committed + reservation <= budget + 0.0000001;
 }
+export function automationState(input: { enabled: boolean; worker: boolean; runAt: string; attempts: number; dailyLimit: number; budget: number; committed: number; runningUntil?: Date | null }, now = new Date()) {
+  if (!input.enabled) return { code: "off", message: "Automation is OFF." };
+  if (!input.worker) return { code: "disconnected", message: "Waiting for the worker to connect." };
+  if (!scheduleDue(input.runAt, now)) return { code: "waiting", message: `Waiting for ${input.runAt} Asia/Jakarta.` };
+  if (input.runningUntil) return input.runningUntil <= now
+    ? { code: "reconcile", message: "An expired job needs reconciliation. Uncertain costs remain held." }
+    : { code: "running", message: "A draft is being prepared." };
+  if (input.attempts >= input.dailyLimit) return { code: "quota", message: "Daily limit reached. The next batch is tomorrow." };
+  if (!budgetAllows(input.budget, input.committed, STAGES.research)) return { code: "budget", message: "Monthly budget reached. Generation is paused." };
+  return { code: "ready", message: "Ready for the next worker check." };
+}

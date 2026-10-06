@@ -9,7 +9,7 @@
 - Discovery uses Google Trends US/Indonesia RSS, Google News technology coverage, recent arXiv AI papers, and source-backed web research. These are hints, not proof of social virality or measured Google rankings. Instagram and Threads are not scraped.
 - Defaults rotate across industry/leadership, policy/safety, work/education, consumer products, science/research, cloud/security/devtools, and model releases. Selection favors under-covered beats in the last ten articles. With other beats enabled, at most one of the last five new articles is a model-release story. Custom topics remain configurable in admin.
 - Each live draft stores its editorial beat and a concrete newsworthiness rationale. Industry/policy research requires at least two source domains and attributed disputed claims. A slot without a verified fresh story fails safely instead of inventing a story or silently switching to another model launch.
-- Paid work runs in GitHub Actions. EC2 only handles the CMS, reservations, uploads, and reports.
+- Docker builds run in GitHub Actions. A lightweight Coolify scheduled task orchestrates remote OpenAI requests; it does not run AI models or build images on EC2. GitHub's editorial workflow is a manual fallback, not the daily scheduler.
 - Text research, writing, and review use `gpt-6-luna` with low reasoning effort. Covers use `gpt-image-2.5-flare`, medium quality, at 1536x864.
 - AI selects `smooth-light` or `bold-dark` for each story, with a saved rationale and short factual headline. Relevant brands may appear as editorial references; named public leaders use clearly illustrated portraits, not invented event photos. The review stage checks this direction before generating a cover.
 
@@ -64,29 +64,39 @@ Restore refuses to overwrite posts edited since the import. Original comments re
 
    ```dotenv
    AUTOMATION_WORKER_TOKEN=<dedicated token>
+   OPENAI_API_KEY=<restricted OpenAI project key>
    FRONTEND_URL=https://doniputra.com
    ```
 
    Enable at runtime, not build time. Restart/redeploy the API after changing runtime configuration. Email is optional and is currently skipped. To use the existing Resend adapter later, configure `RESEND_API_KEY` and `EDITORIAL_EMAIL_FROM` with a verified sending domain; SES needs its own adapter before enabling email delivery.
 
-3. Under repository **Settings > Secrets and variables > Actions**, add encrypted secrets:
+3. For the optional manual GitHub fallback, under repository **Settings > Secrets and variables > Actions**, add encrypted secrets:
    - `OPENAI_API_KEY`: a dedicated restricted OpenAI project key.
    - `AUTOMATION_WORKER_TOKEN`: the matching token from the API.
-4. Add repository variables:
+4. For that fallback, add repository variables:
    - `EDITORIAL_API_URL=https://api.doniputra.com`
    - `EDITORIAL_WORKER_ENABLED=true`
 5. In `/admin/automation`, choose Morning (09:00), Evening (19:00), or a custom time in Asia/Jakarta. Set topics, daily count, monthly limit, and cover preference. The review email can stay blank. Save with automation OFF first.
-6. Run **Prepare Journal Drafts** manually in GitHub Actions while automation remains OFF. It sends an authenticated heartbeat without paid requests. Confirm **Worker connected** in admin, then enable automation when ready. Review the first draft, sources, costs, and cover before leaving automation ON.
+6. In Coolify **portfolio-api-ghcr > Scheduled Tasks**, create **Prepare journal drafts** with frequency `*/10 * * * *`, timeout `1800` seconds, and command:
 
-The workflow checks at minutes 17 and 47 every hour. The API starts draft preparation only at or after the selected Jakarta time, and enforces the daily quota even for manual runs. This is preparation cadence, not automatic publishing: every draft still needs human approval. GitHub schedules are best-effort and may be delayed. Failed attempts also count toward the daily quota to prevent retry loops.
+   ```sh
+   cd /app && EDITORIAL_API_URL=http://127.0.0.1:4000 node --max-old-space-size=128 scripts/editorial-worker.mjs
+   ```
+
+   Leave the container name blank for this single-container application. The task inherits runtime credentials; do not put secrets in its command. For another API port, adjust the loopback URL. Coolify records every execution and output. The DB locks prevent overlapping workers from starting duplicate jobs.
+7. With automation OFF, use **Execute Now** and verify Success and a fresh authenticated heartbeat. This makes no paid requests. Confirm **Worker connected** in admin, then enable automation when ready. Review the first draft, sources, costs, and cover before leaving automation ON.
+
+Coolify checks every ten minutes while the server and API are running. The API starts draft preparation only at or after the selected Jakarta time, and enforces the daily quota even for manual runs. A server outage delays preparation until a later check on the same day; missed days are not backfilled. This is preparation cadence, not automatic publishing: every draft still needs human approval. Failed attempts also count toward the daily quota to prevent retry loops. GitHub cron was removed because checks were delayed/dropped and one job could not acquire a hosted runner. See [GitHub schedule limitations](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule) and [Coolify scheduled tasks](https://coolify.io/docs/core/automation/scheduled-tasks/overview).
 
 Worker status comes from the last authenticated heartbeat, not a manual environment flag. A heartbeat remains fresh for 90 minutes. With a configured token but no fresh heartbeat, admin shows **Waiting for heartbeat**. An OFF run still refreshes the connection and makes no OpenAI requests. A credential-only local check is available with `node scripts/editorial-worker.mjs --heartbeat-only`.
 
-Turning OFF in admin blocks new jobs and new paid stages. An already-started provider request may finish and be logged; its result can still be saved as an unpublished draft. Disable `EDITORIAL_WORKER_ENABLED` as a second stop control when needed.
+Turning OFF in admin blocks new jobs and new paid stages. An already-started provider request may finish and be logged; its result can still be saved as an unpublished draft. Disable the Coolify task as a second stop control when needed. `EDITORIAL_WORKER_ENABLED` controls only the manual GitHub fallback.
 
 ## Budget And Logs
 
 Each stage must reserve funds before contacting OpenAI. Research, writing, review, and cover generation have separate request IDs, token counts, estimated cost, and a pricing snapshot. Unknown usage stays reserved rather than appearing free. Ambiguous paid failures are not retried automatically. An expired job blocks further jobs until stopped from admin; its uncertain cost remains held.
+
+The dashboard shows today's attempts and the same schedule/quota/budget gates used when claiming a job. Research failures include safe reason codes (for example, a source was not retrieved or an event is stale), never provider messages or credentials. Research source URLs must match retrieved evidence. Only AP headline-slug aliases with the same immutable article ID and standard tracking parameters are normalized back to the exact retrieved URL; unrelated paths, hosts and data query parameters remain distinct.
 
 A rejected consistency review can request one deliberate writing revision and one new review, with separate `revision` and `revision_review` usage entries. If that review still rejects the draft, the job stops; there is no revision loop. Initial archive-cover maintenance is logged and budgeted but uses negative slots so it does not consume scheduled news quota.
 
