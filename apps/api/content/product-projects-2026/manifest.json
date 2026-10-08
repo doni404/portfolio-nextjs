@@ -41,6 +41,26 @@
         { "label": "API documentation", "url": "https://smartmatch.gloding.com/api/docs" },
         { "label": "Public OpenAPI specification", "url": "https://smartmatch.gloding.com/openapi.yaml" }
       ]
+    },
+    {
+      "slug": "planpresso-ai-prd-planner",
+      "title": "Planpresso: AI PRD Planner for Coding Agents",
+      "summary": "An AI-powered planning workspace that turns an idea into a scoped product requirements document, a right-sized tech stack, and downloadable coding-agent handoff packs.",
+      "problem": "A short idea prompt rarely captures the users, constraints, scope, and acceptance criteria needed to build useful software. Starting a coding agent too early can turn those missing decisions into unnecessary features, mismatched technology, and repeated rework. Planpresso makes those decisions explicit before implementation begins.",
+      "solutionFile": "projects/planpresso.md",
+      "role": "**Product Creator & Full-Stack Engineer.** Designed and built Planpresso's guided planning experience, structured AI generation pipeline, PostgreSQL data model, project ownership controls, editable and versioned PRDs, and deterministic builder exports. Set up separate web and worker services, GitHub-built container releases, and the private-beta deployment on Coolify.",
+      "outcome": "**Deployed a working private beta in October 2026.** The product supports text-first discovery, explicit MVP scope, structured PRDs, saved revisions, and downloadable agent packs. Deployment checks covered HTTPS, database health, worker connectivity, a Codex pack download, and an isolated backup restore. Paid subscriptions and file processing remain disabled. Builder packs are reviewed and tested as file structures, not certified as executed inside every target tool; sustained production capacity and adoption have not been benchmarked.",
+      "stack": ["Next.js", "TypeScript", "React", "Prisma", "PostgreSQL", "Better Auth", "OpenAI Responses API", "Structured Outputs", "Background Jobs", "Docker", "GitHub Actions", "Coolify"],
+      "year": 2026,
+      "month": 10,
+      "categorySlug": "ai-llm",
+      "featured": true,
+      "sortOrder": -3,
+      "asset": "planpresso",
+      "links": [
+        { "label": "Live product", "url": "https://planpresso.doniputra.com/" },
+        { "label": "Explore a sample PRD", "url": "https://planpresso.doniputra.com/sample" }
+      ]
     }
   ]
 }

@@ -1,5 +1,16 @@
 # Cover Generation Prompts
 
+## Planpresso
+
+Generated on 8 October 2026 with the built-in image tool, not a paid automation API request. Reference: the deployed product's landing page at https://planpresso.doniputra.com/. Original output is retained in Codex's generated-images directory; the packaged WebP uses contain resizing to 1440 x 810 without cropping.
+
+Use case: product-mockup. Asset type: premium wide 16:9 portfolio cover for the real software product Planpresso.
+Use the attached live product screenshot as the branding reference: faithfully preserve the black rounded-square coffee-cup outline logo and lowercase wordmark "planpresso." Do not redesign the logo.
+Create a sophisticated, realistic software product editorial visual, not a cartoon or an illustration. Bright neutral white studio space, charcoal typography, restrained silver, eucalyptus-green and cool-gray accents. A realistic thin silver laptop at a very slight three-quarter angle on the right, showing an inspectable clean product planning interface: left navigation "Overview", "Requirements", "Architecture", "Tasks"; center a document titled "Project brief" with tidy short text, a small three-node feature map, and an MVP checklist. Three simple status labels "MVP", "Later", "Excluded", shown as real workflow states, no metrics or charts. An overlapping modest document sheet titled "Build-ready PRD" and a discrete ZIP file icon labeled "Agent pack" visually convey export; grounded professionally, no floating sci-fi holograms.
+On the left, large correct original Planpresso logo/wordmark, then two short lines of headline exactly "A better plan." and "Before the code." A small supporting line exactly "Idea to PRD to agent handoff." Use editorial typography, not a slogan in a card. Logo and headline crisp and readable at thumbnail size. The software is a planning tool; never show code being automatically deployed or generated. Laptop and UI should reveal the actual category of product, not a generic chatbot or generic dashboard.
+Composition: horizontal 16:9. Logo and headline left 40%, laptop and documents right 60%, balanced whitespace and clear hierarchy. All important elements safely inside central 85%, no edges cropped, whole laptop visible. Subtle natural daylight shadows, premium product photography with precise crisp interface visualization. No people, robots, mascot, dark background, purple gradients, neon, bokeh/orbs, excessive decorative shapes, phone, pricing, adoption/accuracy/speed claims, invented vendor logos, watermarks, tiny unreadable paragraphs. This is an explanatory generated product visualization, not a screenshot; do not duplicate the landing screenshot itself.
+
+
 Generated with the built-in image tool using each product's original public logo as the reference. These are explanatory product visualizations, not actual application screenshots. Final assets are 1440 x 810 WebP covers.
 
 ## milc

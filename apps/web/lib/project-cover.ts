@@ -8,6 +8,14 @@ type CoverPresentation = {
 };
 
 const covers: Record<string, CoverPresentation> = {
+  "products-2026-planpresso.webp": {
+    alt: "Planpresso logo with a generated product planning workspace, PRD, and agent handoff pack",
+    width: 1440,
+    height: 810,
+    caption:
+      "AI-generated product visualization based on Planpresso's branding and planning workflow, not an application screenshot.",
+    credit: { label: "Explore Planpresso", href: "https://planpresso.doniputra.com/" },
+  },
   "products-2026-milc.webp": {
     alt: "milc logo and a generated desktop visualization of voice-powered text editing",
     width: 1440,

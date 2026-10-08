@@ -11,7 +11,7 @@ const manifest = JSON.parse(await readFile(path.join(root, "manifest.json"), "ut
 
 test("product package uses confirmed technologies, supplied months, and portable images", async () => {
   const projects = await loadProductProjects(root);
-  assert.equal(projects.length, 2);
+  assert.equal(projects.length, 3);
   const [milc, smartmatch] = projects.map(project => project.data);
   assert.match(milc.solution, /Project date: January 2026/);
   assert.match(smartmatch.solution, /Project date: April 2026/);
@@ -31,6 +31,22 @@ test("product package uses confirmed technologies, supplied months, and portable
     assert.equal(bytes.subarray(0, 4).toString(), "RIFF");
     assert.equal(bytes.subarray(8, 12).toString(), "WEBP");
   }
+});
+
+test("Planpresso preserves the deployed beta boundaries and verified stack", async () => {
+  const project = (await loadProductProjects(root)).find(item => item.data.slug === "planpresso-ai-prd-planner").data;
+  assert.match(project.solution, /Project date: October 2026/);
+  for (const technology of ["Next.js", "TypeScript", "Prisma", "PostgreSQL", "Better Auth", "OpenAI Responses API"])
+    assert.ok(project.stack.includes(technology));
+  assert.doesNotMatch(project.stack.join(" "), /Supabase|Express/);
+  assert.match(project.solution, /does not silently repeat a paid request/);
+  assert.match(project.outcome, /Paid subscriptions and file processing remain disabled/);
+  assert.match(project.outcome, /not certified as executed inside every target tool/);
+  assert.match(project.coverImageUrl, /^\/uploads\/projects\/planpresso-ai-prd-planner\//);
+  assert.equal(project.links.find(link => link.label === "Live product").url, "https://planpresso.doniputra.com/");
+  assert.equal(project.featured, true);
+  assert.equal(project.status, "published");
+  assert.ok(project.sortOrder < manifest.projects[1].sortOrder);
 });
 
 test("invalid paths, duplicate slugs, months, and unsafe links are rejected", () => {

@@ -1,6 +1,6 @@
-# Product Projects: milc And SmartMatch OCR
+# Product Projects: milc, SmartMatch OCR, And Planpresso
 
-This package creates two published projects without modifying any existing row.
+This package creates three published projects without modifying any existing row.
 It uses the existing Project schema, category, Markdown fields, and upload layout.
 Project months are included in the solution text; `createdAt` remains the real
 database insertion time rather than an invented launch day.
@@ -15,7 +15,7 @@ npm run content:add-products -- --apply
 ```
 
 The default is a read-only preview. Applying saves an existing-project snapshot
-under `storage/backups`, stages both WebP covers under `UPLOAD_DIR`, and creates
+under `storage/backups`, stages the missing projects' WebP covers under `UPLOAD_DIR`, and creates
 missing slugs in one database transaction. Existing slugs are always skipped,
 including archived or deleted projects. Rerunning will not overwrite later admin
 edits or create duplicates. Different files at the same asset path are not overwritten.
@@ -29,19 +29,22 @@ the admin's archive/status controls rather than replacing the database.
 
 1. Back up the production database and API upload volume independently.
 2. Deploy the API package and web changes when approved. No new schema migration
-   is needed for these two projects.
+   is needed for these projects.
 3. Confirm that the API upload directory uses persistent storage.
 4. In the portfolio API container, run the read-only preview above. Check the
    printed database host/name and upload directory.
 5. Apply the import and retain the reported snapshot outside the container.
 6. Check `/projects/milc-voice-ai-text-editing` and
-   `/projects/smartmatch-ocr-ai-document-processing`, including cover URLs and
+   `/projects/smartmatch-ocr-ai-document-processing`, and
+   `/projects/planpresso-ai-prd-planner`, including cover URLs and
    the Visit product links.
 
 Git carries this reviewed content package, not the local database. Apply the
 same create-only import to the server; never restore the local database over
 production to publish projects. This command is separate from `content:refresh`,
-which updates the earlier five articles and three projects.
+which updates the earlier five articles and three projects. After an upgrade,
+existing milc and SmartMatch rows are skipped; only the missing Planpresso row
+and its cover are added.
 
 ## Evidence
 
@@ -76,15 +79,36 @@ as measured outcomes. milc is not described as an offline AI engine.
 
 ## Artwork
 
-The built-in image tool generated the two covers from the original public logo
+The built-in image tool generated the covers from the original public logo
 references. Prompt text and source URLs are in [cover-prompts.md](cover-prompts.md).
 The logos were reused, not redesigned. Generated UI is explanatory, not an actual
 product screenshot; the public detail-page caption makes this explicit.
 
 - `assets/milc.webp`: 1440 x 810, voice command and selected-text editing.
 - `assets/smartmatch.webp`: 1440 x 810, source document, review, and finalized data.
+- `assets/planpresso.webp`: 1440 x 810, planning workspace, PRD, and agent pack.
 - `assets/*-logo-reference.png`: original branding used as generation references.
 
 Only cover files are copied to `storage/uploads/projects/<slug>/`. The frontend
 does not duplicate them under `public`. Full original generation outputs remain
 in Codex's generated-images directory.
+
+## Planpresso Evidence
+
+Reviewed on 8 October 2026 from the owner's Planpresso project thread, repository
+README, database architecture and builder-adapter documentation, and the deployed
+[product](https://planpresso.doniputra.com/) and
+[authored sample](https://planpresso.doniputra.com/sample).
+
+The repository confirms Next.js/TypeScript, Prisma/PostgreSQL, Better Auth,
+OpenAI structured generation, leased background jobs, fourteen-section PRDs,
+versions, and seven export adapters. The deployment record confirms a private
+beta, separate web/worker services, GitHub-built images, and an isolated backup
+restore. Older planning notes are not treated as current production status.
+
+Payments and file processing remain disabled. Adapter file structures are tested,
+but packs have not been executed inside all seven tools. No adoption, productivity,
+latency, production-scale reliability, or fully independent database isolation is
+claimed. Private repository paths, host identifiers, credentials, and logs are
+not included in the public case study. October 2026 is the verified beta deployment
+month; the import does not invent a historical database creation date.

@@ -54,6 +54,7 @@ test("new product covers identify generated UI and link to the real products", (
   for (const [asset, url] of [
     ["milc", "https://milc.work/en"],
     ["smartmatch", "https://smartmatch.gloding.com/"],
+    ["planpresso", "https://planpresso.doniputra.com/"],
   ]) {
     const cover = projectCover(`/uploads/projects/product/products-2026-${asset}.webp`, asset);
     assert.match(cover.caption!, /AI-generated product visualization/);
