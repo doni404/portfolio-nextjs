@@ -23,7 +23,7 @@ const sources = [
 ];
 const topic = { title: "A new developer tool release", beat: "engineering", newsworthiness: "A verified tool release changes an everyday developer workflow.", storyDate: sources[0].date, primaryUrl: sources[0].url, facts: ["A documented new release."], limitations: ["Vendor claim, not independently tested."], sources };
 const artDirection = { pattern: "smooth-light", reason: "An accessible practical guide benefits from calm daylight.", headline: "A BETTER WORKFLOW?", brand: null, person: null, portrait: "none" };
-const draft = { title: topic.title, beat: topic.beat, newsworthiness: topic.newsworthiness, slug: "new-developer-tool", excerpt: "A practical explanation of the new developer tool and its limitations.", content: "An original explanation with sources and caveats. ".repeat(30), storyDate: topic.storyDate, format: "explainer", sources, coverPrompt: "An original professional editorial illustration of a developer workflow.", coverArtDirection: artDirection, flow: [] };
+const draft = { title: topic.title, beat: topic.beat, newsworthiness: topic.newsworthiness, slug: "new-developer-tool", excerpt: "A practical explanation of the new developer tool and its limitations.", content: "An original explanation with sources and caveats. ".repeat(30), storyDate: topic.storyDate, format: "explainer", sources, coverPrompt: "An original professional editorial illustration of a developer workflow.", coverArtDirection: artDirection, flow: [], inlineVisuals: [] };
 const usage = { input_tokens: 1000, output_tokens: 500, input_tokens_details: { cached_tokens: 200 } };
 function modelResponse(value, { research = false, withUsage = true } = {}) {
   return { status: "completed", ...(withUsage ? { usage } : {}), output: [
@@ -194,6 +194,37 @@ test("Japan is a separate selectable beat, not silently added to an AI-only sele
   assert.equal(draftSchema.safeParse({ ...draft, beat: "japan" }).success, true);
 });
 
+test("every three-slot mixed day reserves Japan even when its history is already full", () => {
+  const topics = ["AI industry & leadership", "Japan life & practical hacks", "AI policy & safety", "Work, society & education", "Consumer AI & products", "Science & AI research", "Cloud, security & developer tools", "AI model releases"];
+  const history = Array.from({ length: 10 }, () => ({ editorialMeta: { beat: "japan" } }));
+  for (let day = 1; day <= 28; day++) {
+    const job = { day: `2026-10-${String(day).padStart(2, "0")}`, slot: 1 };
+    const daily = [];
+    for (let slot = 1; slot <= 3; slot++) {
+      const beat = selectBeat(topics, history, { ...job, slot }, 3).id;
+      daily.push(beat);
+      history.unshift({ editorialMeta: { beat } });
+    }
+    assert.equal(daily[0], "japan");
+    assert.equal(daily.filter((beat) => beat === "japan").length, 1);
+    assert.notEqual(daily[1], daily[2]);
+  }
+});
+
+test("daily mix respects quotas, alternating single-slot days, and topic opt-out", () => {
+  const topics = ["AI", "Japan life & practical hacks"];
+  for (const [limit, expected] of [[2, 1], [3, 1], [4, 2], [5, 2]]) {
+    const daily = Array.from({ length: limit }, (_, slot) => selectBeat(topics, [], { day: "2026-10-10", slot: slot + 1 }, limit).id);
+    assert.equal(daily.filter((beat) => beat === "japan").length, expected);
+  }
+  const single = ["2026-10-10", "2026-10-11"].map((day) => selectBeat(topics, [], { day, slot: 1 }, 1).id);
+  assert.equal(single.filter((beat) => beat === "japan").length, 1);
+  for (let slot = 1; slot <= 5; slot++) {
+    assert.notEqual(selectBeat(["AI"], [], { day: "2026-10-10", slot }, 5).id, "japan");
+    assert.equal(selectBeat(["Japan daily life"], [], { day: "2026-10-10", slot }, 5).id, "japan");
+  }
+});
+
 test("article profiles vary depth and avoid turning leadership news into tutorials", () => {
   const history = [];
   const profiles = [];
@@ -314,7 +345,7 @@ test("GA4 supports ignored credential files and never leaks malformed JSON", asy
   }
 });
 
-async function mockRun({ providerStatus = 200, withUsage = true, denyReservation = false, denyUsage = false, searchCalls = 1, images = false, revise = false, revisionFails = false, misspelledSource = false, resolutionFails = false } = {}) {
+async function mockRun({ providerStatus = 200, withUsage = true, denyReservation = false, denyUsage = false, searchCalls = 1, images = false, revise = false, revisionFails = false, misspelledSource = false, resolutionFails = false, topics = ["Cloud, security & developer tools"], dailyLimit = 3, draftOverride = {}, revisionOverride = {} } = {}) {
   const calls = []; let paidCalls = 0; let claimed = false;
   const previousExit = process.exitCode;
   try {
@@ -327,16 +358,17 @@ async function mockRun({ providerStatus = 200, withUsage = true, denyReservation
         if (target.endsWith("images/generations")) return response({ usage: { input_tokens: 20, output_tokens: 100, input_tokens_details: { text_tokens: 20, image_tokens: 0 } }, data: [{ b64_json: Buffer.from("RIFF-test-WEBP").toString("base64") }] });
         const name = body.text.format.name;
         const approved = name === "review" ? !revise : !revisionFails;
-        const research = misspelledSource ? { ...topic, primaryUrl: "https://example.com/misspelled-announcement", sources: [{ ...sources[0], url: "https://example.com/misspelled-announcement" }, sources[1]] } : topic;
+        const beat = selectBeat(topics, [], { day: "2026-10-05", slot: 1 }, dailyLimit).id;
+        const research = misspelledSource ? { ...topic, beat, primaryUrl: "https://example.com/misspelled-announcement", sources: [{ ...sources[0], url: "https://example.com/misspelled-announcement" }, sources[1]] } : { ...topic, beat };
         const resolution = { matches: sources.map(({ url }, sourceIndex) => ({ sourceIndex, url: resolutionFails ? null : url })) };
-        const result = modelResponse(name === "research" ? research : name === "source_resolution" ? resolution : ["draft", "revision"].includes(name) ? draft : { approved, issues: approved ? [] : ["Rewrite an overfamiliar phrase."] }, { research: name === "research", withUsage });
+        const result = modelResponse(name === "research" ? research : name === "source_resolution" ? resolution : ["draft", "revision"].includes(name) ? { ...draft, beat, ...draftOverride, ...(name === "revision" ? revisionOverride : {}) } : { approved, issues: approved ? [] : ["Rewrite an overfamiliar phrase."] }, { research: name === "research", withUsage });
         if (name === "research") result.output.unshift(...Array.from({ length: searchCalls - 1 }, () => ({ type: "web_search_call", action: { sources: [] } })));
         return response(result);
       }
       if (target.endsWith("/claim")) {
         if (claimed) return response({ data: { job: null, reason: "Quota reached" } });
         claimed = true;
-        return response({ data: { job: { id: "test-job", leaseToken: "lease", day: "2026-10-05", slot: 1 }, config: { topics: ["Cloud, security & developer tools"], generateImages: images }, recent: [], attemptedTopics: [{ title: "Previously attempted announcement", topicKey: "https://old.example/story" }] } });
+        return response({ data: { job: { id: "test-job", leaseToken: "lease", day: "2026-10-05", slot: 1 }, config: { topics, dailyLimit, generateImages: images }, recent: [], attemptedTopics: [{ title: "Previously attempted announcement", topicKey: "https://old.example/story" }] } });
       }
       if (denyReservation && target.endsWith("/reserve")) return response({}, 400);
       if (denyUsage && target.endsWith("/usage")) return response({ error: { code: "VALIDATION_ERROR", details: { usage: ["synthetic-secret"] } } }, 400);
@@ -359,6 +391,8 @@ test("happy path reserves every paid stage, logs costs, and creates only a revie
   assert.match(textCalls[0].body.input, /today or the last 24 hours/);
   assert.doesNotMatch(textCalls[1].body.input, /500-750/);
   assert.equal(textCalls[1].body.max_output_tokens, 7500);
+  assert.match(textCalls[1].body.instructions, /Plan professional explanatory images INSIDE the article/);
+  assert.match(textCalls[2].body.input, /Check every inline visual's labels/);
   assert.match(textCalls[2].body.input, /do not flag that required match as copying/);
   assert.deepEqual(calls.filter(({ target }) => target.endsWith("/reserve")).map(({ body }) => body.stage), ["research", "writing", "review", "cover"]);
   assert.equal(calls.filter(({ target }) => target.endsWith("/usage")).length, 4);
@@ -366,6 +400,32 @@ test("happy path reserves every paid stage, logs costs, and creates only a revie
   assert.equal(complete.body.draft.title, draft.title);
   assert.equal(complete.body.draft.status, undefined);
   assert.equal(calls.some(({ target }) => /publish|admin\/blogs/.test(target)), false);
+});
+
+test("mixed-topic worker researches the reserved Japan slot and keeps it through the draft", async () => {
+  const { calls } = await mockRun({ topics: ["AI", "Japan life & practical hacks"] });
+  const research = calls.find(({ body }) => body?.text?.format?.name === "research");
+  assert.match(research.body.input, /Editorial beat for this slot: japan/);
+  assert.match(research.body.input, /not proof of Instagram\/Threads virality or a Google ranking/);
+  assert.equal(calls.find(({ target }) => target.endsWith("/complete")).body.draft.beat, "japan");
+});
+
+test("long worker drafts have in-article visual plans even with cover generation disabled", async () => {
+  const visual = { id: "visual-1", kind: "comparison", title: "Documented scope versus assumptions", summary: "Read what the release documents separately from what has not been verified.", items: [{ label: "Documented release", description: "An official new release changes the supported tool." }, { label: "Not independently tested", description: "The announcement does not establish independent testing." }], alt: "A comparison of the official release and the absence of independent testing.", caption: "Compare evidence and assumptions before drawing a conclusion." };
+  const long = { content: `${"word ".repeat(300)}\n\n[[visual-1]]\n\n${"word ".repeat(500)}`, inlineVisuals: [visual] };
+  const { calls, paidCalls } = await mockRun({ draftOverride: long });
+  assert.equal(paidCalls, 3);
+  assert.equal(calls.some(({ target }) => target.endsWith("images/generations")), false);
+  assert.deepEqual(calls.find(({ target }) => target.endsWith("/complete")).body.draft.inlineVisuals, [visual]);
+  assert.equal(calls.find(({ body }) => body?.text?.format?.name === "draft").body.text.format.schema.properties.inlineVisuals.type, "array");
+  const corrected = await mockRun({ draftOverride: { ...long, inlineVisuals: [] }, revisionOverride: long });
+  assert.equal(corrected.paidCalls, 5);
+  assert.match(corrected.calls.find(({ body }) => body?.text?.format?.name === "revision").body.input, /requires 1 inline visual/);
+  assert.equal(corrected.calls.filter(({ target }) => target.endsWith("/complete")).length, 1);
+  const failed = await mockRun({ draftOverride: { ...long, inlineVisuals: [] } });
+  assert.equal(failed.paidCalls, 5);
+  assert.equal(failed.calls.some(({ target }) => target.endsWith("/complete")), false);
+  assert.equal(failed.calls.find(({ target }) => target.endsWith("/fail")).body.code, "QUALITY_CHECK_FAILED");
 });
 
 test("reported research usage is not clipped; rejected reports stop without paid retries", async () => {

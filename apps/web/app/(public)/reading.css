@@ -271,6 +271,26 @@
   max-width: 100%;
   height: auto;
 }
+.public-site .reading-prose .article-visual {
+  margin: 36px 0;
+}
+.public-site .reading-prose .article-visual > a {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.public-site .reading-prose .article-visual img {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+.public-site .reading-prose .article-visual figcaption {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
 .reader-tags {
   display: flex;
   flex-wrap: wrap;

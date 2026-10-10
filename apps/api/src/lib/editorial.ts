@@ -6,6 +6,7 @@ import { badRequest, forbidden, unauthorized } from "./errors";
 import { automationState, jakartaDay, monthRange, TEXT_MODEL, IMAGE_MODEL } from "./editorial-policy";
 import beats from "./editorial-beats.json";
 import { ga4Configured } from "./ga4";
+import { emailConfiguration, sendEditorialEmail, reviewEmail } from "./editorial-email";
 
 export function requireOwner(req: Request, _res: Response, next: NextFunction) {
   if (req.admin?.role !== "owner") return next(forbidden("Owner access required"));
@@ -25,7 +26,7 @@ export const settings = () => prisma.editorialSettings.upsert({ where: { id: "de
 export function readiness(config?: { workerLastSeenAt?: Date | null }, now = new Date()) {
   const configured = (process.env.AUTOMATION_WORKER_TOKEN?.length ?? 0) >= 32;
   const seen = config?.workerLastSeenAt?.getTime();
-  return { worker: configured && seen != null && seen <= now.getTime() && now.getTime() - seen < 90 * 60_000, email: Boolean(process.env.RESEND_API_KEY && process.env.EDITORIAL_EMAIL_FROM), analytics: ga4Configured() };
+  return { worker: configured && seen != null && seen <= now.getTime() && now.getTime() - seen < 90 * 60_000, email: emailConfiguration() !== null, analytics: ga4Configured() };
 }
 export async function committedCost(tx: Prisma.TransactionClient, now = new Date()) {
   const { start, end } = monthRange(now.toISOString().slice(0, 7));
@@ -45,7 +46,7 @@ export async function claimJob(now = new Date()) {
     const job = await tx.editorialJob.create({ data: { day, slot: count + 1, leaseToken: randomBytes(24).toString("hex"), leaseUntil: new Date(Date.now() + 30 * 60_000) } });
     const recent = await tx.blogPost.findMany({ where: { deletedAt: null }, select: { title: true, slug: true, editorialMeta: true }, orderBy: { createdAt: "desc" }, take: 100 });
     const attemptedTopics = await tx.editorialJob.findMany({ where: { topicKey: { not: null }, slot: { gt: 0 } }, select: { title: true, topicKey: true }, orderBy: { createdAt: "desc" }, take: 100 });
-    return { job, config: { topics: config.topics, generateImages: config.generateImages, textModel: TEXT_MODEL, imageModel: IMAGE_MODEL }, recent, attemptedTopics };
+    return { job, config: { topics: config.topics, dailyLimit: config.dailyLimit, generateImages: config.generateImages, textModel: TEXT_MODEL, imageModel: IMAGE_MODEL }, recent, attemptedTopics };
   });
 }
 export async function lease(tx: Prisma.TransactionClient, id: string, token: string, allowPaused = false) {
@@ -59,20 +60,17 @@ export async function notifyReview(jobId: string, blogId: string, resend = false
     await prisma.editorialJob.update({ where: { id: jobId }, data: { emailStatus: "not_configured" } });
     return "not_configured";
   }
-  const url = new URL(`/admin/blogs/${blogId}`, process.env.FRONTEND_URL ?? "http://localhost:3000").href;
-  try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST", headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json", "Idempotency-Key": `editorial-${jobId}${resend ? `-${randomBytes(8).toString("hex")}` : ""}` },
-      body: JSON.stringify({ from: process.env.EDITORIAL_EMAIL_FROM, to: [config.recipientEmail], subject: "Your journal draft is ready to review", text: `A new AI-assisted draft is ready. Check facts, sources, and add your perspective before publishing.\n\nReview securely: ${url}\n\nThis draft has NOT been published.` }),
-      signal: AbortSignal.timeout(15_000),
-    });
-    const status = response.ok ? "sent" : "failed";
-    await prisma.editorialJob.update({ where: { id: jobId }, data: { emailStatus: status } });
-    return status;
-  } catch {
-    await prisma.editorialJob.update({ where: { id: jobId }, data: { emailStatus: "failed" } });
-    return "failed";
-  }
+  const job = await prisma.editorialJob.findUniqueOrThrow({ where: { id: jobId } });
+  if (job.blogPostId !== blogId) throw badRequest("Review draft does not match the job");
+  if (job.emailStatus === "sending" || (!resend && ["sent", "unknown"].includes(job.emailStatus))) return job.emailStatus;
+  const post = await prisma.blogPost.findUniqueOrThrow({ where: { id: blogId }, select: { title: true, excerpt: true } });
+  const email = reviewEmail(config.recipientEmail, blogId, post, `editorial-${jobId}${resend ? `-${randomBytes(8).toString("hex")}` : ""}`);
+  const claimed = await prisma.editorialJob.updateMany({ where: { id: jobId, emailStatus: job.emailStatus }, data: { emailStatus: "sending" } });
+  if (!claimed.count) return "sending";
+  const result = await sendEditorialEmail(email);
+  if (result.code) console.warn("Editorial email:", result.code);
+  await prisma.editorialJob.update({ where: { id: jobId }, data: { emailStatus: result.status } });
+  return result.status;
 }
 export function assertFreshStory(date: string) {
   const parsed = new Date(`${date}T00:00:00Z`);

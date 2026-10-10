@@ -57,3 +57,20 @@ test("portable upload paths resolve to the public API without duplicate slashes"
     else process.env.NEXT_PUBLIC_API_URL = previous;
   }
 });
+
+test("inline explanatory figures preserve captions, dimensions and full-size API links safely", () => {
+  const previous = process.env.NEXT_PUBLIC_API_URL;
+  process.env.NEXT_PUBLIC_API_URL = "https://api.example.com";
+  try {
+    const path = "/uploads/blogs/generated/job/inline-123.svg";
+    const result = articleContent(`<figure class="article-visual unwanted" onclick="bad()"><a href="${path}" target="_blank"><img src="${path}" alt="A three-stage document review process" width="720" height="820" onerror="bad()"></a><figcaption>Review uncertain fields before using them.</figcaption></figure>`);
+    assert.match(result.html, /<figure class="article-visual">/);
+    assert.match(result.html, /href="https:\/\/api.example.com\/uploads\/blogs\/generated\/job\/inline-123.svg"/);
+    assert.match(result.html, /width="720" height="820" loading="lazy" decoding="async"/);
+    assert.match(result.html, /<figcaption>Review uncertain fields before using them\.<\/figcaption>/);
+    assert.doesNotMatch(result.html, /onclick|onerror|unwanted/);
+  } finally {
+    if (previous === undefined) delete process.env.NEXT_PUBLIC_API_URL;
+    else process.env.NEXT_PUBLIC_API_URL = previous;
+  }
+});

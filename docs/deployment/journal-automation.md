@@ -6,13 +6,15 @@
 - $5 monthly estimated AI budget, adjustable in admin. Budget takes priority over daily cadence.
 - Human review is required to publish every AI-generated draft. The worker cannot publish.
 - Images are optional. Generated covers are labeled as editorial illustrations, not product screenshots.
-- Discovery uses Google Trends US/Indonesia RSS, Google News technology coverage, recent arXiv AI papers, and source-backed web research. These are hints, not proof of social virality or measured Google rankings. Instagram and Threads are not scraped.
+- Discovery uses Google Trends US/Indonesia/Japan RSS, Google News technology and Japan daily-life coverage, recent arXiv AI papers, and source-backed web research. Trends supplies approximate search-interest hints when available; the other feeds supply recent headlines. These are hints, not proof of social virality or measured Google search-result positions. Instagram and Threads are not scraped. The worker researches one selected beat per slot, not every configured topic with a separate paid search. Within that beat, the model weighs freshness, source quality, concrete reader impact, and optional search-interest hints; it does not produce a measured numeric viral ranking.
 - Defaults rotate across industry/leadership, policy/safety, work/education, consumer products, science/research, cloud/security/devtools, and model releases. Selection favors under-covered beats in the last ten articles. With other beats enabled, at most one of the last five new articles is a model-release story. Custom topics remain configurable in admin.
 - Each live draft stores its editorial beat and a concrete newsworthiness rationale. Industry/policy research requires at least two source domains and attributed disputed claims. A slot without a verified fresh story fails safely instead of inventing a story or silently switching to another model launch.
+- When Japan and other topics are enabled, a three-attempt day reserves **slot 1 for Japan Life**, then two rotating non-Japan beats. Two attempts reserve one for each group; four/five reserve two Japan slots. With one attempt, the groups alternate on consecutive Jakarta dates. Japan is not added if it is absent from the topic settings. The admin shows the saved daily plan. This is an attempt allocation, not a promise of completed articles: budget, evidence failures, outages, and a paused worker still take priority. Failed slots are not replaced by extra paid attempts. Existing posts/drafts remain unchanged.
 - If research misspells a source URL, one separately budgeted `source_resolution` call can match it to the same article among the retrieved URLs. Its structured output cannot invent a new URL or change facts/dates. An uncertain match fails safely; there is no paid retry loop. Exact retrieved references are preserved.
 - Docker builds run in GitHub Actions. A lightweight Coolify scheduled task orchestrates remote OpenAI requests; it does not run AI models or build images on EC2. GitHub's editorial workflow is a manual fallback, not the daily scheduler.
 - Text research, writing, and review use `gpt-6-luna` with low reasoning effort. Covers use `gpt-image-2.5-flare`, medium quality, at 1536x864.
 - AI selects `smooth-light` or `bold-dark` for each story, with a saved rationale and short factual headline. Relevant brands may appear as editorial references; named public leaders use clearly illustrated portraits, not invented event photos. The review stage checks this direction before generating a cover.
+- New automated drafts over three minutes include one professional in-article explainer image; seven-minute-or-longer drafts include two. This uses actual prose length at 220 words/minute, excluding sources and placement markers. AI chooses a source-grounded workflow, comparison, or checklist beside the relevant section, not a repeated cover. Its visual plan is checked during the existing consistency review and, if necessary, the single allowed revision. Diagrams are rendered locally as small, immutable SVG images in the persistent API uploads folder, with escaped text, no scripts/remote assets, descriptive alt text, captions, reserved dimensions, and full-size links. There is **no additional paid image API request**; visual-plan tokens are included in the normal writing/review usage logs and monthly budget. Images inside the article do not depend on the optional cover toggle. Existing articles are not silently rewritten, and legacy worker drafts stay compatible during rolling deployment.
 
 ## Deploy Code And Content Separately
 
@@ -69,7 +71,7 @@ Restore refuses to overwrite posts edited since the import. Original comments re
    FRONTEND_URL=https://doniputra.com
    ```
 
-   Enable at runtime, not build time. Restart/redeploy the API after changing runtime configuration. Email is optional and is currently skipped. To use the existing Resend adapter later, configure `RESEND_API_KEY` and `EDITORIAL_EMAIL_FROM` with a verified sending domain; SES needs its own adapter before enabling email delivery.
+   Enable at runtime, not build time. Restart/redeploy the API after changing runtime configuration. Email is optional. Configure SES using the section below, or keep the existing Resend adapter with `EDITORIAL_EMAIL_PROVIDER=resend`, `RESEND_API_KEY`, and a verified `EDITORIAL_EMAIL_FROM`.
 
 3. For the optional manual GitHub fallback, under repository **Settings > Secrets and variables > Actions**, add encrypted secrets:
    - `OPENAI_API_KEY`: a dedicated restricted OpenAI project key.
@@ -92,6 +94,41 @@ Coolify checks every ten minutes while the server and API are running. The API s
 Worker status comes from the last authenticated heartbeat, not a manual environment flag. A heartbeat remains fresh for 90 minutes. With a configured token but no fresh heartbeat, admin shows **Waiting for heartbeat**. An OFF run still refreshes the connection and makes no OpenAI requests. A credential-only local check is available with `node scripts/editorial-worker.mjs --heartbeat-only`.
 
 Turning OFF in admin blocks new jobs and new paid stages. An already-started provider request may finish and be logged; its result can still be saved as an unpublished draft. Disable the Coolify task as a second stop control when needed. `EDITORIAL_WORKER_ENABLED` controls only the manual GitHub fallback.
+
+## Configure AWS SES Notifications
+
+SES sends transactional notifications; it is not a mailbox. Use `Doni Putra Journal <info@doniputra.com>` as the visible sender and a monitored Reply-To, currently `doniputrapurbawa@gmail.com`. A Hostinger mailbox can receive mail for `info@` later while SES continues sending from either EC2 or another hosting provider. Do not replace the domain's existing mailbox MX records with SES receiving records just to send notifications.
+
+1. The supplied SES screenshot confirms `doniputra.com` is verified in Jakarta (`ap-southeast-3`). No separate mailbox or `info@` identity is required for basic sending from this domain. Keep this region for the API, and verify its DKIM status. Review existing DMARC and SPF records before making changes; do not create duplicate SPF TXT records. If using a custom MAIL FROM, use a dedicated subdomain such as `bounce.doniputra.com` and the region-specific records SES supplies for that subdomain.
+2. In sandbox mode, verify the review recipient as well (`doniputrapurbawa@gmail.com`). Sandbox status and identities are region-specific. For sending to unverified recipients later, request production access and configure bounce/complaint handling first. These notifications go only to the owner-selected review address; this is not a bulk newsletter implementation.
+3. Prefer an EC2 instance role with least-privilege `ses:SendEmail` permission. Verify the Docker container can resolve that role through the SDK credential chain. Do not open metadata access broadly across unrelated containers. If no working role is available (including a later non-AWS host), provide dedicated, restricted credentials as API runtime secrets, never GitHub build args or web variables. A scoped example, replacing region/account and identity as appropriate:
+
+   ```json
+   { "Version": "2012-10-17", "Statement": [{ "Effect": "Allow", "Action": "ses:SendEmail", "Resource": "arn:aws:ses:REGION:ACCOUNT_ID:identity/doniputra.com", "Condition": { "StringEquals": { "ses:FromAddress": "info@doniputra.com" } } }] }
+   ```
+
+   For this installation, create an IAM role named **portfolio-ses-notifications** with trusted entity **AWS service > EC2**, then **Add permissions > Create inline policy > JSON** using [`portfolio-ses-send-policy.json`](./portfolio-ses-send-policy.json). Name the policy **PortfolioSESNotificationSend**. It is scoped to the verified Jakarta domain identity and `info@` sender, not general AWS administrator access. Keep the personal IAM user `u-doni` separate; do not generate personal-user keys for the app. Attach the role through **EC2 > Instance > Actions > Security > Modify IAM role**. If an instance profile is already attached, add the scoped SES policy to its existing role instead of replacing unrelated permissions. Before changing the EC2 metadata hop limit for Docker, inspect its current configuration and assess exposure to other containers; do not blindly make metadata accessible. Test the SDK from the API container without printing temporary credentials.
+
+4. In Coolify **portfolio-api-ghcr > Environment Variables**, set Runtime ON / Buildtime OFF:
+
+   ```dotenv
+   EDITORIAL_EMAIL_PROVIDER=ses
+   SES_REGION=ap-southeast-3
+   EDITORIAL_EMAIL_FROM=Doni Putra Journal <info@doniputra.com>
+   EDITORIAL_EMAIL_REPLY_TO=doniputrapurbawa@gmail.com
+   FRONTEND_URL=https://doniputra.com
+   # Only when a working role is not available:
+   AWS_ACCESS_KEY_ID=<dedicated restricted IAM access key>
+   AWS_SECRET_ACCESS_KEY=<secret key>
+   # AWS_SESSION_TOKEN=<token, only when using temporary credentials>
+   ```
+
+5. Restart the API. In `/admin/automation`, save the review email address, then click **Send test email**. The route is owner-only, uses only the saved recipient, is limited to three requests per minute (shared with resends), and records a safe audit result. Confirm the email in the inbox or spam folder. No OpenAI request or article publication occurs during this test.
+6. Each completed automated draft triggers a text/HTML review notification with its title, summary, and authenticated admin link. A database compare-and-set prevents concurrent sends for the same job. `sent` means accepted by the provider, **not confirmed inbox delivery**. `unknown` means the response was ambiguous; `sending` may mean an interrupted process. Check the provider/inbox before manually resending. SES requests use one attempt and are never automatically retried after a timeout. Configuration readiness is not a claim that IAM, DKIM, sandbox permissions, or delivery have been verified.
+
+The existing AI budget excludes SES fees. Check the selected SES pricing plan; the published à-la-carte outbound rate is $0.10 per 1,000 recipients, while newer accounts may default to Essentials at $0.16 per 1,000. At three owner notifications per day (90/month), base sending is roughly $0.009–$0.0144, before optional features, data charges, taxes, and credits. Do not enable paid add-ons for this low-volume test.
+
+References: [SES identities](https://docs.aws.amazon.com/ses/latest/dg/creating-identities.html), [SES sandbox](https://docs.aws.amazon.com/ses/latest/dg/request-production-access.html), [SDK credential chain](https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/setting-credentials-node.html), [SES pricing](https://aws.amazon.com/ses/pricing/).
 
 ## Budget And Logs
 

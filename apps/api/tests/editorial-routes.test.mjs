@@ -28,7 +28,10 @@ const db = {
   $queryRaw: async () => [],
   $transaction: async (run) => run(db),
   editorialSettings: { upsert: async () => config, findUniqueOrThrow: async () => config, update: async ({data}) => (config = {...config, ...data}) },
-  editorialJob: { findUnique: async () => job, findFirst: async () => null, findMany: async () => [], count: async ({ where }) => { quotaFilter = where; return 2; }, update: async ({ data }) => (job = { ...job, ...data }) },
+  editorialJob: { findUnique: async () => job, findUniqueOrThrow: async () => job, findFirst: async () => null, findMany: async () => [], count: async ({ where }) => { quotaFilter = where; return 2; }, create: async ({ data }) => (job = { id: jobId, status: "running", ...data }), update: async ({ data }) => (job = { ...job, ...data }), updateMany: async ({ where, data }) => {
+    if (where.emailStatus !== job.emailStatus) return { count: 0 };
+    job = { ...job, ...data }; return { count: 1 };
+  } },
   aIUsageLog: {
     findMany: async () => logs,
     findUnique: async ({ where }) => logs.find((log) => log.stage === where.jobId_stage.stage),
@@ -43,6 +46,7 @@ const db = {
     count: async () => listedPosts.length,
     create: async ({ data }) => { createdPost = data; post = { id: blogId, ...data }; return post; },
     findFirst: async () => post,
+    findUniqueOrThrow: async () => post,
     update: async ({ data }) => (post = { ...post, ...data }),
   },
   auditLog: { create: async () => ({}) },
@@ -156,6 +160,46 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
       assert.equal((await patch("25:00")).status, 400);
       config.runAt = "00:00";
     });
+    await t.test("the dashboard reports the saved mix and worker claims receive its daily count", async () => {
+      const previous = { ...config };
+      const previousJob = job;
+      try {
+        config.topics = ["AI", "Japan life & practical hacks"]; config.dailyLimit = 3;
+        const overview = await fetch(`${base}/settings`, { headers: { Authorization: `Bearer ${adminToken}` } });
+        const data = (await overview.json()).data;
+        assert.deepEqual(data.dailyPlan.map((slot) => slot.group), ["japan", "other", "other"]);
+        const claim = await request("/worker/claim");
+        const claimed = (await claim.json()).data;
+        assert.equal(claimed.config.dailyLimit, 3);
+        assert.equal(claimed.job.slot, 3);
+      } finally { config = previous; job = previousJob; }
+    });
+    await t.test("SES test email is owner-only, uses the saved recipient, and audits acceptance", async () => {
+      const { SESv2Client } = require("@aws-sdk/client-sesv2");
+      const previousSend = SESv2Client.prototype.send;
+      const keys = ["EDITORIAL_EMAIL_PROVIDER", "SES_REGION", "EDITORIAL_EMAIL_FROM", "EDITORIAL_EMAIL_REPLY_TO", "FRONTEND_URL"];
+      const previousEnv = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+      const previousRecipient = config.recipientEmail;
+      const sent = [];
+      try {
+        Object.assign(process.env, { EDITORIAL_EMAIL_PROVIDER: "ses", SES_REGION: "ap-southeast-1", EDITORIAL_EMAIL_FROM: "info@doniputra.com", EDITORIAL_EMAIL_REPLY_TO: "editor@example.com", FRONTEND_URL: "https://doniputra.com" });
+        SESv2Client.prototype.send = async (command) => { sent.push(command.input); return { MessageId: "fake-id" }; };
+        config.recipientEmail = "saved@example.com";
+        assert.equal((await request("/settings/email/test", {}, "wrong")).status, 401);
+        const editorToken = jwt.sign({ adminId: jobId, role: "editor" }, process.env.JWT_SECRET);
+        assert.equal((await request("/settings/email/test", {}, editorToken)).status, 403);
+        const result = await request("/settings/email/test", { recipientEmail: "unapproved@example.com" }, adminToken);
+        assert.equal(result.status, 200, await result.clone().text());
+        assert.equal(sent.length, 1);
+        assert.deepEqual(sent[0].Destination.ToAddresses, ["saved@example.com"]);
+        config.recipientEmail = null;
+        assert.equal((await request("/settings/email/test", {}, adminToken)).status, 400);
+      } finally {
+        SESv2Client.prototype.send = previousSend;
+        config.recipientEmail = previousRecipient;
+        for (const key of keys) if (previousEnv[key] === undefined) delete process.env[key]; else process.env[key] = previousEnv[key];
+      }
+    });
     await t.test("generated PNG covers retain their format; unsafe bytes are refused", async () => {
       logs.push({ stage: "cover", status: "completed", estimatedUsd: 0.01 });
       const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jXioAAAAASUVORK5CYII=", "base64");
@@ -204,6 +248,55 @@ test("HTTP publishing, worker authentication, reservations, and cost retention",
       assert.equal(createdPost.readingTimeMinutes, 8);
       assert.equal(createdPost.editorialMeta.wordCount, 1541);
       assert.equal(createdPost.status, "draft");
+    });
+    await t.test("long drafts install explanatory images inline without paid cover stages or publication", async () => {
+      job = { ...job, status: "running", blogPostId: null };
+      const date = new Date().toISOString().slice(0, 10);
+      const sources = [{ title: "Announcement", url: "https://example.com/announcement", date }, { title: "Official guide", url: "https://example.com/guide", date }];
+      const visual = { id: "visual-1", kind: "checklist", title: "Check before changing tools", summary: "A documented feature is only part of deciding whether a tool fits your workflow.", items: [{ label: "Read the scope", description: "Check which use cases the release actually documents." }, { label: "Review limitations", description: "Use the official guide to identify known restrictions." }], alt: "Two checks before changing tools: read the documented scope and review known limitations.", caption: "An illustrative decision checklist, not a vendor guarantee." };
+      const draft = { title: "A documented developer tool announcement", beat: "engineering", newsworthiness: "A verified release changes an everyday developer workflow.", slug: "inline-visual-test", excerpt: "A sourced explanation of a developer tool and its practical limitations.", content: `${"word ".repeat(300)}\n\n[[visual-1]]\n\n${"word ".repeat(500)}`, storyDate: date, format: "explainer", sources, coverPrompt: "An editorial illustration of a developer workflow.", flow: [], inlineVisuals: [visual] };
+      logs = ["research", "writing", "review"].map((stage) => ({ stage, status: "completed", estimatedUsd: 0.01 }));
+      assert.equal((await request(`/worker/${jobId}/complete`, { token: leaseToken, draft: { ...draft, inlineVisuals: [] }, coverUrl: null, evidenceUrls: sources.map((source) => source.url) })).status, 400);
+      const result = await request(`/worker/${jobId}/complete`, { token: leaseToken, draft, coverUrl: null, evidenceUrls: sources.map((source) => source.url) });
+      assert.equal(result.status, 200, await result.text());
+      assert.equal(createdPost.status, "draft");
+      assert.equal(createdPost.readingTimeMinutes, 4);
+      assert.equal(createdPost.editorialMeta.wordCount, 800);
+      assert.equal(createdPost.editorialMeta.inlineVisuals.length, 1);
+      assert.match(createdPost.content, /<figure class="article-visual">/);
+      assert.doesNotMatch(createdPost.content, /\[\[visual-/);
+      const asset = createdPost.editorialMeta.inlineVisuals[0];
+      assert.match(await readFile(path.join(uploadDir, asset.url.slice("/uploads/".length)), "utf8"), /CHECKLIST/);
+      assert.equal(logs.length, 3);
+    });
+    await t.test("completed-draft notifications send once, and ambiguous sends stay held", async () => {
+      const { SESv2Client } = require("@aws-sdk/client-sesv2");
+      const { notifyReview } = require("../dist/lib/editorial.js");
+      const previousSend = SESv2Client.prototype.send;
+      const keys = ["EDITORIAL_EMAIL_PROVIDER", "SES_REGION", "EDITORIAL_EMAIL_FROM", "FRONTEND_URL"];
+      const previousEnv = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+      const previousRecipient = config.recipientEmail;
+      let sends = 0;
+      try {
+        Object.assign(process.env, { EDITORIAL_EMAIL_PROVIDER: "ses", SES_REGION: "ap-southeast-1", EDITORIAL_EMAIL_FROM: "info@doniputra.com", FRONTEND_URL: "https://doniputra.com" });
+        config.recipientEmail = "saved@example.com";
+        job = { ...job, emailStatus: "not_sent" };
+        SESv2Client.prototype.send = async () => { sends++; return { MessageId: "fake-id" }; };
+        await Promise.all([notifyReview(jobId, blogId), notifyReview(jobId, blogId)]);
+        assert.equal(sends, 1);
+        assert.equal(job.emailStatus, "sent");
+        assert.equal(await notifyReview(jobId, blogId), "sent");
+        assert.equal(sends, 1);
+        job = { ...job, emailStatus: "not_sent" };
+        SESv2Client.prototype.send = async () => { sends++; throw Object.assign(new Error("sensitive-response"), { name: "AbortError" }); };
+        assert.equal(await notifyReview(jobId, blogId), "unknown");
+        assert.equal(await notifyReview(jobId, blogId), "unknown");
+        assert.equal(sends, 2);
+      } finally {
+        SESv2Client.prototype.send = previousSend;
+        config.recipientEmail = previousRecipient;
+        for (const key of keys) if (previousEnv[key] === undefined) delete process.env[key]; else process.env[key] = previousEnv[key];
+      }
     });
     await t.test("site search filters published content and sorts newest publication first", async () => {
       const result = await fetch(`${base}/public-blogs?q=Japan`);

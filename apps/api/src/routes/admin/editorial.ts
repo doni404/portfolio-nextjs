@@ -7,9 +7,14 @@ import { requireOwner, settings, readiness, notifyReview, committedCost } from "
 import { automationState, jakartaDay, monthRange, runAtSchema } from "../../lib/editorial-policy";
 import { badRequest } from "../../lib/errors";
 import failures from "../../lib/editorial-failures.json";
+import { dailyBeatPlan } from "../../lib/editorial-selection";
+import { emailConfiguration, emailFailureMessage, reviewEmail, sendEditorialEmail } from "../../lib/editorial-email";
+import { rateLimit } from "express-rate-limit";
+import { randomUUID } from "node:crypto";
 
 const router = Router();
 router.use(requireAuth, requireOwner);
+const emailLimiter = rateLimit({ windowMs: 60_000, limit: 3, standardHeaders: true, legacyHeaders: false });
 router.get("/", async (_req, res, next) => {
   try {
     const config = await settings();
@@ -20,7 +25,8 @@ router.get("/", async (_req, res, next) => {
     const running = await prisma.editorialJob.findFirst({ where: { status: "running" } });
     const state = automationState({ enabled: config.enabled, worker: connected.worker, runAt: config.runAt, attempts: today.attempts, dailyLimit: config.dailyLimit, budget: Number(config.monthlyBudgetUsd), committed: await committedCost(prisma, now), runningUntil: running?.leaseUntil }, now);
     const history = jobs.map((job) => ({ ...job, errorDescription: job.errorCode ? failures[job.errorCode.split(":")[1] as keyof typeof failures] ?? null : null }));
-    return ok(res, { config, readiness: connected, workerConfigured: (process.env.AUTOMATION_WORKER_TOKEN?.length ?? 0) >= 32, jobs: history, today, state });
+    const email = emailConfiguration();
+    return ok(res, { config, readiness: connected, emailProvider: email?.provider ?? null, dailyPlan: dailyBeatPlan(config.topics, config.dailyLimit, today.day), workerConfigured: (process.env.AUTOMATION_WORKER_TOKEN?.length ?? 0) >= 32, jobs: history, today, state });
   } catch (err) { next(err); }
 });
 router.patch("/", async (req, res, next) => {
@@ -57,7 +63,18 @@ router.post("/jobs/:id/reconcile", async (req, res, next) => {
     return ok(res, { stopped: true });
   } catch (err) { next(err); }
 });
-router.post("/jobs/:id/email", async (req, res, next) => {
+router.post("/email/test", emailLimiter, async (req, res, next) => {
+  try {
+    const config = await settings();
+    if (!config.recipientEmail) throw badRequest("Save your review email address first");
+    if (!readiness().email) throw badRequest("Configure the email provider in the API's runtime environment first");
+    const result = await sendEditorialEmail(reviewEmail(config.recipientEmail, null, undefined, `editorial-test-${randomUUID()}`));
+    await prisma.auditLog.create({ data: { adminUserId: req.admin!.adminId, action: "editorial.email.test", entityType: "editorial", metadata: { status: result.status, provider: emailConfiguration()?.provider ?? null, code: result.code ?? null } } });
+    if (result.status !== "sent") throw badRequest(emailFailureMessage(result.code));
+    return ok(res, { sent: true });
+  } catch (err) { next(err); }
+});
+router.post("/jobs/:id/email", emailLimiter, async (req, res, next) => {
   try {
     const job = await prisma.editorialJob.findUniqueOrThrow({ where: { id: z.string().uuid().parse(req.params.id) } });
     if (!job.blogPostId) throw badRequest("No draft to review");

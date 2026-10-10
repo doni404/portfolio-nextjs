@@ -1,5 +1,6 @@
 import { z } from "zod";
 import models from "./editorial-models.json";
+import { inlineVisualSchema } from "./editorial-visuals";
 
 export const TEXT_MODEL = models.textModel;
 export const IMAGE_MODEL = models.imageModel;
@@ -40,6 +41,7 @@ export const draftSchema = z.object({
   coverPrompt: z.string().min(30).max(1800),
   coverArtDirection: coverDirectionSchema.optional(),
   flow: z.array(z.object({ title: z.string().min(2).max(60), description: z.string().min(10).max(240) })).max(6),
+  inlineVisuals: z.array(inlineVisualSchema).max(2).optional(),
 });
 
 export function monthRange(month: string) {

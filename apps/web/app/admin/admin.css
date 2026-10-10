@@ -92,6 +92,9 @@
 .admin-page-actions, .admin-editor-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .admin-primary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 14px; border: 1px solid #1c7657; border-radius: 5px; background: #1c7657; color: #fff; font-size: 13px; font-weight: 600; }
 .admin-primary-button:hover { background: #165c43; }
+.admin-secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 14px; border: 1px solid #dfe6e2; border-radius: 5px; background: #fff; color: #253b2d; font-size: 13px; font-weight: 500; }
+.admin-secondary-button:hover:not(:disabled) { background: #eff3f1; }
+.admin-secondary-button:disabled { opacity: 0.5; }
 .admin-icon-button, .admin-row-actions :is(a, button) { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 5px; }
 .admin-icon-button:hover { background: #eff3f1; }
 .admin-row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }

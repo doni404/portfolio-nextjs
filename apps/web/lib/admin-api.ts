@@ -52,6 +52,7 @@ export const adminClient = {
   getAnalytics: (days: number) => req<{ data: AnalyticsReport }>(`/api/admin/analytics?days=${days}`),
   stopExpiredJob: (id: string) => req(`/api/admin/editorial/jobs/${id}/reconcile`, { method: "POST" }),
   resendReviewEmail: (id: string) => req(`/api/admin/editorial/jobs/${id}/email`, { method: "POST" }),
+  testReviewEmail: () => req("/api/admin/editorial/email/test", { method: "POST" }),
   // ── Auth ──────────────────────────────────────────────────────────────────
   login: (email: string, password: string) =>
     req("/api/admin/auth/login", {

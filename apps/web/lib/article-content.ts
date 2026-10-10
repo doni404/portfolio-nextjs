@@ -23,21 +23,23 @@ export function articleContent(content: string, prefix = "section") {
       ...sanitizeHtml.defaults.allowedAttributes,
       h2: ["id"],
       h3: ["id"],
+      figure: ["class"],
       code: ["class"],
-      img: ["src", "alt", "width", "height", "loading"],
+      img: ["src", "alt", "width", "height", "loading", "decoding"],
       th: ["colspan", "rowspan"],
       td: ["colspan", "rowspan"],
     },
+    allowedClasses: { figure: ["article-visual"] },
     transformTags: {
       h2: heading,
       h3: heading,
       img: (tagName, attrs) => ({
         tagName,
-        attribs: { ...attrs, src: mediaUrl(attrs.src) ?? "", loading: "lazy" },
+        attribs: { ...attrs, src: mediaUrl(attrs.src) ?? "", loading: "lazy", decoding: "async" },
       }),
       a: (tagName, attrs) => ({
         tagName,
-        attribs: { ...attrs, rel: "noopener noreferrer" },
+        attribs: { ...attrs, href: mediaUrl(attrs.href) ?? "", rel: "noopener noreferrer" },
       }),
     },
   });
